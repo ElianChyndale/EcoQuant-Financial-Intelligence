@@ -1,0 +1,104 @@
+{
+  "schema": "normalized_document_v1",
+  "schema_version": "1.1",
+  "document_id": "synthetic-green-bond-report-2024",
+  "source": {
+    "provider": "synthetic-fixture"
+  },
+  "page_count": 1,
+  "pages": [
+    {
+      "page_index": 0,
+      "page": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "unit": "pt",
+      "blocks": [
+        {
+          "block_id": "block-1",
+          "page_index": 0,
+          "order": 1,
+          "reading_order": 2,
+          "geometry": {
+            "bbox": [72.0, 144.0, 540.0, 180.0]
+          },
+          "content": {
+            "kind": "text",
+            "text": "Synthetic allocation detail for renewable-energy projects."
+          },
+          "layout_role": "paragraph",
+          "semantic_role": "body",
+          "structure_role": "body",
+          "policy": {
+            "translate": false,
+            "translate_reason": "synthetic fixture"
+          },
+          "provenance": {
+            "provider": "pdf-manager",
+            "raw_label": "Text",
+            "raw_sub_type": "paragraph",
+            "raw_bbox": [72.0, 144.0, 540.0, 180.0],
+            "raw_path": "synthetic-source.pdf"
+          },
+          "metadata": {},
+          "source": {
+            "provider": "pdf-manager"
+          },
+          "continuation_hint": {
+            "source": "provider",
+            "group_id": "group-1",
+            "role": "single",
+            "scope": "intra_page",
+            "reading_order": 2,
+            "confidence": 0.99
+          }
+        },
+        {
+          "block_id": "block-2",
+          "page_index": 0,
+          "order": 2,
+          "reading_order": 1,
+          "geometry": {
+            "bbox": [72.0, 96.0, 540.0, 126.0]
+          },
+          "content": {
+            "kind": "text",
+            "text": "Synthetic green bond allocation summary."
+          },
+          "layout_role": "heading",
+          "semantic_role": "body",
+          "structure_role": "heading",
+          "policy": {
+            "translate": false,
+            "translate_reason": "synthetic fixture"
+          },
+          "provenance": {
+            "provider": "pdf-manager",
+            "raw_label": "Title",
+            "raw_sub_type": "heading",
+            "raw_bbox": [72.0, 96.0, 540.0, 126.0],
+            "raw_path": "synthetic-source.pdf"
+          },
+          "metadata": {},
+          "source": {
+            "provider": "pdf-manager"
+          },
+          "continuation_hint": {
+            "source": "provider",
+            "group_id": "group-2",
+            "role": "single",
+            "scope": "intra_page",
+            "reading_order": 1,
+            "confidence": 0.99
+          }
+        }
+      ]
+    }
+  ],
+  "derived": {
+    "role": "extraction",
+    "by": "synthetic-fixture",
+    "confidence": 0.99
+  },
+  "markers": {}
+}
