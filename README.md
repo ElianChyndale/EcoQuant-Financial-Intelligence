@@ -24,9 +24,10 @@ python -m pytest tests/ -v
 
 ## Key Findings
 
-- **Temporal filtering eliminates stale evidence:** 0% stale rate for temporal methods
-- **Calibrated abstention:** Conservative policy with 4% coverage
-- **Decision gate:** 50% AUTO_REPORT, 50% INSUFFICIENT_EVIDENCE
+- **BM25 and dense achieve perfect recall:** 1.000 Recall@5 with 0% stale evidence
+- **Temporal KG methods have lower recall:** 0.250 Recall@5 but also 0% stale evidence
+- **Calibrated abstention:** Conservative policy with 3.6% coverage (threshold 0.913)
+- **Decision gate:** 3% AUTO_REPORT, 84% HUMAN_REVIEW, 13% INSUFFICIENT_EVIDENCE
 
 ## Architecture
 

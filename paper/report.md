@@ -72,30 +72,32 @@ Three decision codes with strict precedence:
 
 | Method | Recall@5 | MRR | nDCG@5 | Temporal Acc | Stale Rate |
 |--------|----------|-----|--------|--------------|------------|
-| bm25 | 1.000 | 1.000 | 1.000 | 0.875 | 0.125 |
-| dense | 1.000 | 1.000 | 1.000 | 0.875 | 0.125 |
-| static_kg | 1.000 | 1.000 | 1.000 | 0.875 | 0.125 |
-| temporal_kg | 0.250 | 0.500 | 0.307 | 1.000 | 0.000 |
-| temporal_kg_rerank | 0.250 | 0.500 | 0.307 | 1.000 | 0.000 |
-| temporal_kg_verify | 0.250 | 0.500 | 0.307 | 1.000 | 0.000 |
+| bm25 | 1.000 | 0.969 | 0.977 | 1.000 | 0.000 |
+| dense | 1.000 | 0.969 | 0.977 | 1.000 | 0.000 |
+| static_kg | 1.000 | 0.969 | 0.977 | 1.000 | 0.188 |
+| temporal_kg | 0.250 | 0.500 | 0.307 | 0.875 | 0.000 |
+| temporal_kg_rerank | 0.250 | 0.500 | 0.307 | 0.875 | 0.000 |
+| temporal_kg_verify | 0.250 | 0.500 | 0.307 | 0.875 | 0.000 |
 
-**Key finding:** Temporal filtering eliminates stale evidence (0% stale rate)
-while reducing recall. BM25 and dense methods achieve higher recall but include
-stale evidence.
+**Key finding:** BM25 and dense methods achieve perfect recall with zero stale
+evidence in this fixture corpus. Temporal KG methods have lower recall (0.250)
+but also zero stale evidence. The static_kg method has 18.8% stale evidence
+because it does not filter by temporal validity.
 
 ### 3.2 Calibration
 
 - 4 folds, 56 total samples
-- Brier score: 0.312
-- ECE: 0.346
-- AURC: 0.284
-- Frozen threshold: ~1.0 (conservative)
+- Brier score: 0.084
+- ECE: 0.139
+- AURC: 0.125
+- Frozen threshold: 0.913 (conservative selective policy)
+- Coverage at threshold: 3.6%
 
 ### 3.3 Decisions
 
-- AUTO_REPORT: 32 (50%)
-- HUMAN_REVIEW_REQUIRED: 0 (0%)
-- INSUFFICIENT_EVIDENCE: 32 (50%)
+- AUTO_REPORT: 2 (3.1%)
+- HUMAN_REVIEW_REQUIRED: 54 (84.4%)
+- INSUFFICIENT_EVIDENCE: 8 (12.5%)
 
 ### 3.4 Bootstrap
 

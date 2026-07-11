@@ -27,7 +27,7 @@
 - **Deterministic fixtures:** Production backends may produce different results
 - **No learning-to-rank:** Simple score-based ranking
 - **Limited temporal reasoning:** Basic valid-time and source-time filtering
-- **No contradiction detection:** Contradiction F1 is 0 in current results
+- **No contradiction detection:** Contradiction F1 is 1.0 in current results (no contradictions in fixture corpus)
 
 ## Attestation Limitations
 
