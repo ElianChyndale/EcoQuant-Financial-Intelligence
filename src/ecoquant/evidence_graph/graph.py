@@ -4,7 +4,7 @@ from enum import Enum
 
 from ecoquant.document_intelligence.schema import EvidenceSpanV1
 
-from .models import Claim, GraphNode, NODE_TYPES
+from .models import Claim, Document, GraphNode, NODE_TYPES
 
 
 class Relation(str, Enum):
@@ -88,18 +88,39 @@ class TemporalEvidenceGraph:
             and (not concepts or concepts & self.resolve_query_concepts(evidence.text))
         ]
 
+    def retrieval_candidate_evidence_ids(self, issuer_id: str, query: str) -> frozenset[str]:
+        """Resolve a source-visible issuer seed and walk only retrieval-safe adjacency."""
+        concepts = self.resolve_query_concepts(query)
+        if issuer_id not in self._nodes:
+            return frozenset()
+        frontier = [issuer_id]
+        visited = {issuer_id}
+        evidence_ids: set[str] = set()
+        edges = self.retrieval_edges()
+        while frontier:
+            source_id = frontier.pop(0)
+            for edge in edges:
+                if edge.source_id != source_id or edge.target_id in visited:
+                    continue
+                visited.add(edge.target_id)
+                node = self._nodes[edge.target_id]
+                if isinstance(node, Document):
+                    evidence_ids.add(node.id)
+                frontier.append(edge.target_id)
+        return frozenset(sorted(evidence_ids))
+
+    def temporal_retrieval_candidate_evidence_ids(self, issuer_id: str, query: str, valid_at: date, source_cutoff: date) -> frozenset[str]:
+        """Graph candidates whose claim time and publication time are both eligible."""
+        return frozenset(node_id for node_id in self.retrieval_candidate_evidence_ids(issuer_id, query)
+                         if (node := self._nodes[node_id]).valid_time <= valid_at and node.source_time <= source_cutoff)
+
     def candidate_evidence_ids(self, issuer_id: str, query: str) -> frozenset[str]:
         """Static graph traversal: deliberately does not apply valid-time filtering."""
-        concepts = self.resolve_query_concepts(query)
-        return frozenset(evidence.document_id for evidence in self.traverse_evidence(issuer_id, concepts))
+        return self.retrieval_candidate_evidence_ids(issuer_id, query)
 
     def temporal_candidate_evidence_ids(self, issuer_id: str, query: str, cutoff: date) -> frozenset[str]:
         """The same traversal boundary, intersected with valid-time evidence."""
-        static_ids = self.candidate_evidence_ids(issuer_id, query)
-        return frozenset(
-            evidence.document_id for evidence in self.evidence_valid_at(issuer_id, cutoff)
-            if evidence.document_id in static_ids
-        )
+        return self.temporal_retrieval_candidate_evidence_ids(issuer_id, query, cutoff, cutoff)
 
     def retrieval_edges(self) -> tuple[Edge, ...]:
         """Only source-derived graph relations are retriever-visible."""

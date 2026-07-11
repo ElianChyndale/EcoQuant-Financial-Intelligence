@@ -4,7 +4,7 @@ from datetime import date
 from ecoquant.document_intelligence.schema import EvidenceSpanV1
 
 from .graph import Relation, TemporalEvidenceGraph
-from .models import Claim, Document, Metric
+from .models import Claim, Document, Issuer, Metric
 
 
 def build_graph(
@@ -32,6 +32,11 @@ def build_graph(
         graph.add_node(metric)
 
     for evidence in evidence_items:
+        issuer = Issuer(evidence.issuer_id, _report_period_end(evidence.report_period), evidence.source_date, evidence.issuer_id)
+        try:
+            graph.add_node(issuer)
+        except ValueError:
+            pass
         document = Document(
             id=evidence.document_id,
             issuer_id=evidence.issuer_id,
@@ -45,6 +50,7 @@ def build_graph(
             if not isinstance(existing, Document) or existing.issuer_id != document.issuer_id:
                 raise
         graph.add_evidence(evidence.issuer_id, _report_period_end(evidence.report_period), evidence)
+        graph.add_edge(evidence.issuer_id, evidence.document_id, Relation.CONTAINS)
 
     claim_by_id = {claim.id: claim for claim in ordered_claims}
     if len(claim_by_id) != len(ordered_claims):

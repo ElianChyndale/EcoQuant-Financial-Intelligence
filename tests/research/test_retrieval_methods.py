@@ -146,12 +146,12 @@ def test_retrieval_does_not_accept_gold_labels_and_is_deterministic(method) -> N
 
 def test_retriever_visible_corpus_has_no_evaluation_annotations() -> None:
     assert {field.name for field in fields(CorpusRecord)} == {
-        "evidence_id", "issuer", "valid_time", "text", "numeric_value"
+        "evidence_id", "issuer", "valid_time", "text", "numeric_value", "source_time"
     }
 
 
 def test_retriever_visible_query_has_no_evaluator_only_fields() -> None:
-    assert {field.name for field in fields(Question)} == {"question_id", "issuer", "query", "cutoff"}
+    assert {field.name for field in fields(Question)} == {"question_id", "issuer", "query", "cutoff", "source_cutoff"}
 
 
 def test_verifier_status_is_derived_from_retrieval_context_not_a_corpus_annotation() -> None:
@@ -389,6 +389,31 @@ def test_kg_paths_call_graph_temporal_rerank_and_verification_boundaries() -> No
     assert verify_calls
     assert not methods["bm25"].metadata.uses_graph
     assert not methods["dense"].metadata.uses_graph
+
+
+def test_kg_candidates_require_a_source_derived_graph_path_and_honor_source_cutoff() -> None:
+    source = EvidenceSpanV1("evidence-span.v1", "aib-2023", "AIB", "2023", date(2024, 2, 1), "p1", "b1", (0, 0, 1, 1), "Assets", "AIB total assets", "0" * 64, 1.0, "fixture", "1" * 64)
+    graph = build_graph(evidence_spans=[source])
+    methods = {item.method_name: item for item in all_retrievers(frozen_corpus(), cutoff=date(2023, 12, 31), graph=graph)}
+    query = Question("q", "AIB", "AIB total assets", date(2023, 12, 31), source_cutoff=date(2023, 12, 31))
+
+    assert "aib-2023" in {r.evidence_id for r in methods["static_kg"].retrieve(query)}
+    assert "aib-2023" not in {r.evidence_id for r in methods["temporal_kg"].retrieve(query)}
+    assert methods["temporal_kg"].retrieve(query) == methods["temporal_kg"].retrieve(query)
+
+
+def test_evaluator_only_edge_cannot_create_a_retrieval_path() -> None:
+    from ecoquant.evidence_graph.graph import Relation, TemporalEvidenceGraph
+    from ecoquant.evidence_graph.models import Document, Issuer
+
+    graph = TemporalEvidenceGraph()
+    graph.add_node(Issuer("AIB", date(2023, 1, 1), date(2023, 1, 1), "AIB"))
+    graph.add_node(Document("aib-2023", date(2023, 12, 31), date(2023, 1, 1), "AIB"))
+    graph.add_edge("AIB", "aib-2023", Relation.CONTAINS, evaluator_only=True)
+    method = {item.method_name: item for item in all_retrievers(frozen_corpus(), cutoff=date(2023, 12, 31), graph=graph)}["static_kg"]
+    assert "aib-2023" not in {r.evidence_id for r in method.retrieve(frozen_question())}
+    graph.add_edge("AIB", "aib-2023", Relation.CONTAINS)
+    assert "aib-2023" in {r.evidence_id for r in method.retrieve(frozen_question())}
 
 
 def test_paired_issuer_clustered_bootstrap_is_seeded_and_clusters_by_issuer() -> None:

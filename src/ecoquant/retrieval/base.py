@@ -23,6 +23,7 @@ class CorpusRecord:
     valid_time: date
     text: str
     numeric_value: float | None = None
+    source_time: date | None = None
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,15 @@ class RetrieverQuery:
     issuer: str
     query: str
     cutoff: date
+    source_cutoff: date | None = None
+
+    @property
+    def valid_at(self) -> date:
+        return self.cutoff
+
+    @property
+    def effective_source_cutoff(self) -> date:
+        return self.source_cutoff or self.valid_at
 
 
 # Kept as a compatibility name for the frozen Task 5 fixture.
@@ -113,12 +123,12 @@ class BaseRetriever:
             raise TypeError("retrieval accepts only RetrieverQuery")
         if top_k <= 0:
             raise ValueError("top_k must be positive")
-        if question.cutoff != self.cutoff:
+        if question.valid_at != self.cutoff:
             raise ValueError("question cutoff must equal the shared method cutoff")
         ranked = self._rank_records(self._candidate_records(question), question)
         return tuple(
             RetrievalResult(self.method_name, question.question_id, record.evidence_id, rank, score,
-                            record.valid_time <= question.cutoff, self._verification_status(record, question))
+                            record.valid_time <= question.valid_at, self._verification_status(record, question))
             for rank, (score, record) in enumerate(ranked[:top_k], start=1)
         )
 
@@ -129,7 +139,7 @@ class BaseRetriever:
         return sorted(((self._score(record, question), record) for record in candidates), key=lambda item: (-item[0], item[1].evidence_id))
 
     def _include(self, record: CorpusRecord, question: RetrieverQuery) -> bool:
-        return (not self.uses_temporal_filter or record.valid_time <= question.cutoff) and record.issuer == question.issuer
+        return (not self.uses_temporal_filter or record.valid_time <= question.valid_at) and record.issuer == question.issuer
 
     def _score(self, record: CorpusRecord, question: RetrieverQuery) -> float:
         query_terms = _terms(question.query)

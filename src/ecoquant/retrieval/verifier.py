@@ -9,7 +9,11 @@ from .reranker import TemporalKGRerankRetriever
 
 
 def _source_verifier(record: CorpusRecord, question: Question) -> str:
-    return "time_verified" if record.valid_time <= question.cutoff else "unverified"
+    if record.valid_time > question.valid_at:
+        return "invalid_for_requested_time"
+    if record.source_time is not None and record.source_time > question.effective_source_cutoff:
+        return "published_after_source_cutoff"
+    return "time_verified"
 
 
 class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
