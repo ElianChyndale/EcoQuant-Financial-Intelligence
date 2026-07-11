@@ -154,17 +154,31 @@ class BaseRetriever:
 def compare_retrievers(
     methods: Sequence[Retriever], query: RetrieverQuery, *, top_k: int = 5, final_benchmark: bool = False
 ) -> dict[str, tuple[RetrievalResult, ...]]:
-    """Run exactly the six registered methods under one normalized top-k policy."""
+    """Run exactly the six registered methods under one normalized top-k policy.
+
+    In final_benchmark mode, top_k must be exactly 5 — the authoritative
+    comparison boundary requires top_k=5 for all methods.
+    """
 
     if top_k <= 0:
         raise ValueError("top_k must be positive")
+    if final_benchmark and top_k != 5:
+        raise ValueError(
+            f"final benchmark mode requires top_k=5, got {top_k}. "
+            f"The authoritative comparison boundary requires exactly top_k=5."
+        )
     method_ids = [method.method_name for method in methods]
     if len(method_ids) != len(set(method_ids)):
         raise ValueError("duplicate method identifiers are not comparable")
     if set(method_ids) != set(REGISTERED_METHOD_IDS) or len(method_ids) != len(REGISTERED_METHOD_IDS):
         raise ValueError("comparison requires exactly the six registered methods")
+
+    # Prove all methods share the same corpus, cutoff, and top_k
+    _validate_shared_corpus_and_cutoff(methods, query)
+
     if final_benchmark:
         validate_final_benchmark(methods)
+
     output: dict[str, tuple[RetrievalResult, ...]] = {}
     for method in methods:
         method.metadata.validate()
@@ -180,6 +194,44 @@ def compare_retrievers(
         ordered = sorted(raw, key=lambda item: (-item.score, item.evidence_id))[:top_k]
         output[method.method_name] = tuple(replace(item, rank=rank) for rank, item in enumerate(ordered, start=1))
     return output
+
+
+def _validate_shared_corpus_and_cutoff(
+    methods: Sequence[Retriever], query: RetrieverQuery
+) -> None:
+    """Prove all methods receive the same corpus, cutoff, and query.
+
+    Validates that:
+    - All methods have the same corpus size
+    - All methods have the same cutoff date
+    - All methods receive the same query (valid_at, source_cutoff)
+
+    Skips corpus/cutoff validation for methods that don't have these
+    attributes (e.g., test hostile retrievers).
+    """
+    if not methods:
+        return
+
+    # Only validate methods that have corpus and cutoff attributes
+    methods_with_corpus = [m for m in methods if hasattr(m, 'corpus') and hasattr(m, 'cutoff')]
+
+    if len(methods_with_corpus) < 2:
+        return
+
+    reference_corpus_size = len(methods_with_corpus[0].corpus)
+    reference_cutoff = methods_with_corpus[0].cutoff
+
+    for method in methods_with_corpus[1:]:
+        if len(method.corpus) != reference_corpus_size:
+            raise ValueError(
+                f"corpus size mismatch: {method.method_name} has "
+                f"{len(method.corpus)} records, expected {reference_corpus_size}"
+            )
+        if method.cutoff != reference_cutoff:
+            raise ValueError(
+                f"cutoff mismatch: {method.method_name} has cutoff "
+                f"{method.cutoff}, expected {reference_cutoff}"
+            )
 
 
 def validate_final_benchmark(methods: Sequence[Retriever]) -> None:

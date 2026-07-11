@@ -190,8 +190,13 @@ def _numeric_prediction_matches(prediction: object | None, expected: float) -> b
 
 
 def _f1(predicted: set[tuple[str, str]], expected: set[tuple[str, str]]) -> float:
+    """Compute F1 score.
+
+    When neither predictions nor labels contain contradictions, returns NaN
+    to indicate non-evaluable status (not a misleading perfect 1.0).
+    """
     if not predicted and not expected:
-        return 1.0
+        return float("nan")
     true_positive = len(predicted & expected)
     precision = true_positive / len(predicted) if predicted else 0.0
     recall = true_positive / len(expected) if expected else 0.0
