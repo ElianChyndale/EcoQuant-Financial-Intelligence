@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from .base import BaseRetriever, CorpusRecord, Question, _terms
+from .base import BaseRetriever, CorpusRecord, Question, RetrievalMetadata, _terms
 
 
 class BM25Retriever(BaseRetriever):
     method_name = "bm25"
+    metadata = RetrievalMetadata("bm25", "fixture", "deterministic-local", "bm25-tokenizer", "local-fixture-20260710", False, True, False, False)
 
     def _score(self, record: CorpusRecord, question: Question) -> float:
         query_terms = _terms(question.query)

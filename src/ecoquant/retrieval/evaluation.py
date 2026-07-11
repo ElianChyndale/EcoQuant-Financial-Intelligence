@@ -15,7 +15,7 @@ BOOTSTRAP_SEED = 20260710
 
 
 @dataclass(frozen=True)
-class EvaluationLabels:
+class EvaluatorGold:
     """Held-out evaluation annotations; never part of a retriever interface."""
 
     relevant_evidence: Mapping[str, frozenset[str]]
@@ -25,9 +25,16 @@ class EvaluationLabels:
     expected_numeric: Mapping[str, float]
 
 
+# Compatibility name for the previously public evaluator-only record.
+EvaluationLabels = EvaluatorGold
+
+
 @dataclass(frozen=True)
 class RetrievalMetrics:
     recall_at_5: float
+    hit_at_5: float
+    recall_evaluable_question_count: int
+    zero_gold_question_count: int
     mrr: float
     ndcg_at_5: float
     temporal_accuracy: float
@@ -35,6 +42,12 @@ class RetrievalMetrics:
     contradiction_f1: float
     citation_accuracy: float
     numerical_mismatch: float
+    evaluable_question_count: int
+    prediction_count: int
+    answer_coverage: float
+    mismatch_count: int
+    mismatch_denominator: int
+    mismatch_rate: float
 
 
 @dataclass(frozen=True)
@@ -49,7 +62,7 @@ class BootstrapInterval:
 
 def score_retrieval(
     results_by_question: Mapping[str, Sequence[RetrievalResult]],
-    labels: EvaluationLabels,
+    labels: EvaluatorGold,
     *,
     numeric_predictions: Mapping[str, float] | None = None,
 ) -> RetrievalMetrics:
@@ -60,6 +73,7 @@ def score_retrieval(
         raise ValueError("at least one labelled question is required")
 
     recalls: list[float] = []
+    hits: list[float] = []
     reciprocal_ranks: list[float] = []
     ndcgs: list[float] = []
     temporal: list[float] = []
@@ -72,8 +86,11 @@ def score_retrieval(
     for question_id in question_ids:
         results = tuple(sorted(results_by_question.get(question_id, ()), key=lambda result: result.rank))[:5]
         relevant = labels.relevant_evidence[question_id]
+        retrieved_ids = {result.evidence_id for result in results}
         hit_ranks = [result.rank for result in results if result.evidence_id in relevant]
-        recalls.append(len({result.evidence_id for result in results} & relevant) / len(relevant) if relevant else 0.0)
+        hits.append(float(bool(retrieved_ids & relevant)))
+        if relevant:
+            recalls.append(len(retrieved_ids & relevant) / len(relevant))
         reciprocal_ranks.append(1.0 / min(hit_ranks) if hit_ranks else 0.0)
         ideal = min(len(relevant), 5)
         dcg = sum(1.0 / math.log2(rank + 1) for rank in hit_ranks)
@@ -90,24 +107,33 @@ def score_retrieval(
             (question_id, evidence_id) for evidence_id in labels.contradiction_evidence.get(question_id, frozenset())
         )
 
-    mismatch_values: list[float] = []
-    if labels.expected_numeric:
-        if numeric_predictions is None or any(question_id not in numeric_predictions for question_id in labels.expected_numeric):
-            mismatch_values = [math.inf]
-        else:
-            mismatch_values = [
-                abs(numeric_predictions[question_id] - expected)
-                for question_id, expected in labels.expected_numeric.items()
-            ]
+    predictions = numeric_predictions or {}
+    numeric_question_ids = tuple(sorted(labels.expected_numeric))
+    prediction_count = sum(question_id in predictions for question_id in numeric_question_ids)
+    mismatch_count = sum(
+        not _numeric_prediction_matches(predictions.get(question_id), labels.expected_numeric[question_id])
+        for question_id in numeric_question_ids
+    )
+    mismatch_denominator = len(numeric_question_ids)
+    mismatch_rate = mismatch_count / mismatch_denominator if mismatch_denominator else 0.0
     return RetrievalMetrics(
         recall_at_5=_mean(recalls),
+        hit_at_5=_mean(hits),
+        recall_evaluable_question_count=len(recalls),
+        zero_gold_question_count=len(question_ids) - len(recalls),
         mrr=_mean(reciprocal_ranks),
         ndcg_at_5=_mean(ndcgs),
         temporal_accuracy=_mean(temporal),
         stale_evidence_rate=stale_count / retrieved_count if retrieved_count else 0.0,
         contradiction_f1=_f1(predicted_contradictions, expected_contradictions),
         citation_accuracy=_mean(citations),
-        numerical_mismatch=_mean(mismatch_values),
+        numerical_mismatch=mismatch_rate,
+        evaluable_question_count=mismatch_denominator,
+        prediction_count=prediction_count,
+        answer_coverage=prediction_count / mismatch_denominator if mismatch_denominator else 0.0,
+        mismatch_count=mismatch_count,
+        mismatch_denominator=mismatch_denominator,
+        mismatch_rate=mismatch_rate,
     )
 
 
@@ -150,6 +176,17 @@ def paired_issuer_clustered_bootstrap(
 
 def _mean(values: Sequence[float]) -> float:
     return sum(values) / len(values) if values else 0.0
+
+
+def _numeric_prediction_matches(prediction: object | None, expected: float) -> bool:
+    """A numeric answer is either correct (0) or a mismatch (1)."""
+    if prediction is None or isinstance(prediction, bool):
+        return False
+    try:
+        parsed = float(prediction)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(parsed) and math.isclose(parsed, expected, rel_tol=0.0, abs_tol=1e-9)
 
 
 def _f1(predicted: set[tuple[str, str]], expected: set[tuple[str, str]]) -> float:

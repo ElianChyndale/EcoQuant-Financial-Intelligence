@@ -1,16 +1,22 @@
-"""Shared, label-free retrieval interfaces for the frozen benchmark."""
+"""Label-free retrieval contracts and the shared comparison boundary."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, replace
 from datetime import date
-from typing import Protocol
+from math import isfinite
+from typing import Literal, Protocol
+
+
+REGISTERED_METHOD_IDS = (
+    "bm25", "dense", "static_kg", "temporal_kg", "temporal_kg_rerank", "temporal_kg_verify",
+)
 
 
 @dataclass(frozen=True)
 class CorpusRecord:
-    """A local evidence fixture available to every comparable method."""
+    """Source-derived evidence available to every comparable method."""
 
     evidence_id: str
     issuer: str
@@ -20,13 +26,17 @@ class CorpusRecord:
 
 
 @dataclass(frozen=True)
-class Question:
-    """Retrieval input intentionally limited to query and temporal context."""
+class RetrieverQuery:
+    """The only query shape accepted by retrievers; it carries no gold data."""
 
     question_id: str
     issuer: str
     query: str
     cutoff: date
+
+
+# Kept as a compatibility name for the frozen Task 5 fixture.
+Question = RetrieverQuery
 
 
 @dataclass(frozen=True)
@@ -40,19 +50,52 @@ class RetrievalResult:
     verification_status: str
 
 
+@dataclass(frozen=True)
+class RetrievalMetadata:
+    """Immutable implementation provenance for a method result or manifest."""
+
+    method_id: str
+    implementation_mode: Literal["production", "fixture"]
+    backend: str
+    model_name: str | None
+    model_revision: str | None
+    uses_graph: bool
+    uses_temporal_filter: bool
+    uses_reranker: bool
+    uses_verification: bool
+
+    @classmethod
+    def fixture(cls, method_id: str, **overrides: object) -> "RetrievalMetadata":
+        values: dict[str, object] = {
+            "method_id": method_id, "implementation_mode": "fixture", "backend": "deterministic-local",
+            "model_name": None, "model_revision": None, "uses_graph": False, "uses_temporal_filter": False,
+            "uses_reranker": False, "uses_verification": False,
+        }
+        values.update(overrides)
+        return cls(**values)  # type: ignore[arg-type]
+
+    def validate(self) -> None:
+        if self.method_id not in REGISTERED_METHOD_IDS:
+            raise ValueError(f"unknown registered method_id: {self.method_id}")
+        if self.implementation_mode == "production" and (not self.backend or not self.model_name or not self.model_revision):
+            raise ValueError("production metadata requires backend, model_name, and model_revision")
+
+
 class Retriever(Protocol):
     method_name: str
     corpus: tuple[CorpusRecord, ...]
     cutoff: date
+    metadata: RetrievalMetadata
 
-    def retrieve(self, question: Question, top_k: int = 5) -> tuple[RetrievalResult, ...]: ...
+    def retrieve(self, question: RetrieverQuery, top_k: int = 5) -> tuple[RetrievalResult, ...]: ...
 
 
 class BaseRetriever:
-    """Common deterministic ranking and temporal accounting implementation."""
+    """Common deterministic ranking and label-free query validation."""
 
     method_name = "base"
     uses_temporal_filter = True
+    metadata = RetrievalMetadata.fixture("bm25")
 
     def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date, graph: object | None = None) -> None:
         self.corpus = tuple(corpus)
@@ -63,65 +106,92 @@ class BaseRetriever:
             raise ValueError("corpus must contain at least one record")
         if len(identifiers) != len(set(identifiers)):
             raise ValueError("corpus evidence_id values must be unique")
+        self.metadata.validate()
 
-    def retrieve(self, question: Question, top_k: int = 5) -> tuple[RetrievalResult, ...]:
-        if top_k != 5:
-            raise ValueError("comparable retrieval uses a fixed top_k=5")
+    def retrieve(self, question: RetrieverQuery, top_k: int = 5) -> tuple[RetrievalResult, ...]:
+        if type(question) is not RetrieverQuery:
+            raise TypeError("retrieval accepts only RetrieverQuery")
+        if top_k <= 0:
+            raise ValueError("top_k must be positive")
         if question.cutoff != self.cutoff:
             raise ValueError("question cutoff must equal the shared method cutoff")
-
-        candidates = [record for record in self.corpus if self._include(record, question)]
-        ranked = sorted(
-            ((self._score(record, question), record) for record in candidates),
-            key=lambda item: (-item[0], item[1].evidence_id),
-        )[:top_k]
+        ranked = self._rank_records(self._candidate_records(question), question)
         return tuple(
-            RetrievalResult(
-                method=self.method_name,
-                question_id=question.question_id,
-                evidence_id=record.evidence_id,
-                rank=rank,
-                score=score,
-                valid_time_match=record.valid_time <= question.cutoff,
-                verification_status=self._verification_status(record),
-            )
-            for rank, (score, record) in enumerate(ranked, start=1)
+            RetrievalResult(self.method_name, question.question_id, record.evidence_id, rank, score,
+                            record.valid_time <= question.cutoff, self._verification_status(record, question))
+            for rank, (score, record) in enumerate(ranked[:top_k], start=1)
         )
 
-    def _include(self, record: CorpusRecord, question: Question) -> bool:
+    def _candidate_records(self, question: RetrieverQuery) -> list[CorpusRecord]:
+        return [record for record in self.corpus if self._include(record, question)]
+
+    def _rank_records(self, candidates: Iterable[CorpusRecord], question: RetrieverQuery) -> list[tuple[float, CorpusRecord]]:
+        return sorted(((self._score(record, question), record) for record in candidates), key=lambda item: (-item[0], item[1].evidence_id))
+
+    def _include(self, record: CorpusRecord, question: RetrieverQuery) -> bool:
         return (not self.uses_temporal_filter or record.valid_time <= question.cutoff) and record.issuer == question.issuer
 
-    def _score(self, record: CorpusRecord, question: Question) -> float:
+    def _score(self, record: CorpusRecord, question: RetrieverQuery) -> float:
         query_terms = _terms(question.query)
         record_terms = _terms(record.text)
-        overlap = len(query_terms & record_terms)
-        year_bonus = 0.25 if str(record.valid_time.year) in query_terms else 0.0
-        return float(overlap) + year_bonus
+        return float(len(query_terms & record_terms)) + (0.25 if str(record.valid_time.year) in query_terms else 0.0)
 
-    def _verification_status(self, record: CorpusRecord) -> str:
+    def _verification_status(self, record: CorpusRecord, question: RetrieverQuery) -> str:
         return "unverified"
 
-    def graph_evidence_ids(self, question: Question) -> frozenset[str]:
-        """Read temporal graph evidence only; it contains no evaluation labels."""
 
-        evidence_valid_at = getattr(self.graph, "evidence_valid_at", None)
-        if not callable(evidence_valid_at):
-            return frozenset()
-        return frozenset(
-            evidence.document_id
-            for evidence in evidence_valid_at(question.issuer, question.cutoff)
-            if isinstance(getattr(evidence, "document_id", None), str)
-        )
+def compare_retrievers(
+    methods: Sequence[Retriever], query: RetrieverQuery, *, top_k: int = 5, final_benchmark: bool = False
+) -> dict[str, tuple[RetrievalResult, ...]]:
+    """Run exactly the six registered methods under one normalized top-k policy."""
+
+    if top_k <= 0:
+        raise ValueError("top_k must be positive")
+    method_ids = [method.method_name for method in methods]
+    if len(method_ids) != len(set(method_ids)):
+        raise ValueError("duplicate method identifiers are not comparable")
+    if set(method_ids) != set(REGISTERED_METHOD_IDS) or len(method_ids) != len(REGISTERED_METHOD_IDS):
+        raise ValueError("comparison requires exactly the six registered methods")
+    if final_benchmark:
+        validate_final_benchmark(methods)
+    output: dict[str, tuple[RetrievalResult, ...]] = {}
+    for method in methods:
+        method.metadata.validate()
+        raw = tuple(method.retrieve(query, top_k=top_k))
+        if any(result.method != method.method_name for result in raw):
+            raise ValueError("retriever returned a result for another method")
+        if any(result.question_id != query.question_id for result in raw):
+            raise ValueError("retriever returned a result for another question_id")
+        if len({result.evidence_id for result in raw}) != len(raw):
+            raise ValueError("retriever results must have unique evidence IDs")
+        if any(not isfinite(result.score) for result in raw):
+            raise ValueError("retriever result scores must be finite")
+        ordered = sorted(raw, key=lambda item: (-item.score, item.evidence_id))[:top_k]
+        output[method.method_name] = tuple(replace(item, rank=rank) for rank, item in enumerate(ordered, start=1))
+    return output
+
+
+def validate_final_benchmark(methods: Sequence[Retriever]) -> None:
+    """Reject local fixtures before an output can be called a final benchmark."""
+
+    for method in methods:
+        method.metadata.validate()
+        if method.metadata.implementation_mode != "production":
+            raise ValueError(f"final benchmark rejects fixture-mode method: {method.method_name}")
+
+
+def retrieval_manifest(methods: Sequence[Retriever]) -> Mapping[str, RetrievalMetadata]:
+    """Metadata retained beside method-keyed comparison outputs."""
+
+    return {method.method_name: method.metadata for method in methods}
 
 
 def _terms(text: str) -> frozenset[str]:
     return frozenset("".join(character if character.isalnum() else " " for character in text.lower()).split())
 
 
-def all_retrievers(
-    corpus: Sequence[CorpusRecord], *, cutoff: date, graph: object | None = None
-) -> tuple[Retriever, ...]:
-    """Construct the six methods over precisely the same frozen inputs."""
+def all_retrievers(corpus: Sequence[CorpusRecord], *, cutoff: date, graph: object | None = None) -> tuple[Retriever, ...]:
+    """Construct the six fixture-mode methods over the same corpus and cutoff."""
 
     from .bm25 import BM25Retriever
     from .dense import DenseRetriever
@@ -129,11 +199,6 @@ def all_retrievers(
     from .reranker import TemporalKGRerankRetriever
     from .verifier import TemporalKGVerifyRetriever
 
-    return (
-        BM25Retriever(corpus, cutoff=cutoff, graph=graph),
-        DenseRetriever(corpus, cutoff=cutoff, graph=graph),
-        StaticKGRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph),
-    )
+    return (BM25Retriever(corpus, cutoff=cutoff, graph=graph), DenseRetriever(corpus, cutoff=cutoff, graph=graph),
+            StaticKGRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
+            TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph))

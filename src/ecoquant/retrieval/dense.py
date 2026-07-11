@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .base import BaseRetriever, CorpusRecord, Question, _terms
+from .base import BaseRetriever, CorpusRecord, Question, RetrievalMetadata, _terms
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,7 @@ DENSE_MODEL = ModelPin("sentence-transformers/all-MiniLM-L6-v2", "local-fixture-
 class DenseRetriever(BaseRetriever):
     method_name = "dense"
     model = DENSE_MODEL
+    metadata = RetrievalMetadata("dense", "fixture", "deterministic-local", DENSE_MODEL.name, DENSE_MODEL.revision, False, True, False, False)
 
     def _score(self, record: CorpusRecord, question: Question) -> float:
         query_terms = _terms(question.query)
