@@ -297,11 +297,21 @@ def _build_fold_data(
         # Feature 4: temporal validity
         temporal_validity = 1.0 if top1.valid_time_match else 0.0
 
-        # Feature 5: evidence coverage
-        gold_ids = labels.relevant_evidence.get(qid, frozenset())
-        top5_ids = {r.evidence_id for r in method_results[:5]}
-        evidence_coverage = len(top5_ids & gold_ids) / len(gold_ids) if gold_ids else 0.0
+        # Feature 5: evidence coverage (retriever-visible sufficiency, NOT gold-based)
+        # Compute from the number of results returned and their scores
+        # This measures whether the retriever found sufficient evidence,
+        # not whether it matches gold labels
+        top5_scores = [r.score for r in method_results[:5]]
+        if top5_scores:
+            # Coverage based on score distribution: high scores indicate good coverage
+            avg_score = sum(top5_scores) / len(top5_scores)
+            max_possible = max(top5_scores) if top5_scores else 1.0
+            evidence_coverage = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
+        else:
+            evidence_coverage = 0.0
 
+        # Label is still from gold for calibration fitting (this is the target, not a feature)
+        gold_ids = labels.relevant_evidence.get(qid, frozenset())
         label = top1.evidence_id in gold_ids
 
         features = UncertaintyFeatures(

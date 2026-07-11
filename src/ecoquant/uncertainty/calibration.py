@@ -2,11 +2,14 @@
 
 All calibration is fit only on non-test issuers. The threshold is frozen
 before final test evaluation to prevent leakage.
+
+Implements real Platt scaling with gradient descent fitting.
 """
 
 from __future__ import annotations
 
 import math
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -14,41 +17,144 @@ from .features import UncertaintyFeatures
 
 
 @dataclass(frozen=True)
-class SimpleCalibrator:
-    """Minimal Platt-style calibrator using a fixed sigmoid transform.
+class PlattCalibrator:
+    """Platt-style calibrator fitted via gradient descent.
 
-    In fixture mode this uses a deterministic mapping from features to
-    probability; production backends replace this with a fitted model.
+    Fits a logistic regression on the feature vector to produce calibrated
+    probabilities. Uses L2 regularization for stability.
     """
 
-    weight_retrieval_margin: float = 1.0
-    weight_agreement: float = 0.5
-    weight_extraction: float = 0.8
-    weight_temporal: float = 0.3
-    weight_coverage: float = 0.6
-    bias: float = -0.5
+    weights: tuple[float, ...]
+    bias: float
+    regularization: float = 0.01
+    learning_rate: float = 0.1
+    max_iterations: int = 1000
+    convergence_threshold: float = 1e-6
 
-    def predict_proba(self, features: Sequence[UncertaintyFeatures]) -> list[float]:
-        """Map features to calibrated probabilities via a deterministic sigmoid."""
-        return [self._sigmoid(self._logit(f)) for f in features]
+    @classmethod
+    def fit(
+        cls,
+        features: Sequence[UncertaintyFeatures],
+        labels: Sequence[bool],
+        *,
+        regularization: float = 0.01,
+        learning_rate: float = 0.1,
+        max_iterations: int = 1000,
+        convergence_threshold: float = 1e-6,
+        seed: int = 20260710,
+    ) -> "PlattCalibrator":
+        """Fit a Platt calibrator from training data using gradient descent.
 
-    def _logit(self, f: UncertaintyFeatures) -> float:
-        return (
-            self.weight_retrieval_margin * f.retrieval_margin
-            + self.weight_agreement * f.cross_retriever_agreement
-            + self.weight_extraction * f.extraction_confidence
-            + self.weight_temporal * f.temporal_validity
-            + self.weight_coverage * f.evidence_coverage
-            + self.bias
+        Args:
+            features: Training feature vectors.
+            labels: Binary labels (True = correct, False = incorrect).
+            regularization: L2 regularization strength.
+            learning_rate: Gradient descent step size.
+            max_iterations: Maximum optimization iterations.
+            convergence_threshold: Gradient norm threshold for early stopping.
+            seed: Random seed for reproducibility.
+
+        Returns:
+            A fitted PlattCalibrator instance.
+        """
+        if len(features) != len(labels):
+            raise ValueError("features and labels must have the same length")
+        if not features:
+            return cls(weights=(0.0, 0.0, 0.0, 0.0, 0.0), bias=0.0)
+
+        n_features = 5  # retrieval_margin, agreement, extraction, temporal, coverage
+        rng = random.Random(seed)
+
+        # Initialize weights with small random values
+        weights = [rng.gauss(0, 0.1) for _ in range(n_features)]
+        bias = 0.0
+
+        # Convert features to arrays
+        X = [
+            [
+                f.retrieval_margin,
+                f.cross_retriever_agreement,
+                f.extraction_confidence,
+                f.temporal_validity,
+                f.evidence_coverage,
+            ]
+            for f in features
+        ]
+        y = [1.0 if label else 0.0 for label in labels]
+
+        # Gradient descent with L2 regularization
+        for iteration in range(max_iterations):
+            # Compute predictions
+            predictions = []
+            for x_i in X:
+                logit = sum(w * x for w, x in zip(weights, x_i)) + bias
+                pred = _sigmoid(logit)
+                predictions.append(pred)
+
+            # Compute gradients
+            weight_gradients = [0.0] * n_features
+            bias_gradient = 0.0
+
+            for i in range(len(X)):
+                error = predictions[i] - y[i]
+                for j in range(n_features):
+                    weight_gradients[j] += error * X[i][j]
+                bias_gradient += error
+
+            # Add L2 regularization
+            for j in range(n_features):
+                weight_gradients[j] += regularization * weights[j]
+
+            # Average gradients
+            n = len(X)
+            for j in range(n_features):
+                weight_gradients[j] /= n
+            bias_gradient /= n
+
+            # Update weights
+            for j in range(n_features):
+                weights[j] -= learning_rate * weight_gradients[j]
+            bias -= learning_rate * bias_gradient
+
+            # Check convergence
+            gradient_norm = math.sqrt(
+                sum(g ** 2 for g in weight_gradients) + bias_gradient ** 2
+            )
+            if gradient_norm < convergence_threshold:
+                break
+
+        return cls(
+            weights=tuple(weights),
+            bias=bias,
+            regularization=regularization,
+            learning_rate=learning_rate,
+            max_iterations=max_iterations,
+            convergence_threshold=convergence_threshold,
         )
 
-    @staticmethod
-    def _sigmoid(x: float) -> float:
-        if x >= 0:
-            z = math.exp(-x)
-            return 1.0 / (1.0 + z)
-        z = math.exp(x)
-        return z / (1.0 + z)
+    def predict_proba(self, features: Sequence[UncertaintyFeatures]) -> list[float]:
+        """Map features to calibrated probabilities via a learned sigmoid."""
+        return [self._predict_single(f) for f in features]
+
+    def _predict_single(self, f: UncertaintyFeatures) -> float:
+        logit = (
+            self.weights[0] * f.retrieval_margin
+            + self.weights[1] * f.cross_retriever_agreement
+            + self.weights[2] * f.extraction_confidence
+            + self.weights[3] * f.temporal_validity
+            + self.weights[4] * f.evidence_coverage
+            + self.bias
+        )
+        return _sigmoid(logit)
+
+
+def _sigmoid(x: float) -> float:
+    """Numerically stable sigmoid function."""
+    if x >= 0:
+        z = math.exp(-x)
+        return 1.0 / (1.0 + z)
+    z = math.exp(x)
+    return z / (1.0 + z)
 
 
 @dataclass(frozen=True)
@@ -57,9 +163,10 @@ class CalibrationFold:
 
     test_issuer: str
     train_issuers: tuple[str, ...]
-    calibrator: SimpleCalibrator
+    calibrator: PlattCalibrator
     test_probs: tuple[float, ...]
     test_labels: tuple[bool, ...]
+    split_manifest: dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -97,12 +204,31 @@ def fit_calibration_folds(
             train_features.extend(features)
             train_labels.extend(labels)
 
-        # Fit calibrator (deterministic in fixture mode).
-        calibrator = SimpleCalibrator()
+        # Fit calibrator using real Platt scaling
+        calibrator = PlattCalibrator.fit(
+            train_features,
+            train_labels,
+            regularization=0.01,
+            learning_rate=0.1,
+            max_iterations=1000,
+            seed=20260710,
+        )
 
         # Evaluate on test issuer.
         test_features, test_labels = fold_data[test_issuer]
         test_probs = calibrator.predict_proba(test_features)
+
+        # Record split manifest
+        split_manifest = {
+            "test_issuer": test_issuer,
+            "train_issuers": list(train_issuers),
+            "train_sample_count": len(train_features),
+            "test_sample_count": len(test_features),
+            "train_positive_count": sum(train_labels),
+            "train_negative_count": len(train_labels) - sum(train_labels),
+            "calibrator_weights": list(calibrator.weights),
+            "calibrator_bias": calibrator.bias,
+        }
 
         folds.append(
             CalibrationFold(
@@ -111,6 +237,7 @@ def fit_calibration_folds(
                 calibrator=calibrator,
                 test_probs=tuple(test_probs),
                 test_labels=tuple(test_labels),
+                split_manifest=split_manifest,
             )
         )
 
@@ -125,6 +252,10 @@ def freeze_threshold(
     """Find the lowest threshold achieving at most max_selective_error on calibration data.
 
     The threshold is frozen before final test evaluation.
+
+    Uses the conformal prediction approach:
+    - Higher nonconformity score = worse conformity
+    - Accept when score <= calibrated threshold
     """
 
     # Collect all calibration probabilities and labels.
@@ -137,7 +268,7 @@ def freeze_threshold(
     if not all_probs:
         return 0.0
 
-    # Sort by probability descending.
+    # Sort by probability descending (higher prob = more confident = better conformity)
     paired = sorted(zip(all_probs, all_labels), key=lambda x: -x[0])
     probs_sorted = [p for p, _ in paired]
     labels_sorted = [l for _, l in paired]
