@@ -29,7 +29,10 @@ class SensitivityScenario:
         evidence_id: Identifier linking back to the originating risk factor.
         risk_factor: The risk factor name that drove this adjustment.
         risk_channel: The mapped risk channel for this factor.
+        units: Units for spread values (always "bps").
+        base_spread_bps: Base credit spread before this channel adjustment.
         spread_delta_bps: The spread adjustment applied for this channel.
+        adjusted_spread_bps: Total adjusted spread (base + delta).
         decision_code: The governing decision code from the policy result.
         adjusted_price: Price after applying the spread shock.
         adjusted_duration: Duration after applying the spread shock.
@@ -41,7 +44,10 @@ class SensitivityScenario:
     evidence_id: str
     risk_factor: str
     risk_channel: str
+    units: str
+    base_spread_bps: int
     spread_delta_bps: int
+    adjusted_spread_bps: int
     decision_code: DecisionCode
     adjusted_price: float
     adjusted_duration: float
@@ -116,7 +122,10 @@ def compute_sensitivity(
                 evidence_id=factor,
                 risk_factor=factor,
                 risk_channel=channel,
+                units="bps",
+                base_spread_bps=base_spread_bps,
                 spread_delta_bps=delta_bps,
+                adjusted_spread_bps=base_spread_bps + delta_bps,
                 decision_code=policy_result.decision_code,
                 adjusted_price=shocked_pricing.price,
                 adjusted_duration=shocked_pricing.modified_duration,

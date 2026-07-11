@@ -361,6 +361,11 @@ def _run_calibration(
                 "test_issuer": f.test_issuer,
                 "train_issuers": list(f.train_issuers),
                 "test_sample_count": len(f.test_probs),
+                "train_sample_count": f.split_manifest.get("train_sample_count", 0),
+                "train_positive_count": f.split_manifest.get("train_positive_count", 0),
+                "train_negative_count": f.split_manifest.get("train_negative_count", 0),
+                "calibrator_weights": f.split_manifest.get("calibrator_weights", []),
+                "calibrator_bias": f.split_manifest.get("calibrator_bias", 0.0),
             }
             for f in folds
         ],
@@ -376,8 +381,15 @@ def _run_decision_gating(
     labels: EvaluatorGold,
     primary_method: str,
     conformal_threshold: float,
+    folds: tuple | None = None,
 ) -> dict[str, object]:
     counts = {"AUTO_REPORT": 0, "HUMAN_REVIEW_REQUIRED": 0, "INSUFFICIENT_EVIDENCE": 0}
+
+    # Build issuer->calibrator mapping from folds if available
+    calibrators_by_issuer: dict[str, object] = {}
+    if folds:
+        for fold in folds:
+            calibrators_by_issuer[fold.test_issuer] = fold.calibrator
 
     for qid in all_results:
         method_results = all_results[qid].get(primary_method, ())
@@ -386,12 +398,41 @@ def _run_decision_gating(
             continue
 
         top1 = method_results[0]
-        gold_ids = labels.relevant_evidence.get(qid, frozenset())
-        top5_ids = {r.evidence_id for r in method_results[:5]}
+        top5_scores = [r.score for r in method_results[:5]]
 
-        calibrated_prob = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
+        # Evidence coverage from retriever-visible sufficiency (NOT gold-based)
+        if top5_scores:
+            avg_score = sum(top5_scores) / len(top5_scores)
+            max_possible = max(top5_scores)
+            evidence_sufficiency = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
+        else:
+            evidence_sufficiency = 0.0
+
+        # Use fitted calibrator if available, otherwise fall back to normalized score
+        issuer = labels.issuer_by_question.get(qid)
+        if issuer and issuer in calibrators_by_issuer:
+            from ecoquant.uncertainty.features import UncertaintyFeatures
+            calibrator = calibrators_by_issuer[issuer]
+            # Build features for this prediction
+            retrieval_margin = top1.score - (method_results[1].score if len(method_results) > 1 else 0.0)
+            agreement_count = sum(1 for r in method_results[:5] if r.evidence_id == top1.evidence_id)
+            cross_retriever_agreement = agreement_count / len(method_results[:5]) if method_results else 0.0
+            extraction_confidence = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
+            temporal_validity = 1.0 if top1.valid_time_match else 0.0
+
+            features = UncertaintyFeatures(
+                retrieval_margin=retrieval_margin,
+                cross_retriever_agreement=cross_retriever_agreement,
+                extraction_confidence=extraction_confidence,
+                temporal_validity=temporal_validity,
+                evidence_coverage=evidence_sufficiency,
+            )
+            calibrated_prob = calibrator.predict_proba([features])[0]
+        else:
+            # Fallback: normalized score (not calibrated)
+            calibrated_prob = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
+
         conforms = conformal_accept(score=calibrated_prob, threshold=conformal_threshold)
-        evidence_sufficiency = len(top5_ids & gold_ids) / len(gold_ids) if gold_ids else 0.0
 
         decision = decide(
             calibrated_probability=calibrated_prob,
@@ -477,11 +518,13 @@ def main() -> int:
     # 4. Calibration
     primary = "temporal_kg_verify"
     fold_data = _build_fold_data(all_results, labels, primary)
+    from ecoquant.uncertainty.calibration import fit_calibration_folds
+    folds = fit_calibration_folds(fold_data)
     calibration = _run_calibration(fold_data)
 
-    # 5. Decision gating
+    # 5. Decision gating (using fitted calibrators from folds)
     conformal_threshold = float(calibration["frozen_threshold"])  # type: ignore[arg-type]
-    decisions = _run_decision_gating(all_results, labels, primary, conformal_threshold)
+    decisions = _run_decision_gating(all_results, labels, primary, conformal_threshold, folds=folds)
 
     # 6. Bootstrap intervals
     bootstrap = _compute_bootstrap(all_results, labels, "bm25", "temporal_kg_verify")

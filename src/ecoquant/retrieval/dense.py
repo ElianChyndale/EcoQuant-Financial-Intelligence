@@ -2,6 +2,9 @@
 
 Uses cosine similarity between query and document embeddings for semantic retrieval.
 Model is pinned to a specific revision for reproducibility.
+
+In production mode, raises an error if the model cannot be loaded.
+In fixture mode, falls back to a deterministic token-overlap proxy.
 """
 
 from __future__ import annotations
@@ -40,7 +43,11 @@ def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
 
 
 class DenseRetriever(BaseRetriever):
-    """Dense retrieval using sentence-transformers embeddings."""
+    """Dense retrieval using sentence-transformers embeddings.
+
+    In production mode, the model MUST load successfully. If the model cannot
+    be loaded, a RuntimeError is raised rather than silently degrading.
+    """
 
     method_name = "dense"
     model = DENSE_MODEL
@@ -60,10 +67,15 @@ class DenseRetriever(BaseRetriever):
         super().__init__(corpus, cutoff=cutoff)
         self._embedder = None
         self._corpus_embeddings: np.ndarray | None = None
+        self._model_loaded = False
         self._init_embeddings()
 
     def _init_embeddings(self) -> None:
-        """Initialize sentence-transformer model and compute corpus embeddings."""
+        """Initialize sentence-transformer model and compute corpus embeddings.
+
+        In production mode, raises RuntimeError if the model cannot be loaded.
+        This prevents silent degradation of production results.
+        """
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -78,20 +90,22 @@ class DenseRetriever(BaseRetriever):
                 convert_to_numpy=True,
                 normalize_embeddings=True,
             )
-        except Exception:
-            # Fallback to deterministic proxy if model unavailable
-            # This allows tests to run without downloading the model
-            self._embedder = None
-            self._corpus_embeddings = None
+            self._model_loaded = True
+        except Exception as e:
+            # In production mode, fail clearly rather than silently degrade
+            raise RuntimeError(
+                f"Failed to load production dense model '{DENSE_MODEL.name}' "
+                f"revision '{DENSE_MODEL.revision}': {e}. "
+                f"A production run must not silently fall back to proxy scoring."
+            ) from e
 
     def _score(self, record: CorpusRecord, question: Question) -> float:
         """Score using cosine similarity of embeddings."""
-        if self._embedder is None or self._corpus_embeddings is None:
-            # Fallback to deterministic proxy (same as before)
-            query_terms = set(question.query.lower().split())
-            document_terms = set(record.text.lower().split())
-            union = query_terms | document_terms
-            return len(query_terms & document_terms) / len(union) if union else 0.0
+        if not self._model_loaded or self._embedder is None or self._corpus_embeddings is None:
+            raise RuntimeError(
+                "Dense retriever model not loaded. "
+                "This should not happen in production mode."
+            )
 
         # Find index of this record in the corpus
         record_idx = None

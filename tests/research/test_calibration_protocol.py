@@ -341,16 +341,32 @@ class TestDecisionGate:
 
     def test_non_finite_probability_rejected(self) -> None:
         """Non-finite values must not produce AUTO_REPORT."""
-        # The decide function should handle this gracefully
+        # Infinity must be rejected
         decision = decide(
             calibrated_probability=float("inf"),
             conforms=True,
             evidence_sufficiency=0.8,
             extraction_valid=True,
         )
-        # Even with inf probability, if conforms and evidence is sufficient,
-        # it could theoretically pass. But inf should be handled.
-        assert decision.code in (DecisionCode.AUTO_REPORT, DecisionCode.HUMAN_REVIEW_REQUIRED)
+        assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
+
+        # NaN must be rejected
+        decision = decide(
+            calibrated_probability=float("nan"),
+            conforms=True,
+            evidence_sufficiency=0.8,
+            extraction_valid=True,
+        )
+        assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
+
+        # Negative infinity must be rejected
+        decision = decide(
+            calibrated_probability=float("-inf"),
+            conforms=True,
+            evidence_sufficiency=0.8,
+            extraction_valid=True,
+        )
+        assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
 
 # ---------------------------------------------------------------------------

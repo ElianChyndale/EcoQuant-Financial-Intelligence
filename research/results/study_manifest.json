@@ -11,7 +11,7 @@
     "temporal_kg_verify"
   ],
   "implementation_mode": "production",
-  "git_commit": "404588c095896b1e279e86bf9a8c627fe69d2882",
+  "git_commit": "6bced740eac208e4969d35bf8046f9b22c71c8a7",
   "python_version": "3.13.14",
   "platform": "Windows-11-10.0.22631-SP0",
   "dependency_versions": {

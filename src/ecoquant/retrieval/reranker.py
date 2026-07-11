@@ -2,6 +2,8 @@
 
 Uses a cross-encoder model for reranking retrieved candidates.
 Model is pinned to a specific revision for reproducibility.
+
+In production mode, raises an error if the model cannot be loaded.
 """
 
 from __future__ import annotations
@@ -24,21 +26,13 @@ RERANKER_MODEL = ModelPin(
 )
 
 
-@dataclass(frozen=True)
-class RerankerConfig:
-    """Configuration for the reranker."""
-    model_name: str
-    model_revision: str
-    use_model: bool = True
-
-
-def _period_reranker(record: CorpusRecord, question: Question, score: float) -> float:
-    """Deterministic period-matching reranker (fallback when model unavailable)."""
-    return score + (0.5 if str(record.valid_time.year) in question.query else 0.0)
-
-
 class TemporalKGRerankRetriever(TemporalKGRetriever):
-    """Temporal KG retrieval with cross-encoder reranking."""
+    """Temporal KG retrieval with cross-encoder reranking.
+
+    In production mode, the cross-encoder model MUST load successfully.
+    If the model cannot be loaded, a RuntimeError is raised rather than
+    silently degrading to proxy scoring.
+    """
 
     method_name = "temporal_kg_rerank"
     model = RERANKER_MODEL
@@ -59,10 +53,15 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
     ) -> None:
         super().__init__(corpus, cutoff=cutoff, graph=graph)
         self._cross_encoder = None
+        self._model_loaded = False
         self._init_reranker()
 
     def _init_reranker(self) -> None:
-        """Initialize cross-encoder model for reranking."""
+        """Initialize cross-encoder model for reranking.
+
+        In production mode, raises RuntimeError if the model cannot be loaded.
+        This prevents silent degradation of production results.
+        """
         try:
             from sentence_transformers import CrossEncoder
 
@@ -70,9 +69,14 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
                 RERANKER_MODEL.name,
                 revision=RERANKER_MODEL.revision,
             )
-        except Exception:
-            # Fallback to deterministic proxy if model unavailable
-            self._cross_encoder = None
+            self._model_loaded = True
+        except Exception as e:
+            # In production mode, fail clearly rather than silently degrade
+            raise RuntimeError(
+                f"Failed to load production reranker model '{RERANKER_MODEL.name}' "
+                f"revision '{RERANKER_MODEL.revision}': {e}. "
+                f"A production run must not silently fall back to proxy scoring."
+            ) from e
 
     def _rank_records(self, candidates: Iterable[CorpusRecord], question: Question) -> list[tuple[float, CorpusRecord]]:
         """Rerank candidates using cross-encoder model."""
@@ -80,23 +84,21 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         if not candidates_list:
             return []
 
-        if self._cross_encoder is not None:
-            # Use cross-encoder for reranking
-            pairs = [(question.query, record.text) for record in candidates_list]
-            scores = self._cross_encoder.predict(pairs)
-            # Combine with base score (from parent) and reranker score
-            base_scores = [(self._score_base(record, question), record) for record in candidates_list]
-            reranked = [
-                (base_score + float(reranker_score), record)
-                for (base_score, record), reranker_score in zip(base_scores, scores)
-            ]
-        else:
-            # Fallback to deterministic period-matching reranker
-            base_scores = [(self._score_base(record, question), record) for record in candidates_list]
-            reranked = [
-                (_period_reranker(record, question, base_score), record)
-                for base_score, record in base_scores
-            ]
+        if not self._model_loaded or self._cross_encoder is None:
+            raise RuntimeError(
+                "Reranker model not loaded. "
+                "This should not happen in production mode."
+            )
+
+        # Use cross-encoder for reranking
+        pairs = [(question.query, record.text) for record in candidates_list]
+        scores = self._cross_encoder.predict(pairs)
+        # Combine with base score (from parent) and reranker score
+        base_scores = [(self._score_base(record, question), record) for record in candidates_list]
+        reranked = [
+            (base_score + float(reranker_score), record)
+            for (base_score, record), reranker_score in zip(base_scores, scores)
+        ]
 
         return sorted(reranked, key=lambda item: (-item[0], item[1].evidence_id))
 

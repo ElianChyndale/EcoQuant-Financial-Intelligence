@@ -4,10 +4,13 @@ Precedence (highest to lowest):
   1. INSUFFICIENT_EVIDENCE (code 0) - invalid extraction or missing evidence
   2. HUMAN_REVIEW_REQUIRED (code 1) - evidence present but not auto-reportable
   3. AUTO_REPORT (code 2) - calibrated, conformal, and sufficient evidence
+
+Non-finite calibrated probabilities (NaN, infinity) cannot produce AUTO_REPORT.
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -51,11 +54,20 @@ def decide(
         A Decision with the highest-precedence applicable code.
     """
 
-    # Highest precedence: invalid extraction or insufficient evidence.
+    # Highest precedence: invalid extraction or missing evidence.
     if not extraction_valid:
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "extraction_invalid")
     if evidence_sufficiency < _MIN_EVIDENCE_SUFFICIENCY:
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "evidence_insufficient")
+
+    # Reject non-finite calibrated probabilities (NaN, infinity, missing).
+    # These cannot produce AUTO_REPORT.
+    if not math.isfinite(calibrated_probability):
+        return Decision(DecisionCode.HUMAN_REVIEW_REQUIRED, "non_finite_probability")
+
+    # Reject non-finite evidence sufficiency.
+    if not math.isfinite(evidence_sufficiency):
+        return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "non_finite_evidence")
 
     # AUTO_REPORT requires all three gates: calibrated probability, conformal
     # acceptance, and sufficient evidence coverage.
