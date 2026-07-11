@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from datetime import date
+
+from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
 
 from .base import CorpusRecord, Question, RetrievalMetadata
 from .dense import ModelPin
@@ -20,8 +23,10 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
     model = RERANKER_MODEL
     metadata = RetrievalMetadata("temporal_kg_rerank", "fixture", "temporal-evidence-graph", RERANKER_MODEL.name, RERANKER_MODEL.revision, True, True, True, False)
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, corpus: Iterable[CorpusRecord], *, cutoff: date, graph: TemporalEvidenceGraph | None = None
+    ) -> None:
+        super().__init__(corpus, cutoff=cutoff, graph=graph)
         self.reranker: Callable[[CorpusRecord, Question, float], float] = _period_reranker
 
     def _score(self, record: CorpusRecord, question: Question) -> float:
