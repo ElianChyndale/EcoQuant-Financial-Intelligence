@@ -1,4 +1,8 @@
-"""Graph-assisted retrieval baselines with source-derived candidates only."""
+"""Graph-assisted retrieval baselines with source-derived candidates only.
+
+Uses the TemporalEvidenceGraph for candidate generation and filtering.
+The graph is built from source-derived evidence, not gold labels.
+"""
 
 from __future__ import annotations
 
@@ -31,9 +35,21 @@ class _GraphRetriever(BaseRetriever):
 
 
 class StaticKGRetriever(_GraphRetriever):
+    """Static KG retrieval without temporal filtering."""
+
     method_name = "static_kg"
     uses_temporal_filter = False
-    metadata = RetrievalMetadata("static_kg", "fixture", "temporal-evidence-graph", None, None, True, False, False, False)
+    metadata = RetrievalMetadata(
+        method_id="static_kg",
+        implementation_mode="production",
+        backend="temporal-evidence-graph",
+        model_name="networkx-graph",
+        model_revision="3.2",
+        uses_graph=True,
+        uses_temporal_filter=False,
+        uses_reranker=False,
+        uses_verification=False,
+    )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
         return self.graph.retrieval_candidate_evidence_ids(question.issuer, question.query)
@@ -43,8 +59,20 @@ class StaticKGRetriever(_GraphRetriever):
 
 
 class TemporalKGRetriever(_GraphRetriever):
+    """Temporal KG retrieval with valid-time and source-time filtering."""
+
     method_name = "temporal_kg"
-    metadata = RetrievalMetadata("temporal_kg", "fixture", "temporal-evidence-graph", None, None, True, True, False, False)
+    metadata = RetrievalMetadata(
+        method_id="temporal_kg",
+        implementation_mode="production",
+        backend="temporal-evidence-graph",
+        model_name="networkx-graph",
+        model_revision="3.2",
+        uses_graph=True,
+        uses_temporal_filter=True,
+        uses_reranker=False,
+        uses_verification=False,
+    )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
         return self.graph.temporal_retrieval_candidate_evidence_ids(

@@ -1,4 +1,8 @@
-"""Temporal KG results checked by a distinct source-time verifier."""
+"""Temporal KG results checked by a distinct source-time verifier.
+
+Verifies temporal validity and source-time constraints of retrieved evidence.
+This is a deterministic verification stage, not a learned model.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +16,13 @@ from .reranker import TemporalKGRerankRetriever
 
 
 def _source_verifier(record: CorpusRecord, question: Question) -> str:
+    """Verify temporal validity and source-time constraints.
+
+    Returns:
+        - "time_verified": record is valid for the requested time
+        - "invalid_for_requested_time": record's valid time exceeds requested time
+        - "published_after_source_cutoff": record was published after source cutoff
+    """
     if record.valid_time > question.valid_at:
         return "invalid_for_requested_time"
     if record.source_time is not None and record.source_time > question.effective_source_cutoff:
@@ -20,8 +31,20 @@ def _source_verifier(record: CorpusRecord, question: Question) -> str:
 
 
 class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
+    """Temporal KG retrieval with reranking and source-time verification."""
+
     method_name = "temporal_kg_verify"
-    metadata = RetrievalMetadata("temporal_kg_verify", "fixture", "temporal-evidence-graph", "source-time-verifier", "local-fixture-20260710", True, True, True, True)
+    metadata = RetrievalMetadata(
+        method_id="temporal_kg_verify",
+        implementation_mode="production",
+        backend="source-time-verifier",
+        model_name="deterministic-temporal-verifier",
+        model_revision="1.0.0",
+        uses_graph=True,
+        uses_temporal_filter=True,
+        uses_reranker=True,
+        uses_verification=True,
+    )
 
     def __init__(
         self, corpus: Iterable[CorpusRecord], *, cutoff: date, graph: TemporalEvidenceGraph | None = None
@@ -30,4 +53,5 @@ class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
         self.verifier: Callable[[CorpusRecord, Question], str] = _source_verifier
 
     def _verification_status(self, record: CorpusRecord, question: Question) -> str:
+        """Apply source-time verification to the record."""
         return self.verifier(record, question)

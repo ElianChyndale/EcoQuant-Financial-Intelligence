@@ -6,15 +6,24 @@ build-backend = "setuptools.build_meta"
 name = "ecoquant-financial-intelligence"
 version = "0.1.0"
 requires-python = ">=3.11"
+dependencies = [
+    "rank-bm25>=0.2.2",
+    "sentence-transformers>=3.0.0",
+    "numpy>=1.26.0",
+    "networkx>=3.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
 
 [tool.ecoquant.retrieval_models]
 dense_name = "sentence-transformers/all-MiniLM-L6-v2"
-dense_revision = "local-fixture-20260710"
+dense_revision = "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c"
 reranker_name = "BAAI/bge-reranker-base"
-reranker_revision = "local-fixture-20260710"
+reranker_revision = "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5"
 
 [tool.setuptools.packages.find]
 where = ["src", "."]

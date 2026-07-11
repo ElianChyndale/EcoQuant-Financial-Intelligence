@@ -63,8 +63,9 @@ def source_graph(records: tuple[CorpusRecord, ...]) -> TemporalEvidenceGraph:
 
 
 def all_methods():
+    """Return fixture-mode retrievers for deterministic unit testing."""
     corpus = frozen_corpus()
-    return all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=source_graph(corpus))
+    return all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=source_graph(corpus), mode="fixture")
 
 
 @pytest.mark.parametrize("method", all_methods(), ids=lambda item: item.method_name)
@@ -328,6 +329,38 @@ def test_retrievers_expose_frozen_metadata_and_final_benchmark_rejects_fixtures(
     assert retrieval_manifest(methods) == {method.method_name: method.metadata for method in methods}
     with pytest.raises(ValueError, match="production metadata"):
         RetrievalMetadata("bm25", "production", "", None, None, False, True, False, False).validate()
+
+
+def test_production_retrievers_have_production_metadata() -> None:
+    """Verify production-mode retrievers have production metadata."""
+    corpus = frozen_corpus()
+    graph = source_graph(corpus)
+    production_methods = all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=graph, mode="production")
+
+    for method in production_methods:
+        assert method.metadata.implementation_mode == "production"
+        assert method.metadata.backend is not None and method.metadata.backend != ""
+        # Model name and revision may be None for graph-based methods
+        if method.method_name in ("bm25", "dense", "temporal_kg_rerank", "temporal_kg_verify"):
+            assert method.metadata.model_name is not None
+            assert method.metadata.model_revision is not None
+
+
+def test_fixture_retrievers_reject_gold_shaped_inputs() -> None:
+    """Verify fixture retrievers also reject gold-shaped inputs."""
+    methods = all_methods()  # fixture mode
+
+    class GoldShapedQuery:
+        question_id = "aib-assets-2023"
+        issuer = "AIB"
+        query = "AIB assets"
+        cutoff = date(2023, 12, 31)
+        gold_answer = "136.3"
+        gold_source_ids = ("aib-2023",)
+
+    for method in methods:
+        with pytest.raises(TypeError, match="RetrieverQuery"):
+            method.retrieve(GoldShapedQuery())  # type: ignore[arg-type]
 
 
 def test_retrieval_rejects_gold_shaped_inputs_and_does_not_open_label_files(monkeypatch: pytest.MonkeyPatch) -> None:

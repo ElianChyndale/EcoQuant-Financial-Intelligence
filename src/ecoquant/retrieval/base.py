@@ -202,9 +202,17 @@ def _terms(text: str) -> frozenset[str]:
 
 
 def all_retrievers(
-    corpus: Sequence[CorpusRecord], *, cutoff: date, graph: TemporalEvidenceGraph | None = None
+    corpus: Sequence[CorpusRecord], *, cutoff: date, graph: TemporalEvidenceGraph | None = None,
+    mode: str = "production"
 ) -> tuple[Retriever, ...]:
-    """Construct the six fixture-mode methods over the same corpus and cutoff."""
+    """Construct the six methods over the same corpus and cutoff.
+
+    Args:
+        corpus: The frozen corpus of evidence records.
+        cutoff: The temporal cutoff date.
+        graph: Optional temporal evidence graph for KG methods.
+        mode: "production" for real backends, "fixture" for deterministic testing.
+    """
 
     from .bm25 import BM25Retriever
     from .dense import DenseRetriever
@@ -212,6 +220,31 @@ def all_retrievers(
     from .reranker import TemporalKGRerankRetriever
     from .verifier import TemporalKGVerifyRetriever
 
-    return (BM25Retriever(corpus, cutoff=cutoff), DenseRetriever(corpus, cutoff=cutoff),
-            StaticKGRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
-            TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph))
+    if mode == "fixture":
+        # Return fixture-mode retrievers for unit testing
+        from .fixture import (
+            FixtureBM25Retriever,
+            FixtureDenseRetriever,
+            FixtureStaticKGRetriever,
+            FixtureTemporalKGRetriever,
+            FixtureTemporalKGRerankRetriever,
+            FixtureTemporalKGVerifyRetriever,
+        )
+        return (
+            FixtureBM25Retriever(corpus, cutoff=cutoff),
+            FixtureDenseRetriever(real_bm25=None, corpus=corpus, cutoff=cutoff),
+            FixtureStaticKGRetriever(corpus, cutoff=cutoff, graph=graph),
+            FixtureTemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
+            FixtureTemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph),
+            FixtureTemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph),
+        )
+
+    # Return production-mode retrievers
+    return (
+        BM25Retriever(corpus, cutoff=cutoff),
+        DenseRetriever(corpus, cutoff=cutoff),
+        StaticKGRetriever(corpus, cutoff=cutoff, graph=graph),
+        TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
+        TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph),
+        TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph),
+    )

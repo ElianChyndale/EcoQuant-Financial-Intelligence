@@ -65,7 +65,7 @@ from ecoquant.uncertainty.features import UncertaintyFeatures
 # ---------------------------------------------------------------------------
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 QUESTIONS_PATH = REPOSITORY_ROOT / "research" / "questions" / "questions.jsonl"
-RESULTS_DIR = REPOSITORY_ROOT / "results"
+RESULTS_DIR = REPOSITORY_ROOT / "research" / "results"
 
 # Frozen corpus: twelve source-derived records covering four issuers, three
 # annual reporting periods each.  Text fields are crafted so that every query
@@ -222,7 +222,7 @@ def _run_all_methods(
     results: dict[str, dict[str, tuple]] = {}
     for q in questions:
         query = _question_to_query(q)
-        methods = all_retrievers(corpus, cutoff=query.cutoff, graph=graph)
+        methods = all_retrievers(corpus, cutoff=query.cutoff, graph=graph, mode="production")
         compared = compare_retrievers(methods, query)
         results[query.question_id] = compared
     return results
@@ -479,13 +479,57 @@ def main() -> int:
     # 7. Write artifacts
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Build manifest with all required fields
+    import platform
+    import subprocess
+
+    # Get git commit
+    try:
+        git_commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPOSITORY_ROOT,
+            text=True,
+        ).strip()
+    except Exception:
+        git_commit = "unknown"
+
+    # Get dependency versions
+    dependency_versions = {}
+    try:
+        import rank_bm25
+        dependency_versions["rank-bm25"] = rank_bm25.__version__
+    except Exception:
+        dependency_versions["rank-bm25"] = "unknown"
+    try:
+        import sentence_transformers
+        dependency_versions["sentence-transformers"] = sentence_transformers.__version__
+    except Exception:
+        dependency_versions["sentence-transformers"] = "unknown"
+    try:
+        import networkx
+        dependency_versions["networkx"] = networkx.__version__
+    except Exception:
+        dependency_versions["networkx"] = "unknown"
+
     artifacts: dict[str, object] = {
         "study_manifest.json": {
             "seed": args.seed,
             "corpus_size": len(corpus),
             "question_count": len(questions),
             "methods": list(REGISTERED_METHOD_IDS),
-            "implementation_mode": "fixture",
+            "implementation_mode": "production",
+            "git_commit": git_commit,
+            "python_version": platform.python_version(),
+            "platform": platform.platform(),
+            "dependency_versions": dependency_versions,
+            "model_names": {
+                "dense": "sentence-transformers/all-MiniLM-L6-v2",
+                "reranker": "BAAI/bge-reranker-base",
+            },
+            "model_revisions": {
+                "dense": "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c",
+                "reranker": "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5",
+            },
         },
         "retrieval_metrics.json": retrieval_metrics,
         "calibration_result.json": calibration,

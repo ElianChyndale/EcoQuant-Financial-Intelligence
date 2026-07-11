@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
+RESULTS_DIR = Path(__file__).resolve().parents[2] / "research" / "results"
 
 # ---------------------------------------------------------------------------
 # Expected structure
@@ -85,7 +85,7 @@ class TestStudyManifest:
         assert methods == _EXPECTED_METHODS
 
     def test_implementation_mode(self) -> None:
-        assert self.manifest["implementation_mode"] == "fixture"
+        assert self.manifest["implementation_mode"] == "production"
 
 
 # ---------------------------------------------------------------------------
