@@ -10,6 +10,12 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
 
+[tool.ecoquant.retrieval_models]
+dense_name = "sentence-transformers/all-MiniLM-L6-v2"
+dense_revision = "local-fixture-20260710"
+reranker_name = "BAAI/bge-reranker-base"
+reranker_revision = "local-fixture-20260710"
+
 [tool.setuptools.packages.find]
 where = ["src", "."]
 include = ["ecoquant*", "integrations*"]
