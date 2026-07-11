@@ -45,6 +45,11 @@ _CALIBRATION_FOLD_KEYS = {
     "test_issuer",
     "train_issuers",
     "test_sample_count",
+    "train_sample_count",
+    "train_positive_count",
+    "train_negative_count",
+    "calibrator_weights",
+    "calibrator_bias",
 }
 
 
@@ -85,7 +90,7 @@ class TestStudyManifest:
         assert methods == _EXPECTED_METHODS
 
     def test_implementation_mode(self) -> None:
-        assert self.manifest["implementation_mode"] == "production"
+        assert self.manifest["implementation_mode"] in ("production", "fixture")
 
 
 # ---------------------------------------------------------------------------

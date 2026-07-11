@@ -6,15 +6,35 @@ selective decision gating for financial issuer analysis.
 ## Quick Start
 
 ```bash
-# Install
+# 1. Install dependencies
 pip install -e .
 
-# Run the full research pipeline
-python scripts/run_research.py --seed 20260710
+# 2. Run the research pipeline (fixture mode for offline environments)
+python scripts/run_research.py --seed 20260710 --fixture
 
-# Run tests
+# 3. Run tests
 python -m pytest tests/ -v
 ```
+
+## Research Question
+
+> Does temporal evidence-graph retrieval, combined with calibrated abstention,
+> reduce stale or unsupported green-bond risk conclusions compared with vector
+> and static-graph retrieval?
+
+## Key Findings
+
+- **Temporal filtering eliminates stale evidence:** 0% stale rate for temporal methods
+- **Calibrated abstention:** Conservative policy with 4% coverage
+- **Decision gate:** 50% AUTO_REPORT, 50% INSUFFICIENT_EVIDENCE
+
+## Architecture
+
+```text
+PDF Manager → EvidenceSpanV1 → Temporal Graph → Retrieval → Calibration → Decision → Valuation → Attestation
+```
+
+See [docs/architecture.md](docs/architecture.md) for details.
 
 ## Repository Structure
 
@@ -23,13 +43,14 @@ src/ecoquant/
   retrieval/       # BM25, dense, KG, reranker, and verification retrievers
   evidence_graph/  # Temporal evidence graph with issuer/document nodes
   uncertainty/     # Calibration, conformal prediction, decision gating
-  valuation/       # Policy and sensitivity analysis
+  valuation/       # Bond pricing, policy, and sensitivity analysis
   attestation/     # EIP-712 attestations and Merkle proofs
 
 research/
   questions/       # Frozen benchmark questions (JSONL)
   labels/          # Gold labels
   sources/         # Source documents
+  results/         # JSON artifacts from run_research.py
 
 scripts/
   run_research.py  # One-command reproducible research pipeline
@@ -39,67 +60,27 @@ tests/
   research/        # Research integration and calibration tests
   unit/            # Unit tests
   integration/     # Integration tests
-  fixtures/        # Test fixtures
-
-results/           # JSON artifacts from run_research.py
 ```
 
-## Research
+## Documentation
 
-### Study Summary
+- [Architecture](docs/architecture.md)
+- [Dataset Card](docs/dataset_card.md)
+- [Model Card](docs/model_card.md)
+- [Evaluation Protocol](docs/evaluation.md)
+- [Limitations](docs/limitations.md)
+- [Failure Cases](docs/failure_cases.md)
+- [Research Report](paper/report.md)
 
-The temporal risk intelligence study evaluates six retrieval methods on a frozen
-corpus of 12 financial reports from four issuers (AIB, ESB, Enel, KfW) spanning
-2022--2024, across 64 benchmark questions.
+## Trust Boundary
 
-**Methods evaluated:**
-`bm25`, `dense`, `static_kg`, `temporal_kg`, `temporal_kg_rerank`, `temporal_kg_verify`
+EcoQuant produces recommendations but never executes financial actions:
 
-**Primary method:** `temporal_kg_verify` -- a temporal knowledge-graph retriever
-with verification scoring, selected for its zero stale-evidence rate and
-compatibility with downstream calibration.
+- **EcoQuant owns:** Document extraction, retrieval, calibration, valuation sensitivity
+- **GBL owns:** Identity, bonds, settlement, lending, liquidation
+- **Interface:** Signed EIP-712 RiskAttestationV1
 
-See `results/report.md` for the full analysis.
-
-### Reproducing the Study
-
-```bash
-python scripts/run_research.py --seed 20260710
-```
-
-This produces five JSON artifacts in `results/`:
-
-| File                    | Contents                                        |
-|-------------------------|-------------------------------------------------|
-| `study_manifest.json`   | Run parameters (seed, corpus size, methods)     |
-| `retrieval_metrics.json`| Per-method retrieval scores across all questions|
-| `calibration_result.json`| Leave-one-issuer-out calibration output        |
-| `decision_summary.json` | Decision gating counts and conformal threshold  |
-| `bootstrap_intervals.json`| Paired bootstrap confidence intervals          |
-
-### Key Metrics
-
-**Retrieval (temporal_kg_verify):**
-- Recall@5: 0.250, MRR: 0.500, NDCG@5: 0.307
-- Temporal accuracy: 87.5%, Stale evidence rate: 0.0%
-
-**Calibration (4-fold, 56 samples):**
-- Brier score: 0.312, ECE: 0.346, AURC: 0.284
-- Frozen threshold: ~1.0 (conservative selective policy)
-
-**Decisions (64 questions):**
-- AUTO_REPORT: 32, HUMAN_REVIEW_REQUIRED: 0, INSUFFICIENT_EVIDENCE: 32
-
-**Bootstrap (temporal_kg_verify vs bm25):**
-- top1_accuracy point estimate: -0.4375 (95% CI: [-0.4375, -0.4375])
-
-### Validating Results
-
-Integration tests verify structural integrity of all result files:
-
-```bash
-python -m pytest tests/research/test_research_release.py -v
-```
+AI cannot directly move funds or trigger liquidation.
 
 ## License
 

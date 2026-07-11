@@ -1,8 +1,8 @@
 {
-  "frozen_threshold": 0.8965927233742781,
-  "brier": 0.10044431096544264,
-  "ece": 0.20929626217372232,
-  "aurc": 0.12577269575844166,
+  "frozen_threshold": 0.9126755486043167,
+  "brier": 0.08410591462253168,
+  "ece": 0.13881128715222604,
+  "aurc": 0.124959353180031,
   "coverage_at_threshold": 0.03571428571428571,
   "fold_count": 4,
   "total_samples": 56,
@@ -14,7 +14,18 @@
         "Enel",
         "KfW"
       ],
-      "test_sample_count": 14
+      "test_sample_count": 14,
+      "train_sample_count": 42,
+      "train_positive_count": 24,
+      "train_negative_count": 18,
+      "calibrator_weights": [
+        0.11213859297416882,
+        5.044973358870587,
+        -0.827942021083282,
+        -0.8084758500421871,
+        -1.7832096293847872
+      ],
+      "calibrator_bias": -0.8889256652078239
     },
     {
       "test_issuer": "ESB",
@@ -23,7 +34,18 @@
         "Enel",
         "KfW"
       ],
-      "test_sample_count": 14
+      "test_sample_count": 14,
+      "train_sample_count": 42,
+      "train_positive_count": 24,
+      "train_negative_count": 18,
+      "calibrator_weights": [
+        0.1384147883972878,
+        5.011499014703192,
+        -0.8123420372121793,
+        -0.7928758661710846,
+        -1.8818872603350152
+      ],
+      "calibrator_bias": -0.8732250682108497
     },
     {
       "test_issuer": "Enel",
@@ -32,7 +54,18 @@
         "ESB",
         "KfW"
       ],
-      "test_sample_count": 14
+      "test_sample_count": 14,
+      "train_sample_count": 42,
+      "train_positive_count": 24,
+      "train_negative_count": 18,
+      "calibrator_weights": [
+        0.10018634645470752,
+        5.071227315829162,
+        -0.8130413012455158,
+        -0.7935751302044204,
+        -1.8205526952751663
+      ],
+      "calibrator_bias": -0.8737466460012628
     },
     {
       "test_issuer": "KfW",
@@ -41,7 +74,18 @@
         "ESB",
         "Enel"
       ],
-      "test_sample_count": 14
+      "test_sample_count": 14,
+      "train_sample_count": 42,
+      "train_positive_count": 24,
+      "train_negative_count": 18,
+      "calibrator_weights": [
+        0.09610244053060091,
+        5.082149256473646,
+        -0.8285073974882177,
+        -0.8090412264471216,
+        -1.7755272697104933
+      ],
+      "calibrator_bias": -0.8894182050809757
     }
   ]
 }

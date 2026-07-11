@@ -217,12 +217,13 @@ def _run_all_methods(
     corpus: tuple[CorpusRecord, ...],
     graph: TemporalEvidenceGraph,
     questions: list[dict[str, object]],
+    mode: str = "production",
 ) -> dict[str, dict[str, tuple]]:
     """Return ``{question_id: {method_name: (RetrievalResult, ...)}}``."""
     results: dict[str, dict[str, tuple]] = {}
     for q in questions:
         query = _question_to_query(q)
-        methods = all_retrievers(corpus, cutoff=query.cutoff, graph=graph, mode="production")
+        methods = all_retrievers(corpus, cutoff=query.cutoff, graph=graph, mode=mode)
         compared = compare_retrievers(methods, query)
         results[query.question_id] = compared
     return results
@@ -500,6 +501,9 @@ def _compute_bootstrap(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, required=True, help="RNG seed for reproducibility")
+    parser.add_argument("--fixture", action="store_true",
+                        help="Use fixture backends instead of production models. "
+                             "For environments where ML models are not available.")
     args = parser.parse_args()
 
     # 1. Seed all RNGs
@@ -512,7 +516,8 @@ def main() -> int:
     labels = _build_evaluator_gold(questions)
 
     # 3. Run retrieval across all six methods
-    all_results = _run_all_methods(corpus, graph, questions)
+    retrieval_mode = "fixture" if args.fixture else "production"
+    all_results = _run_all_methods(corpus, graph, questions, mode=retrieval_mode)
     retrieval_metrics = _compute_retrieval_metrics(all_results, labels)
 
     # 4. Calibration
@@ -570,7 +575,8 @@ def main() -> int:
             "corpus_size": len(corpus),
             "question_count": len(questions),
             "methods": list(REGISTERED_METHOD_IDS),
-            "implementation_mode": "production",
+            "implementation_mode": retrieval_mode,
+            "fixture_mode": args.fixture,
             "git_commit": git_commit,
             "python_version": platform.python_version(),
             "platform": platform.platform(),

@@ -10,8 +10,9 @@
     "temporal_kg_rerank",
     "temporal_kg_verify"
   ],
-  "implementation_mode": "production",
-  "git_commit": "6bced740eac208e4969d35bf8046f9b22c71c8a7",
+  "implementation_mode": "fixture",
+  "fixture_mode": true,
+  "git_commit": "bb318048dbfd7ebe677a28cde98387e870a86cc1",
   "python_version": "3.13.14",
   "platform": "Windows-11-10.0.22631-SP0",
   "dependency_versions": {
