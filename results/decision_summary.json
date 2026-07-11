@@ -1,0 +1,7 @@
+{
+  "total_questions": 64,
+  "auto_report_count": 32,
+  "human_review_required_count": 0,
+  "insufficient_evidence_count": 32,
+  "conformal_threshold": 0.9999988200059715
+}

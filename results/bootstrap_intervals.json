@@ -1,0 +1,11 @@
+{
+  "temporal_kg_verify_vs_bm25": {
+    "metric": "top1_accuracy",
+    "point_estimate": -0.4375,
+    "lower": -0.4375,
+    "upper": -0.4375,
+    "seed": 20260710,
+    "samples": 1000,
+    "cluster_count": 4
+  }
+}

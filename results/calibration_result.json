@@ -1,0 +1,47 @@
+{
+  "frozen_threshold": 0.9999988200059715,
+  "brier": 0.3122981220377717,
+  "ece": 0.3456792588422105,
+  "aurc": 0.28403060612341313,
+  "coverage_at_threshold": 0.03571428571428571,
+  "fold_count": 4,
+  "total_samples": 56,
+  "folds": [
+    {
+      "test_issuer": "AIB",
+      "train_issuers": [
+        "ESB",
+        "Enel",
+        "KfW"
+      ],
+      "test_sample_count": 14
+    },
+    {
+      "test_issuer": "ESB",
+      "train_issuers": [
+        "AIB",
+        "Enel",
+        "KfW"
+      ],
+      "test_sample_count": 14
+    },
+    {
+      "test_issuer": "Enel",
+      "train_issuers": [
+        "AIB",
+        "ESB",
+        "KfW"
+      ],
+      "test_sample_count": 14
+    },
+    {
+      "test_issuer": "KfW",
+      "train_issuers": [
+        "AIB",
+        "ESB",
+        "Enel"
+      ],
+      "test_sample_count": 14
+    }
+  ]
+}

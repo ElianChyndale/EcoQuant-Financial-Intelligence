@@ -1,0 +1,14 @@
+{
+  "seed": 20260710,
+  "corpus_size": 12,
+  "question_count": 64,
+  "methods": [
+    "bm25",
+    "dense",
+    "static_kg",
+    "temporal_kg",
+    "temporal_kg_rerank",
+    "temporal_kg_verify"
+  ],
+  "implementation_mode": "fixture"
+}
