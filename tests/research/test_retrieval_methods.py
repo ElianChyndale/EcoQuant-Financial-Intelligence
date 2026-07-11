@@ -24,6 +24,9 @@ from ecoquant.retrieval.evaluation import (
 )
 from ecoquant.evidence_graph.builder import build_graph
 from ecoquant.document_intelligence.schema import EvidenceSpanV1
+from ecoquant.evidence_graph.graph import Relation, TemporalEvidenceGraph
+from ecoquant.evidence_graph.models import Document, Issuer
+from ecoquant.retrieval.kg import StaticKGRetriever
 
 
 def frozen_corpus() -> tuple[CorpusRecord, ...]:
@@ -46,8 +49,22 @@ def frozen_question() -> Question:
     )
 
 
+def source_graph(records: tuple[CorpusRecord, ...]) -> TemporalEvidenceGraph:
+    """Create a source-derived retrieval graph for the fixture corpus."""
+    graph = TemporalEvidenceGraph()
+    issuers: set[str] = set()
+    for record in records:
+        if record.issuer not in issuers:
+            graph.add_node(Issuer(record.issuer, record.valid_time, record.source_time or record.valid_time, record.issuer))
+            issuers.add(record.issuer)
+        graph.add_node(Document(record.evidence_id, record.valid_time, record.source_time or record.valid_time, record.issuer))
+        graph.add_edge(record.issuer, record.evidence_id, Relation.CONTAINS)
+    return graph
+
+
 def all_methods():
-    return all_retrievers(frozen_corpus(), cutoff=frozen_question().cutoff)
+    corpus = frozen_corpus()
+    return all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=source_graph(corpus))
 
 
 @pytest.mark.parametrize("method", all_methods(), ids=lambda item: item.method_name)
@@ -180,13 +197,11 @@ def test_temporal_kg_uses_the_label_free_temporal_evidence_graph() -> None:
         content_hash="1" * 64,
     )
     graph = build_graph(evidence_spans=[evidence])
-    without_graph = {method.method_name: method for method in all_methods()}["temporal_kg"]
     with_graph = {
         method.method_name: method
         for method in all_retrievers(frozen_corpus(), cutoff=frozen_question().cutoff, graph=graph)
     }["temporal_kg"]
 
-    assert "aib-2023" in {result.evidence_id for result in without_graph.retrieve(frozen_question())}
     assert {result.evidence_id for result in with_graph.retrieve(frozen_question())} == {"aib-2022"}
 
 
@@ -359,22 +374,13 @@ def test_evaluator_only_graph_edges_are_not_retriever_visible_and_source_graph_s
     assert "aib-2023" in {result.evidence_id for result in method.retrieve(frozen_question())}
 
 
-def test_kg_paths_call_graph_temporal_rerank_and_verification_boundaries() -> None:
-    class GraphSpy:
-        def __init__(self) -> None:
-            self.static_calls = 0
-            self.temporal_calls = 0
-        def candidate_evidence_ids(self, issuer: str, query: str) -> frozenset[str]:
-            self.static_calls += 1
-            return frozenset({"aib-2023"})
-        def temporal_candidate_evidence_ids(self, issuer: str, query: str, cutoff: date) -> frozenset[str]:
-            self.temporal_calls += 1
-            return frozenset({"aib-2023"})
+def test_kg_paths_require_the_typed_retrieval_safe_graph_boundary() -> None:
+    with pytest.raises(ValueError, match="TemporalEvidenceGraph"):
+        StaticKGRetriever(frozen_corpus(), cutoff=frozen_question().cutoff)
+    with pytest.raises(ValueError, match="TemporalEvidenceGraph"):
+        StaticKGRetriever(frozen_corpus(), cutoff=frozen_question().cutoff, graph=object())
 
-    graph = GraphSpy()
-    methods = {item.method_name: item for item in all_retrievers(frozen_corpus(), cutoff=frozen_question().cutoff, graph=graph)}
-    methods["static_kg"].retrieve(frozen_question())
-    methods["temporal_kg"].retrieve(frozen_question())
+    methods = {item.method_name: item for item in all_methods()}
 
     rerank_calls: list[str] = []
     verify_calls: list[str] = []
@@ -383,8 +389,6 @@ def test_kg_paths_call_graph_temporal_rerank_and_verification_boundaries() -> No
     methods["temporal_kg_rerank"].retrieve(frozen_question())
     methods["temporal_kg_verify"].retrieve(frozen_question())
 
-    assert graph.static_calls >= 1
-    assert graph.temporal_calls >= 3
     assert rerank_calls
     assert verify_calls
     assert not methods["bm25"].metadata.uses_graph
@@ -402,18 +406,54 @@ def test_kg_candidates_require_a_source_derived_graph_path_and_honor_source_cuto
     assert methods["temporal_kg"].retrieve(query) == methods["temporal_kg"].retrieve(query)
 
 
-def test_evaluator_only_edge_cannot_create_a_retrieval_path() -> None:
-    from ecoquant.evidence_graph.graph import Relation, TemporalEvidenceGraph
-    from ecoquant.evidence_graph.models import Document, Issuer
-
+@pytest.mark.parametrize("evaluator_relation", (Relation.CONTRADICTS, Relation.SUPERSEDES))
+def test_evaluator_only_edges_cannot_create_retrieval_paths_or_access_labels(
+    monkeypatch: pytest.MonkeyPatch, evaluator_relation: Relation
+) -> None:
     graph = TemporalEvidenceGraph()
     graph.add_node(Issuer("AIB", date(2023, 1, 1), date(2023, 1, 1), "AIB"))
     graph.add_node(Document("aib-2023", date(2023, 12, 31), date(2023, 1, 1), "AIB"))
-    graph.add_edge("AIB", "aib-2023", Relation.CONTAINS, evaluator_only=True)
+    graph.add_edge("AIB", "aib-2023", evaluator_relation, evaluator_only=True)
     method = {item.method_name: item for item in all_retrievers(frozen_corpus(), cutoff=date(2023, 12, 31), graph=graph)}["static_kg"]
-    assert "aib-2023" not in {r.evidence_id for r in method.retrieve(frozen_question())}
+
+    import builtins
+    original_open = builtins.open
+
+    def fail_label_access(*args: object, **kwargs: object) -> object:
+        if args and "labels" in str(args[0]).replace("\\", "/"):
+            raise AssertionError("retrieval opened a label file")
+        return original_open(*args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", fail_label_access)
+    before = method.retrieve(frozen_question())
     graph.add_edge("AIB", "aib-2023", Relation.CONTAINS)
-    assert "aib-2023" in {r.evidence_id for r in method.retrieve(frozen_question())}
+    after = method.retrieve(frozen_question())
+
+    assert "aib-2023" not in {r.evidence_id for r in before}
+    assert "aib-2023" in {r.evidence_id for r in after}
+
+
+def test_temporal_kg_applies_valid_and_source_time_independently_when_their_order_is_inverted() -> None:
+    valid_before_source = CorpusRecord("published-late", "AIB", date(2023, 12, 31), "AIB assets", source_time=date(2024, 1, 1))
+    source_before_valid = CorpusRecord("valid-late", "AIB", date(2024, 12, 31), "AIB assets", source_time=date(2023, 1, 1))
+    corpus = (valid_before_source, source_before_valid)
+    method = {
+        item.method_name: item
+        for item in all_retrievers(corpus, cutoff=date(2023, 12, 31), graph=source_graph(corpus))
+    }["temporal_kg"]
+    query = Question("q", "AIB", "AIB assets", date(2023, 12, 31), source_cutoff=date(2023, 12, 31))
+
+    assert method.retrieve(query) == ()
+
+
+def test_verifier_distinguishes_valid_and_source_time_failures() -> None:
+    verifier = {method.method_name: method for method in all_methods()}["temporal_kg_verify"]
+    query = Question("q", "AIB", "AIB assets", date(2023, 12, 31), source_cutoff=date(2023, 12, 31))
+    valid_before_source = CorpusRecord("published-late", "AIB", date(2023, 12, 31), "AIB assets", source_time=date(2024, 1, 1))
+    source_before_valid = CorpusRecord("valid-late", "AIB", date(2024, 12, 31), "AIB assets", source_time=date(2023, 1, 1))
+
+    assert verifier._verification_status(valid_before_source, query) == "published_after_source_cutoff"  # type: ignore[attr-defined]
+    assert verifier._verification_status(source_before_valid, query) == "invalid_for_requested_time"  # type: ignore[attr-defined]
 
 
 def test_paired_issuer_clustered_bootstrap_is_seeded_and_clusters_by_issuer() -> None:

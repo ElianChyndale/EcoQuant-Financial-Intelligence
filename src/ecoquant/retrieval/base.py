@@ -8,6 +8,8 @@ from datetime import date
 from math import isfinite
 from typing import Literal, Protocol
 
+from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
+
 
 REGISTERED_METHOD_IDS = (
     "bm25", "dense", "static_kg", "temporal_kg", "temporal_kg_rerank", "temporal_kg_verify",
@@ -107,10 +109,9 @@ class BaseRetriever:
     uses_temporal_filter = True
     metadata = RetrievalMetadata.fixture("bm25")
 
-    def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date, graph: object | None = None) -> None:
+    def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date) -> None:
         self.corpus = tuple(corpus)
         self.cutoff = cutoff
-        self.graph = graph
         identifiers = [record.evidence_id for record in self.corpus]
         if not self.corpus:
             raise ValueError("corpus must contain at least one record")
@@ -200,7 +201,9 @@ def _terms(text: str) -> frozenset[str]:
     return frozenset("".join(character if character.isalnum() else " " for character in text.lower()).split())
 
 
-def all_retrievers(corpus: Sequence[CorpusRecord], *, cutoff: date, graph: object | None = None) -> tuple[Retriever, ...]:
+def all_retrievers(
+    corpus: Sequence[CorpusRecord], *, cutoff: date, graph: TemporalEvidenceGraph | None = None
+) -> tuple[Retriever, ...]:
     """Construct the six fixture-mode methods over the same corpus and cutoff."""
 
     from .bm25 import BM25Retriever
@@ -209,6 +212,6 @@ def all_retrievers(corpus: Sequence[CorpusRecord], *, cutoff: date, graph: objec
     from .reranker import TemporalKGRerankRetriever
     from .verifier import TemporalKGVerifyRetriever
 
-    return (BM25Retriever(corpus, cutoff=cutoff, graph=graph), DenseRetriever(corpus, cutoff=cutoff, graph=graph),
+    return (BM25Retriever(corpus, cutoff=cutoff), DenseRetriever(corpus, cutoff=cutoff),
             StaticKGRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
             TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph), TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph))
