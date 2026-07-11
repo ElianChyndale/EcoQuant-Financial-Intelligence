@@ -130,7 +130,7 @@ where false positives are costly.
 ## 5. Limitations
 
 - Small corpus (12 reports, 4 issuers)
-- Small label set (32 questions)
+- Small label set (64 questions)
 - No inter-annotator agreement
 - Conservative calibration policy
 - Fixture mode for deterministic testing
