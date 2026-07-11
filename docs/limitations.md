@@ -3,7 +3,7 @@
 ## Data Limitations
 
 - **Small corpus:** Only 12 reports from 4 issuers
-- **Small label set:** 32 labeled questions (16 qualitative + 16 audit)
+- **Small label set:** 64 frozen questions across four types (evidence lookup, numeric change, contradiction/supersession, table/citation)
 - **No inter-annotator agreement:** Labels are single-annotator
 - **Synthetic corpus:** Production corpus requires PDF Manager integration
 - **No real PDFs committed:** Source documents fetched from official archives

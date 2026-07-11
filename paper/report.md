@@ -120,9 +120,12 @@ decisions where false positives are costly.
 
 ### 4.3 Decision Distribution
 
-The 50/50 split between AUTO_REPORT and INSUFFICIENT_EVIDENCE suggests
-the system effectively distinguishes between sufficient and insufficient
-evidence.
+The decision distribution shows 3.1% AUTO_REPORT, 84.4% HUMAN_REVIEW_REQUIRED,
+and 12.5% INSUFFICIENT_EVIDENCE. The high rate of HUMAN_REVIEW_REQUIRED
+indicates the system is conservative -- most predictions have sufficient
+evidence but do not meet the stringent calibrated and conformal gates for
+automatic reporting. This is appropriate for high-stakes financial decisions
+where false positives are costly.
 
 ## 5. Limitations
 
