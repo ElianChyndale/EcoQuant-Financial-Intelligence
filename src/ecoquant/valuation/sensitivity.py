@@ -2,6 +2,8 @@
 
 Every output is a **model sensitivity estimate**, not an investment
 recommendation.  Consumers must treat results as indicative only.
+
+Uses proper bond pricing with duration and convexity calculations.
 """
 
 from __future__ import annotations
@@ -10,6 +12,12 @@ from dataclasses import dataclass
 
 from ecoquant.uncertainty.decision import DecisionCode
 from ecoquant.valuation.policy import PolicyResult
+from ecoquant.valuation.bond_pricing import (
+    BondTerms,
+    BondPricingResult,
+    price_bond,
+    price_bond_with_spread_shock,
+)
 
 
 @dataclass(frozen=True)
@@ -24,8 +32,9 @@ class SensitivityScenario:
         spread_delta_bps: The spread adjustment applied for this channel.
         decision_code: The governing decision code from the policy result.
         adjusted_price: Price after applying the spread shock.
-        adjusted_duration: Duration scaled proportionally to the price change.
-        adjusted_convexity: Convexity scaled proportionally to the price change.
+        adjusted_duration: Duration after applying the spread shock.
+        adjusted_convexity: Convexity after applying the spread shock.
+        rule_version: Version of the policy rule applied.
     """
 
     scenario_name: str
@@ -37,42 +46,57 @@ class SensitivityScenario:
     adjusted_price: float
     adjusted_duration: float
     adjusted_convexity: float
+    rule_version: str = "v1"
+
+
+@dataclass(frozen=True)
+class ValuationSensitivityResult:
+    """Complete sensitivity analysis result."""
+
+    base_price: float
+    base_duration: float
+    base_convexity: float
+    scenarios: tuple[SensitivityScenario, ...]
+    bond_terms: BondTerms
+    base_yield: float
+    base_spread_bps: int
 
 
 def compute_sensitivity(
-    base_price: float,
-    base_duration: float,
-    base_convexity: float,
+    bond_terms: BondTerms,
+    base_yield: float,
+    base_spread_bps: int,
     policy_result: PolicyResult,
     risk_channel_map: dict[str, str],
-) -> tuple[SensitivityScenario, ...]:
+) -> ValuationSensitivityResult:
     """Generate one sensitivity scenario per active adjustment channel.
 
     For each entry in ``policy_result.adjustments`` the function:
 
     1. Looks up the corresponding risk channel via *risk_channel_map*.
-    2. Computes the spread impact factor ``1 - delta_bps / 10_000``.
-    3. Applies that factor uniformly to price, duration, and convexity.
+    2. Computes the bond price with the spread shock applied.
+    3. Records the adjusted price, duration, and convexity.
 
     Factors present in the adjustments but absent from *risk_channel_map*
     are skipped silently (they have no channel to attribute the shock to).
 
     Args:
-        base_price: Unadjusted clean price of the instrument.
-        base_duration: Unadjusted modified duration (years).
-        base_convexity: Unadjusted convexity measure.
+        bond_terms: Bond terms for pricing.
+        base_yield: Base yield without spread.
+        base_spread_bps: Base credit spread in bps.
         policy_result: Output of :func:`~ecoquant.valuation.policy.apply_policy`.
         risk_channel_map: Mapping from risk factor name to risk channel name.
 
     Returns:
-        A tuple of :class:`SensitivityScenario` instances, one per mapped
-        adjustment channel.  The tuple is empty when there are no adjustments
-        or when no factors resolve to a channel.
+        A ValuationSensitivityResult with base pricing and per-channel scenarios.
 
     Note:
         Results represent model sensitivity estimates only and must not be
         treated as investment advice.
     """
+    # Compute base pricing
+    base_pricing = price_bond(bond_terms, base_yield, base_spread_bps)
+
     scenarios: list[SensitivityScenario] = []
 
     for factor, delta_bps in policy_result.adjustments.items():
@@ -81,13 +105,10 @@ def compute_sensitivity(
             # No channel mapping available -- skip this factor.
             continue
 
-        # Spread impact factor: positive delta_bps means spread widening,
-        # which reduces the price proportionally.
-        shock = 1.0 - delta_bps / 10_000.0
-
-        adjusted_price = base_price * shock
-        adjusted_duration = base_duration * shock
-        adjusted_convexity = base_convexity * shock
+        # Compute pricing with spread shock
+        shocked_pricing = price_bond_with_spread_shock(
+            bond_terms, base_yield, base_spread_bps, delta_bps
+        )
 
         scenarios.append(
             SensitivityScenario(
@@ -97,10 +118,18 @@ def compute_sensitivity(
                 risk_channel=channel,
                 spread_delta_bps=delta_bps,
                 decision_code=policy_result.decision_code,
-                adjusted_price=adjusted_price,
-                adjusted_duration=adjusted_duration,
-                adjusted_convexity=adjusted_convexity,
+                adjusted_price=shocked_pricing.price,
+                adjusted_duration=shocked_pricing.modified_duration,
+                adjusted_convexity=shocked_pricing.convexity,
             ),
         )
 
-    return tuple(scenarios)
+    return ValuationSensitivityResult(
+        base_price=base_pricing.price,
+        base_duration=base_pricing.modified_duration,
+        base_convexity=base_pricing.convexity,
+        scenarios=tuple(scenarios),
+        bond_terms=bond_terms,
+        base_yield=base_yield,
+        base_spread_bps=base_spread_bps,
+    )

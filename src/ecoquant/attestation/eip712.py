@@ -1,16 +1,26 @@
-"""EIP-712 hashing helpers for RiskAttestationV1."""
+"""EIP-712 hashing helpers for RiskAttestationV1.
+
+Uses genuine Ethereum Keccak-256 (NOT NIST SHA-3).
+Ethereum uses the original Keccak-256 before NIST standardized it as SHA-3.
+"""
 
 from __future__ import annotations
 
-import hashlib
 import struct
+
+from Crypto.Hash import keccak as _keccak
 
 from .models import RiskAttestationV1
 
 
 def keccak256(data: bytes) -> bytes:
-    """Return the 32-byte keccak256 digest (SHA-3 256 approximation)."""
-    return hashlib.sha3_256(data).digest()
+    """Return the 32-byte Ethereum Keccak-256 digest.
+
+    This is the genuine Ethereum Keccak, NOT NIST SHA-3.
+    """
+    k = _keccak.new(digest_bits=256)
+    k.update(data)
+    return k.digest()
 
 
 # -- Domain separator --------------------------------------------------------
@@ -106,3 +116,14 @@ def eip712_struct_hash(attestation: RiskAttestationV1) -> bytes:
         + _abi_encode_address(attestation.provider)
     )
     return keccak256(encoded)
+
+
+def eip712_digest(
+    domain_hash: bytes,
+    struct_hash: bytes,
+) -> bytes:
+    """Compute the final EIP-712 digest.
+
+    ``keccak256(b"\\x19\\x01" + domainHash + structHash)``
+    """
+    return keccak256(b"\x19\x01" + domain_hash + struct_hash)
