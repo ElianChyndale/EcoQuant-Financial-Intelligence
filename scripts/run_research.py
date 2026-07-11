@@ -260,68 +260,94 @@ def _compute_retrieval_metrics(
 # Calibration
 # ---------------------------------------------------------------------------
 
+def _build_features_for_question(
+    qid: str,
+    all_results: dict[str, dict[str, tuple]],
+    primary_method: str,
+) -> UncertaintyFeatures | None:
+    """Build uncertainty features for a single question using one canonical definition.
+
+    This is the single production feature builder used for:
+    - calibration fitting
+    - conformal quantile estimation
+    - threshold selection
+    - outer evaluation
+    - final decision
+
+    Cross-retriever agreement compares the top-1 prediction of each of the
+    six registered retrievers against the primary method's top-1, NOT duplicates
+    within one method's top 5.
+    """
+    method_results = all_results[qid].get(primary_method, ())
+    if not method_results:
+        return None
+
+    top1 = method_results[0]
+    top2_score = method_results[1].score if len(method_results) > 1 else 0.0
+
+    # Feature 1: retrieval margin (top1 - top2 score)
+    retrieval_margin = top1.score - top2_score
+
+    # Feature 2: cross-retriever agreement
+    # Compare each of the six retrievers' top-1 against the primary method's top-1
+    agreement_count = 0
+    total_methods = 0
+    for other_name, other_results in all_results[qid].items():
+        if other_results:
+            total_methods += 1
+            if other_results[0].evidence_id == top1.evidence_id:
+                agreement_count += 1
+    cross_retriever_agreement = (
+        agreement_count / total_methods if total_methods else 0.0
+    )
+
+    # Feature 3: extraction confidence (normalised score)
+    extraction_confidence = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
+
+    # Feature 4: temporal validity
+    temporal_validity = 1.0 if top1.valid_time_match else 0.0
+
+    # Feature 5: evidence coverage (retriever-visible sufficiency, NOT gold-based)
+    top5_scores = [r.score for r in method_results[:5]]
+    if top5_scores:
+        avg_score = sum(top5_scores) / len(top5_scores)
+        max_possible = max(top5_scores) if top5_scores else 1.0
+        evidence_coverage = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
+    else:
+        evidence_coverage = 0.0
+
+    return UncertaintyFeatures(
+        retrieval_margin=retrieval_margin,
+        cross_retriever_agreement=cross_retriever_agreement,
+        extraction_confidence=extraction_confidence,
+        temporal_validity=temporal_validity,
+        evidence_coverage=evidence_coverage,
+    )
+
+
 def _build_fold_data(
     all_results: dict[str, dict[str, tuple]],
     labels: EvaluatorGold,
     primary_method: str,
 ) -> dict[str, tuple[list[UncertaintyFeatures], list[bool]]]:
-    """Derive calibration features per issuer from retrieval outputs."""
+    """Derive calibration features per issuer from retrieval outputs.
+
+    Uses the shared _build_features_for_question for consistent feature
+    construction across all pipeline stages.
+    """
     fold_data: dict[str, tuple[list[UncertaintyFeatures], list[bool]]] = {}
 
     for qid in all_results:
         issuer = labels.issuer_by_question[qid]
-        method_results = all_results[qid].get(primary_method, ())
-        if not method_results:
+        features = _build_features_for_question(qid, all_results, primary_method)
+        if features is None:
             continue
 
+        # Label is from gold for calibration fitting (target, not a feature)
+        method_results = all_results[qid].get(primary_method, ())
         top1 = method_results[0]
-        top2_score = method_results[1].score if len(method_results) > 1 else 0.0
-
-        # Feature 1: retrieval margin
-        retrieval_margin = top1.score - top2_score
-
-        # Feature 2: cross-retriever agreement
-        agreement_count = 0
-        total_methods = 0
-        for other_name, other_results in all_results[qid].items():
-            if other_results:
-                total_methods += 1
-                if other_results[0].evidence_id == top1.evidence_id:
-                    agreement_count += 1
-        cross_retriever_agreement = (
-            agreement_count / total_methods if total_methods else 0.0
-        )
-
-        # Feature 3: extraction confidence (normalised score)
-        extraction_confidence = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
-
-        # Feature 4: temporal validity
-        temporal_validity = 1.0 if top1.valid_time_match else 0.0
-
-        # Feature 5: evidence coverage (retriever-visible sufficiency, NOT gold-based)
-        # Compute from the number of results returned and their scores
-        # This measures whether the retriever found sufficient evidence,
-        # not whether it matches gold labels
-        top5_scores = [r.score for r in method_results[:5]]
-        if top5_scores:
-            # Coverage based on score distribution: high scores indicate good coverage
-            avg_score = sum(top5_scores) / len(top5_scores)
-            max_possible = max(top5_scores) if top5_scores else 1.0
-            evidence_coverage = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
-        else:
-            evidence_coverage = 0.0
-
-        # Label is still from gold for calibration fitting (this is the target, not a feature)
         gold_ids = labels.relevant_evidence.get(qid, frozenset())
         label = top1.evidence_id in gold_ids
-
-        features = UncertaintyFeatures(
-            retrieval_margin=retrieval_margin,
-            cross_retriever_agreement=cross_retriever_agreement,
-            extraction_confidence=extraction_confidence,
-            temporal_validity=temporal_validity,
-            evidence_coverage=evidence_coverage,
-        )
 
         if issuer not in fold_data:
             fold_data[issuer] = ([], [])
@@ -333,9 +359,18 @@ def _build_fold_data(
 
 def _run_calibration(
     fold_data: dict[str, tuple[list[UncertaintyFeatures], list[bool]]],
+    *,
+    conformal_alpha: float = 0.10,
+    max_selective_error: float = 0.10,
+    seed: int = 20260710,
 ) -> dict[str, object]:
-    folds = fit_calibration_folds(fold_data)
-    threshold = freeze_threshold(folds, max_selective_error=0.10)
+    folds = fit_calibration_folds(
+        fold_data,
+        conformal_alpha=conformal_alpha,
+        max_selective_error=max_selective_error,
+        seed=seed,
+    )
+    threshold = freeze_threshold(folds, max_selective_error=max_selective_error)
 
     all_probs: list[float] = []
     all_labels: list[bool] = []
@@ -354,21 +389,33 @@ def _run_calibration(
         "brier": brier,
         "ece": ece,
         "aurc": aurc,
+        "aurc_convention": "includes_coverage_zero_to_first_point",
         "coverage_at_threshold": coverage,
         "fold_count": len(folds),
         "total_samples": len(all_probs),
+        "conformal_alpha": conformal_alpha,
         "folds": [
             {
+                "outer_fold_id": f.split_manifest.get("outer_fold_id", i),
                 "test_issuer": f.test_issuer,
-                "train_issuers": list(f.train_issuers),
+                "held_out_issuer": f.split_manifest.get("held_out_issuer", f.test_issuer),
+                "fit_issuers": f.split_manifest.get("fit_issuers", []),
+                "calibration_issuers": f.split_manifest.get("calibration_issuers", []),
+                "threshold_selection_issuers": f.split_manifest.get("threshold_selection_issuers", []),
+                "seed": f.split_manifest.get("seed", seed),
                 "test_sample_count": len(f.test_probs),
-                "train_sample_count": f.split_manifest.get("train_sample_count", 0),
-                "train_positive_count": f.split_manifest.get("train_positive_count", 0),
-                "train_negative_count": f.split_manifest.get("train_negative_count", 0),
-                "calibrator_weights": f.split_manifest.get("calibrator_weights", []),
-                "calibrator_bias": f.split_manifest.get("calibrator_bias", 0.0),
+                "fit_sample_count": f.split_manifest.get("fit_sample_count", 0),
+                "cal_sample_count": f.split_manifest.get("cal_sample_count", 0),
+                "fit_positive_count": f.split_manifest.get("fit_positive_count", 0),
+                "fit_negative_count": f.split_manifest.get("fit_negative_count", 0),
+                "fitted_coefficients": f.split_manifest.get("fitted_coefficients", {}),
+                "normalization_parameters": f.split_manifest.get("normalization_parameters", {}),
+                "conformal_threshold": f.split_manifest.get("conformal_threshold", 0.0),
+                "conformal_alpha": f.split_manifest.get("conformal_alpha", conformal_alpha),
+                "decision_threshold": f.split_manifest.get("decision_threshold", 0.0),
+                "convergence_status": f.split_manifest.get("convergence_status", {}),
             }
-            for f in folds
+            for i, f in enumerate(folds)
         ],
     }
 
@@ -381,16 +428,23 @@ def _run_decision_gating(
     all_results: dict[str, dict[str, tuple]],
     labels: EvaluatorGold,
     primary_method: str,
-    conformal_threshold: float,
-    folds: tuple | None = None,
+    folds: tuple,
 ) -> dict[str, object]:
+    """Apply decision gating using fitted calibrators from nested folds.
+
+    In production/final mode, missing fitted calibration state raises a
+    configuration error — there is no non-calibrated fallback.
+
+    Uses the shared _build_features_for_question for consistent feature
+    construction. Conformal acceptance uses the larger-is-worse convention:
+    nonconformity score = 1 - calibrated_prob, accept iff score <= threshold.
+    """
     counts = {"AUTO_REPORT": 0, "HUMAN_REVIEW_REQUIRED": 0, "INSUFFICIENT_EVIDENCE": 0}
 
-    # Build issuer->calibrator mapping from folds if available
-    calibrators_by_issuer: dict[str, object] = {}
-    if folds:
-        for fold in folds:
-            calibrators_by_issuer[fold.test_issuer] = fold.calibrator
+    # Build issuer->fold mapping from folds
+    fold_by_issuer: dict[str, object] = {}
+    for fold in folds:
+        fold_by_issuer[fold.test_issuer] = fold
 
     for qid in all_results:
         method_results = all_results[qid].get(primary_method, ())
@@ -398,42 +452,40 @@ def _run_decision_gating(
             counts["INSUFFICIENT_EVIDENCE"] += 1
             continue
 
-        top1 = method_results[0]
-        top5_scores = [r.score for r in method_results[:5]]
+        # Use shared feature builder
+        features = _build_features_for_question(qid, all_results, primary_method)
 
-        # Evidence coverage from retriever-visible sufficiency (NOT gold-based)
-        if top5_scores:
-            avg_score = sum(top5_scores) / len(top5_scores)
-            max_possible = max(top5_scores)
-            evidence_sufficiency = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
+        # Compute evidence sufficiency from features
+        if features is not None:
+            evidence_sufficiency = features.evidence_coverage
         else:
             evidence_sufficiency = 0.0
 
-        # Use fitted calibrator if available, otherwise fall back to normalized score
+        # Require fitted calibrator — no fallback in production mode
         issuer = labels.issuer_by_question.get(qid)
-        if issuer and issuer in calibrators_by_issuer:
-            from ecoquant.uncertainty.features import UncertaintyFeatures
-            calibrator = calibrators_by_issuer[issuer]
-            # Build features for this prediction
-            retrieval_margin = top1.score - (method_results[1].score if len(method_results) > 1 else 0.0)
-            agreement_count = sum(1 for r in method_results[:5] if r.evidence_id == top1.evidence_id)
-            cross_retriever_agreement = agreement_count / len(method_results[:5]) if method_results else 0.0
-            extraction_confidence = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
-            temporal_validity = 1.0 if top1.valid_time_match else 0.0
-
-            features = UncertaintyFeatures(
-                retrieval_margin=retrieval_margin,
-                cross_retriever_agreement=cross_retriever_agreement,
-                extraction_confidence=extraction_confidence,
-                temporal_validity=temporal_validity,
-                evidence_coverage=evidence_sufficiency,
+        if not issuer or issuer not in fold_by_issuer:
+            raise RuntimeError(
+                f"no fitted calibrator for issuer '{issuer}' "
+                f"(question {qid}). Production mode requires calibration "
+                f"folds for all issuers."
             )
-            calibrated_prob = calibrator.predict_proba([features])[0]
-        else:
-            # Fallback: normalized score (not calibrated)
-            calibrated_prob = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
 
-        conforms = conformal_accept(score=calibrated_prob, threshold=conformal_threshold)
+        fold = fold_by_issuer[issuer]
+        calibrator = fold.calibrator
+        normalization = fold.normalization
+
+        # Normalize features using the fold's fitted normalization
+        norm_features = normalization.normalize([features])
+        calibrated_prob = calibrator.predict_proba(norm_features)[0]
+
+        # Conformal acceptance: larger-is-worse nonconformity score
+        # score = 1 - calibrated_prob (higher = less conforming)
+        # accept iff score <= conformal_threshold
+        nonconformity_score = 1.0 - calibrated_prob
+        conforms = conformal_accept(
+            score=nonconformity_score,
+            threshold=fold.conformal_threshold,
+        )
 
         decision = decide(
             calibrated_probability=calibrated_prob,
@@ -449,7 +501,7 @@ def _run_decision_gating(
         "auto_report_count": counts["AUTO_REPORT"],
         "human_review_required_count": counts["HUMAN_REVIEW_REQUIRED"],
         "insufficient_evidence_count": counts["INSUFFICIENT_EVIDENCE"],
-        "conformal_threshold": conformal_threshold,
+        "conformal_alpha": folds[0].conformal_alpha if folds else 0.10,
     }
 
 
@@ -520,16 +572,26 @@ def main() -> int:
     all_results = _run_all_methods(corpus, graph, questions, mode=retrieval_mode)
     retrieval_metrics = _compute_retrieval_metrics(all_results, labels)
 
-    # 4. Calibration
+    # 4. Calibration (nested issuer-level protocol)
     primary = "temporal_kg_verify"
     fold_data = _build_fold_data(all_results, labels, primary)
     from ecoquant.uncertainty.calibration import fit_calibration_folds
-    folds = fit_calibration_folds(fold_data)
-    calibration = _run_calibration(fold_data)
+    folds = fit_calibration_folds(
+        fold_data,
+        conformal_alpha=0.10,
+        max_selective_error=0.10,
+        seed=args.seed,
+    )
+    calibration = _run_calibration(
+        fold_data,
+        conformal_alpha=0.10,
+        max_selective_error=0.10,
+        seed=args.seed,
+    )
 
-    # 5. Decision gating (using fitted calibrators from folds)
-    conformal_threshold = float(calibration["frozen_threshold"])  # type: ignore[arg-type]
-    decisions = _run_decision_gating(all_results, labels, primary, conformal_threshold, folds=folds)
+    # 5. Decision gating (using fitted calibrators from nested folds)
+    # No non-calibrated fallback — raises RuntimeError if calibrator missing
+    decisions = _run_decision_gating(all_results, labels, primary, folds)
 
     # 6. Bootstrap intervals
     bootstrap = _compute_bootstrap(all_results, labels, "bm25", "temporal_kg_verify")

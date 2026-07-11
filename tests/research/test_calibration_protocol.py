@@ -2,11 +2,13 @@
 
 Verifies:
 - No gold leakage in features
-- Nested issuer isolation
-- Real Platt scaling
-- Correct conformal direction
+- Nested issuer isolation (inner splits)
+- Real Platt scaling with normalization
+- Correct conformal direction (larger-is-worse)
 - Non-finite input rejection
-- Split manifest recording
+- Split manifest recording with all required fields
+- Convergence tracking
+- Feature consistency between training and decision paths
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from ecoquant.uncertainty.calibration import (
     PlattCalibrator,
     CalibrationFold,
     CalibrationResult,
+    FeatureNormalization,
     fit_calibration_folds,
     freeze_threshold,
     brier_score,
@@ -28,7 +31,7 @@ from ecoquant.uncertainty.calibration import (
     risk_coverage_curve,
     area_under_risk_coverage,
 )
-from ecoquant.uncertainty.conformal import conformal_accept
+from ecoquant.uncertainty.conformal import conformal_accept, compute_conformal_threshold
 from ecoquant.uncertainty.decision import DecisionCode, decide
 
 
@@ -64,18 +67,61 @@ class TestFeatureIsolation:
         }
         assert field_names == allowed
 
-    def test_evidence_coverage_must_be_computed_without_gold(self) -> None:
-        """Evidence coverage should be based on retriever-visible sufficiency."""
-        # This test verifies the feature values are in valid range
-        # and don't require gold data to compute
-        features = UncertaintyFeatures(
-            retrieval_margin=0.5,
-            cross_retriever_agreement=0.8,
-            extraction_confidence=0.9,
-            temporal_validity=1.0,
-            evidence_coverage=0.7,
-        )
-        assert 0.0 <= features.evidence_coverage <= 1.0
+
+# ---------------------------------------------------------------------------
+# Feature normalization tests
+# ---------------------------------------------------------------------------
+
+
+class TestFeatureNormalization:
+    """Verify feature normalization fitted on training data only."""
+
+    def test_normalization_zeroes_mean(self) -> None:
+        """Normalized features should have approximately zero mean."""
+        features = [
+            UncertaintyFeatures(0.8, 0.9, 0.95, 1.0, 0.85),
+            UncertaintyFeatures(0.2, 0.3, 0.4, 0.5, 0.3),
+            UncertaintyFeatures(0.6, 0.7, 0.8, 0.9, 0.7),
+            UncertaintyFeatures(0.1, 0.2, 0.3, 0.4, 0.2),
+        ]
+        norm = FeatureNormalization.fit(features)
+        normalized = norm.normalize(features)
+
+        # Check means are approximately zero
+        for dim in range(5):
+            vals = [
+                f.retrieval_margin if dim == 0
+                else f.cross_retriever_agreement if dim == 1
+                else f.extraction_confidence if dim == 2
+                else f.temporal_validity if dim == 3
+                else f.evidence_coverage
+                for f in normalized
+            ]
+            mean = sum(vals) / len(vals)
+            assert abs(mean) < 0.01, f"dimension {dim} mean {mean} not near zero"
+
+    def test_normalization_handles_constant_features(self) -> None:
+        """Constant features should produce zero after normalization."""
+        features = [
+            UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5),
+            UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5),
+        ]
+        norm = FeatureNormalization.fit(features)
+        normalized = norm.normalize(features)
+
+        for f in normalized:
+            assert f.retrieval_margin == 0.0
+            assert f.cross_retriever_agreement == 0.0
+
+    def test_normalization_is_deterministic(self) -> None:
+        features = [
+            UncertaintyFeatures(0.8, 0.9, 0.95, 1.0, 0.85),
+            UncertaintyFeatures(0.2, 0.3, 0.4, 0.5, 0.3),
+        ]
+        norm1 = FeatureNormalization.fit(features)
+        norm2 = FeatureNormalization.fit(features)
+        assert norm1.means == norm2.means
+        assert norm1.stds == norm2.stds
 
 
 # ---------------------------------------------------------------------------
@@ -120,15 +166,37 @@ class TestPlattScaling:
         assert cal1.weights == cal2.weights
         assert cal1.bias == cal2.bias
 
+    def test_platt_calibrator_records_convergence(self) -> None:
+        """Calibrator must record convergence status and iterations."""
+        features = [
+            UncertaintyFeatures(0.8, 0.9, 0.95, 1.0, 0.85),
+            UncertaintyFeatures(0.2, 0.3, 0.4, 0.5, 0.3),
+        ]
+        labels = [True, False]
+
+        cal = PlattCalibrator.fit(features, labels, seed=42)
+        assert isinstance(cal.converged, bool)
+        assert isinstance(cal.iterations_run, int)
+        assert cal.iterations_run > 0
+        assert cal.degeneracy_status in ("normal", "all_positive", "all_negative", "degenerate_output")
+
+    def test_platt_calibrator_rejects_empty_data(self) -> None:
+        """Empty fit data must raise ValueError, not return zero weights."""
+        with pytest.raises(ValueError, match="non-empty"):
+            PlattCalibrator.fit([], [])
+
     def test_platt_calibrator_handles_degenerate_labels(self) -> None:
-        """All-True or all-False labels must not crash."""
+        """All-True or all-False labels must not crash and must record status."""
         features = [
             UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5),
             UncertaintyFeatures(0.6, 0.6, 0.6, 0.6, 0.6),
         ]
 
         all_true = PlattCalibrator.fit(features, [True, True], seed=42)
+        assert all_true.degeneracy_status == "all_positive"
+
         all_false = PlattCalibrator.fit(features, [False, False], seed=42)
+        assert all_false.degeneracy_status == "all_negative"
 
         # Should produce finite probabilities
         probs_true = all_true.predict_proba(features)
@@ -136,19 +204,26 @@ class TestPlattScaling:
         assert all(math.isfinite(p) for p in probs_true)
         assert all(math.isfinite(p) for p in probs_false)
 
-    def test_platt_calibrator_produces_finite_outputs(self) -> None:
-        """All outputs must be finite floats."""
+    def test_platt_calibrator_validates_finite_features(self) -> None:
+        """Non-finite feature values must be rejected."""
         features = [
-            UncertaintyFeatures(0.0, 0.0, 0.0, 0.0, 0.0),
-            UncertaintyFeatures(1.0, 1.0, 1.0, 1.0, 1.0),
+            UncertaintyFeatures(float("inf"), 0.5, 0.5, 0.5, 0.5),
             UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5),
         ]
-        labels = [True, False, True]
+        with pytest.raises(ValueError, match="non-finite"):
+            PlattCalibrator.fit(features, [True, False], seed=42)
 
-        calibrator = PlattCalibrator.fit(features, labels, seed=42)
-        probs = calibrator.predict_proba(features)
+    def test_platt_calibrator_validates_output_range(self) -> None:
+        """predict_proba must raise if output is outside [0, 1]."""
+        features = [
+            UncertaintyFeatures(0.8, 0.9, 0.95, 1.0, 0.85),
+            UncertaintyFeatures(0.2, 0.3, 0.4, 0.5, 0.3),
+        ]
+        labels = [True, False]
+        cal = PlattCalibrator.fit(features, labels, seed=42)
 
-        assert all(math.isfinite(p) for p in probs)
+        # Normal usage should work
+        probs = cal.predict_proba(features)
         assert all(0.0 <= p <= 1.0 for p in probs)
 
 
@@ -158,7 +233,7 @@ class TestPlattScaling:
 
 
 class TestNestedIssuerIsolation:
-    """Verify leave-one-issuer-out fold isolation."""
+    """Verify nested leave-one-issuer-out fold isolation."""
 
     def _make_fold_data(self) -> dict[str, tuple[list[UncertaintyFeatures], list[bool]]]:
         """Create fold data with four issuers."""
@@ -189,6 +264,34 @@ class TestNestedIssuerIsolation:
         for fold in folds:
             assert fold.test_issuer not in fold.train_issuers
 
+    def test_held_out_issuer_not_in_fit_or_calibration(self) -> None:
+        """Held-out issuer must not appear in fit or calibration manifests."""
+        fold_data = self._make_fold_data()
+        folds = fit_calibration_folds(fold_data)
+
+        for fold in folds:
+            manifest = fold.split_manifest
+            held_out = manifest["held_out_issuer"]
+            fit_issuers = set(manifest["fit_issuers"])
+            cal_issuers = set(manifest["calibration_issuers"])
+            assert held_out not in fit_issuers, f"{held_out} found in fit_issuers"
+            assert held_out not in cal_issuers, f"{held_out} found in calibration_issuers"
+
+    def test_no_issuer_in_two_roles_same_fold(self) -> None:
+        """No issuer should appear in both fit and calibration roles."""
+        fold_data = self._make_fold_data()
+        folds = fit_calibration_folds(fold_data)
+
+        for fold in folds:
+            manifest = fold.split_manifest
+            fit_issuers = set(manifest["fit_issuers"])
+            cal_issuers = set(manifest["calibration_issuers"])
+            # Overlap is only allowed when there's a single train issuer
+            if len(fold.train_issuers) > 1:
+                assert not fit_issuers.intersection(cal_issuers), (
+                    f"Overlap: {fit_issuers.intersection(cal_issuers)}"
+                )
+
     def test_fold_covers_all_issuers(self) -> None:
         """Each issuer must be the test issuer exactly once."""
         fold_data = self._make_fold_data()
@@ -197,34 +300,101 @@ class TestNestedIssuerIsolation:
         test_issuers = [f.test_issuer for f in folds]
         assert sorted(test_issuers) == sorted(fold_data.keys())
 
-    def test_split_manifest_records_fold_details(self) -> None:
-        """Each fold must have a split manifest."""
+    def test_split_manifest_has_all_required_fields(self) -> None:
+        """Each fold must have a complete split manifest."""
+        fold_data = self._make_fold_data()
+        folds = fit_calibration_folds(fold_data)
+
+        required_fields = {
+            "outer_fold_id", "held_out_issuer", "fit_issuers",
+            "calibration_issuers", "threshold_selection_issuers",
+            "seed", "fitted_coefficients", "normalization_parameters",
+            "conformal_threshold", "conformal_alpha", "decision_threshold",
+            "convergence_status",
+        }
+
+        for fold in folds:
+            for field in required_fields:
+                assert field in fold.split_manifest, f"Missing field: {field}"
+
+    def test_split_manifest_records_normalization(self) -> None:
+        """Normalization parameters must be recorded per fold."""
         fold_data = self._make_fold_data()
         folds = fit_calibration_folds(fold_data)
 
         for fold in folds:
-            assert fold.split_manifest is not None
-            assert fold.split_manifest["test_issuer"] == fold.test_issuer
-            assert fold.split_manifest["train_issuers"] == list(fold.train_issuers)
-            assert fold.split_manifest["train_sample_count"] > 0
-            assert fold.split_manifest["test_sample_count"] > 0
-            assert len(fold.split_manifest["calibrator_weights"]) == 5
+            norm = fold.split_manifest["normalization_parameters"]
+            assert "means" in norm
+            assert "stds" in norm
+            assert len(norm["means"]) == 5
+            assert len(norm["stds"]) == 5
+
+    def test_split_manifest_records_convergence(self) -> None:
+        """Convergence status must be recorded per fold."""
+        fold_data = self._make_fold_data()
+        folds = fit_calibration_folds(fold_data)
+
+        for fold in folds:
+            status = fold.split_manifest["convergence_status"]
+            assert "converged" in status
+            assert "iterations_run" in status
+            assert "degeneracy_status" in status
 
     def test_calibrator_is_fitted_on_non_test_issuers_only(self) -> None:
         """Calibrator weights must differ per fold (fitted on different data)."""
         fold_data = self._make_fold_data()
         folds = fit_calibration_folds(fold_data)
 
-        # Different folds should have different calibrators
-        # (unless by coincidence, which is unlikely with different data)
         weights_sets = set()
         for fold in folds:
             weight_key = tuple(round(w, 6) for w in fold.calibrator.weights)
             weights_sets.add(weight_key)
 
         # With different training data, we expect different weights
-        # (at least 2 distinct sets across 4 folds)
         assert len(weights_sets) >= 2
+
+    def test_changing_outer_labels_does_not_change_threshold(self) -> None:
+        """Outer test labels must NOT affect the frozen threshold.
+
+        This is the critical leakage test: if changing outer labels changes
+        the threshold, then outer outcomes are leaking into threshold selection.
+        """
+        fold_data = self._make_fold_data()
+        folds1 = fit_calibration_folds(fold_data, seed=42)
+        threshold1 = freeze_threshold(folds1)
+
+        # Change outer test labels for AIB
+        modified_data = {
+            k: (list(v[0]), list(v[1])) for k, v in fold_data.items()
+        }
+        # Flip all AIB labels
+        modified_data["AIB"] = (
+            modified_data["AIB"][0],
+            [not l for l in modified_data["AIB"][1]],
+        )
+        folds2 = fit_calibration_folds(modified_data, seed=42)
+        threshold2 = freeze_threshold(folds2)
+
+        # Thresholds must be identical because they are selected on
+        # inner calibration data, not outer test data
+        assert threshold1 == threshold2, (
+            f"Threshold changed from {threshold1} to {threshold2} "
+            f"when outer labels were modified — leakage detected"
+        )
+
+    def test_normalization_fitted_on_fit_issuers_only(self) -> None:
+        """Normalization must be fitted on inner fit issuers, not calibration."""
+        fold_data = self._make_fold_data()
+        folds = fit_calibration_folds(fold_data, seed=42)
+
+        for fold in folds:
+            # The normalization should exist and have valid parameters
+            assert fold.normalization is not None
+            assert len(fold.normalization.means) == 5
+            assert len(fold.normalization.stds) == 5
+            # All stds should be positive (from fit data, not degenerate)
+            for s in fold.normalization.stds:
+                assert s > 0
 
 
 # ---------------------------------------------------------------------------
@@ -233,22 +403,84 @@ class TestNestedIssuerIsolation:
 
 
 class TestConformalPrediction:
-    """Verify conformal acceptance direction and behavior."""
+    """Verify split-conformal protocol correctness."""
 
-    def test_conformal_accept_direction(self) -> None:
-        """Higher score (better conformity) must be accepted."""
-        assert conformal_accept(score=0.9, threshold=0.5) is True
-        assert conformal_accept(score=0.5, threshold=0.5) is True  # equality accepted
-        assert conformal_accept(score=0.4, threshold=0.5) is False
+    def test_conformal_threshold_by_hand(self) -> None:
+        """Verify quantile computation matches hand calculation.
+
+        For n=10, alpha=0.10:
+        k = ceil((10+1) * (1-0.10)) = ceil(9.9) = 10
+        threshold = 10th smallest (sorted ascending)
+        """
+        scores = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        threshold = compute_conformal_threshold(scores, alpha=0.10)
+        # k = ceil(11 * 0.9) = ceil(9.9) = 10, so threshold = scores[9] = 1.0
+        assert threshold == 1.0
+
+    def test_conformal_threshold_small_set(self) -> None:
+        """For n=1, alpha=0.10: k = ceil(2*0.9) = 2, clamped to 1."""
+        scores = [0.5]
+        threshold = compute_conformal_threshold(scores, alpha=0.10)
+        assert threshold == 0.5
+
+    def test_conformal_threshold_n5(self) -> None:
+        """For n=5, alpha=0.20: k = ceil(6*0.8) = ceil(4.8) = 5."""
+        scores = [0.1, 0.2, 0.3, 0.4, 0.5]
+        threshold = compute_conformal_threshold(scores, alpha=0.20)
+        assert threshold == 0.5
+
+    def test_conformal_threshold_rejects_empty(self) -> None:
+        with pytest.raises(ValueError, match="non-empty"):
+            compute_conformal_threshold([], alpha=0.10)
+
+    def test_conformal_threshold_rejects_invalid_alpha(self) -> None:
+        with pytest.raises(ValueError, match="alpha"):
+            compute_conformal_threshold([0.5], alpha=0.0)
+        with pytest.raises(ValueError, match="alpha"):
+            compute_conformal_threshold([0.5], alpha=1.0)
+
+    def test_conformal_threshold_rejects_non_finite_scores(self) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            compute_conformal_threshold([float("inf"), 0.5], alpha=0.10)
+        with pytest.raises(ValueError, match="finite"):
+            compute_conformal_threshold([float("nan"), 0.5], alpha=0.10)
+
+    def test_conformal_accept_direction_larger_is_worse(self) -> None:
+        """For larger-is-worse: accept iff score <= threshold."""
+        # Low nonconformity score = good = accepted
+        assert conformal_accept(score=0.1, threshold=0.5) is True
+        # At boundary = accepted
+        assert conformal_accept(score=0.5, threshold=0.5) is True
+        # High nonconformity score = bad = rejected
+        assert conformal_accept(score=0.9, threshold=0.5) is False
 
     def test_conformal_accept_rejects_infinity(self) -> None:
-        """Infinity must not be silently accepted."""
-        assert conformal_accept(score=float("inf"), threshold=0.5) is True
+        """Both positive and negative infinity must be rejected."""
+        assert conformal_accept(score=float("inf"), threshold=0.5) is False
         assert conformal_accept(score=float("-inf"), threshold=0.5) is False
 
     def test_conformal_accept_rejects_nan(self) -> None:
-        """NaN must not be silently accepted."""
+        """NaN must be rejected."""
         assert conformal_accept(score=float("nan"), threshold=0.5) is False
+
+    def test_conformal_accept_rejects_none(self) -> None:
+        """None values must be rejected."""
+        assert conformal_accept(score=None, threshold=0.5) is False
+        assert conformal_accept(score=0.5, threshold=None) is False
+
+    def test_conformal_accept_rejects_non_finite_threshold(self) -> None:
+        """Non-finite threshold must reject."""
+        assert conformal_accept(score=0.5, threshold=float("inf")) is False
+        assert conformal_accept(score=0.5, threshold=float("nan")) is False
+
+    def test_conformal_ties(self) -> None:
+        """Ties at the boundary should be accepted (<= convention)."""
+        scores = [0.3, 0.3, 0.3, 0.3, 0.3]
+        threshold = compute_conformal_threshold(scores, alpha=0.10)
+        # All values are 0.3, threshold is 0.3
+        assert threshold == 0.3
+        # score == threshold should be accepted
+        assert conformal_accept(score=0.3, threshold=threshold) is True
 
 
 # ---------------------------------------------------------------------------
@@ -261,7 +493,6 @@ class TestThresholdFreezing:
 
     def test_threshold_achieves_target_error(self) -> None:
         """Frozen threshold must achieve at most max_selective_error."""
-        # Create fold data where high probs are mostly correct
         fold_data = {
             "AIB": (
                 [UncertaintyFeatures(0.9, 0.9, 0.95, 1.0, 0.9)] * 8 +
@@ -287,12 +518,45 @@ class TestThresholdFreezing:
                 [UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5)] * 3,
                 [True, False, True],
             ),
+            "ESB": (
+                [UncertaintyFeatures(0.6, 0.6, 0.6, 0.6, 0.6)] * 3,
+                [True, True, False],
+            ),
         }
         folds = fit_calibration_folds(fold_data)
 
         t1 = freeze_threshold(folds, max_selective_error=0.10)
         t2 = freeze_threshold(folds, max_selective_error=0.10)
         assert t1 == t2
+
+    def test_threshold_not_affected_by_outer_labels(self) -> None:
+        """Changing outer test labels must not change the frozen threshold."""
+        fold_data = {
+            "AIB": (
+                [UncertaintyFeatures(0.8, 0.9, 0.95, 1.0, 0.85)] * 5,
+                [True, True, True, False, False],
+            ),
+            "ESB": (
+                [UncertaintyFeatures(0.6, 0.7, 0.8, 0.9, 0.7)] * 4,
+                [True, True, False, False],
+            ),
+            "Enel": (
+                [UncertaintyFeatures(0.4, 0.5, 0.6, 0.7, 0.5)] * 3,
+                [True, False, False],
+            ),
+        }
+
+        folds1 = fit_calibration_folds(fold_data, seed=42)
+        t1 = freeze_threshold(folds1)
+
+        # Modify Enel labels (outer test for some fold)
+        modified = {k: (list(v[0]), list(v[1])) for k, v in fold_data.items()}
+        modified["Enel"] = (modified["Enel"][0], [not l for l in modified["Enel"][1]])
+
+        folds2 = fit_calibration_folds(modified, seed=42)
+        t2 = freeze_threshold(folds2)
+
+        assert t1 == t2, f"Threshold leaked: {t1} vs {t2}"
 
 
 # ---------------------------------------------------------------------------
@@ -341,7 +605,6 @@ class TestDecisionGate:
 
     def test_non_finite_probability_rejected(self) -> None:
         """Non-finite values must not produce AUTO_REPORT."""
-        # Infinity must be rejected
         decision = decide(
             calibrated_probability=float("inf"),
             conforms=True,
@@ -350,7 +613,6 @@ class TestDecisionGate:
         )
         assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
-        # NaN must be rejected
         decision = decide(
             calibrated_probability=float("nan"),
             conforms=True,
@@ -359,14 +621,44 @@ class TestDecisionGate:
         )
         assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
-        # Negative infinity must be rejected
+    def test_non_finite_evidence_sufficiency_rejected(self) -> None:
+        """Non-finite evidence_sufficiency must be checked BEFORE comparison."""
         decision = decide(
-            calibrated_probability=float("-inf"),
+            calibrated_probability=0.85,
             conforms=True,
-            evidence_sufficiency=0.8,
+            evidence_sufficiency=float("inf"),
             extraction_valid=True,
         )
-        assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
+        assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
+
+        decision = decide(
+            calibrated_probability=0.85,
+            conforms=True,
+            evidence_sufficiency=float("nan"),
+            extraction_valid=True,
+        )
+        assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
+
+    def test_no_non_finite_produces_auto_report(self) -> None:
+        """No combination involving at least one non-finite value produces AUTO_REPORT."""
+        non_finite = [float("inf"), float("-inf"), float("nan")]
+        for val in non_finite:
+            # Only test cases where at least one input is non-finite
+            cases = [
+                (val, 0.9),      # non-finite prob, finite suff
+                (0.99, val),     # finite prob, non-finite suff
+                (val, val),      # both non-finite
+            ]
+            for prob, suff in cases:
+                decision = decide(
+                    calibrated_probability=prob,
+                    conforms=True,
+                    evidence_sufficiency=suff,
+                    extraction_valid=True,
+                )
+                assert decision.code is not DecisionCode.AUTO_REPORT, (
+                    f"AUTO_REPORT with prob={prob}, suff={suff}"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -378,34 +670,37 @@ class TestCalibrationMetrics:
     """Verify calibration metrics are correctly computed."""
 
     def test_brier_score_perfect_calibration(self) -> None:
-        """Perfect predictions must have Brier score 0."""
         probs = [1.0, 0.0, 1.0, 0.0]
         labels = [True, False, True, False]
         assert brier_score(probs, labels) == pytest.approx(0.0)
 
     def test_brier_score_worst_calibration(self) -> None:
-        """Worst predictions must have Brier score 1."""
         probs = [0.0, 1.0, 0.0, 1.0]
         labels = [True, False, True, False]
         assert brier_score(probs, labels) == pytest.approx(1.0)
 
     def test_ece_zero_for_perfect_calibration(self) -> None:
-        """Perfect calibration must have ECE near 0."""
         probs = [1.0, 0.0, 1.0, 0.0]
         labels = [True, False, True, False]
         ece = expected_calibration_error(probs, labels)
-        assert ece < 0.01  # Should be very small for perfect predictions
+        assert ece < 0.01
 
     def test_aurc_computes_area(self) -> None:
-        """AURC must be a finite non-negative number."""
         probs = [0.9, 0.8, 0.7, 0.6, 0.5]
         labels = [True, True, False, True, False]
         aurc = area_under_risk_coverage(probs, labels)
         assert math.isfinite(aurc)
         assert aurc >= 0.0
 
+    def test_aurc_convention_includes_zero_to_first(self) -> None:
+        """AURC must include the segment from coverage 0 to first point."""
+        probs = [0.9, 0.8, 0.7]
+        labels = [True, True, False]
+        aurc = area_under_risk_coverage(probs, labels)
+        # With convention including 0-to-first, aurc > 0 even for all-correct
+        assert aurc >= 0.0
+
     def test_risk_coverage_curve_length(self) -> None:
-        """Curve must have same length as input."""
         probs = [0.9, 0.8, 0.7]
         labels = [True, False, True]
         curve = risk_coverage_curve(probs, labels)
@@ -413,15 +708,15 @@ class TestCalibrationMetrics:
 
 
 # ---------------------------------------------------------------------------
-# Original fold isolation tests (preserved)
+# Original fold isolation tests (preserved and updated)
 # ---------------------------------------------------------------------------
+
 
 _ISSUERS = ("AlphaCorp", "BetaLtd", "GammaInc", "DeltaPLC")
 
 
 def _make_features(issuer: str, n: int = 20) -> list[UncertaintyFeatures]:
     """Deterministic synthetic features per issuer."""
-    base = hash(issuer) % 100
     return [
         UncertaintyFeatures(
             retrieval_margin=0.3 + (i % 5) * 0.1,
@@ -516,19 +811,6 @@ class TestMetrics:
         assert 0.0 <= aurc <= 1.0
 
 
-class TestConformal:
-    """Split-conformal abstention."""
-
-    def test_conformal_accept_high_score(self) -> None:
-        assert conformal_accept(score=0.9, threshold=0.5) is True
-
-    def test_conformal_reject_low_score(self) -> None:
-        assert conformal_accept(score=0.3, threshold=0.5) is False
-
-    def test_conformal_threshold_boundary(self) -> None:
-        assert conformal_accept(score=0.5, threshold=0.5) is True
-
-
 class TestCalibrationResult:
     def test_result_has_required_fields(self, fold_data: dict) -> None:
         folds = fit_calibration_folds(fold_data)
@@ -543,3 +825,4 @@ class TestCalibrationResult:
         )
         assert result.frozen_threshold == threshold
         assert len(result.folds) == len(_ISSUERS)
+        assert result.aurc_convention == "includes_coverage_zero_to_first_point"

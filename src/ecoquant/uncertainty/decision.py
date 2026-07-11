@@ -57,6 +57,12 @@ def decide(
     # Highest precedence: invalid extraction or missing evidence.
     if not extraction_valid:
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "extraction_invalid")
+
+    # Check finiteness BEFORE any comparison.
+    # Non-finite evidence sufficiency cannot be compared to a threshold.
+    if not math.isfinite(evidence_sufficiency):
+        return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "non_finite_evidence")
+
     if evidence_sufficiency < _MIN_EVIDENCE_SUFFICIENCY:
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "evidence_insufficient")
 
@@ -64,10 +70,6 @@ def decide(
     # These cannot produce AUTO_REPORT.
     if not math.isfinite(calibrated_probability):
         return Decision(DecisionCode.HUMAN_REVIEW_REQUIRED, "non_finite_probability")
-
-    # Reject non-finite evidence sufficiency.
-    if not math.isfinite(evidence_sufficiency):
-        return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "non_finite_evidence")
 
     # AUTO_REPORT requires all three gates: calibrated probability, conformal
     # acceptance, and sufficient evidence coverage.
