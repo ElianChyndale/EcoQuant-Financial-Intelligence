@@ -55,7 +55,7 @@ def _abi_encode_uint256(value: int) -> bytes:
 def _abi_encode_address(address: str) -> bytes:
     """ABI-encode a hex address (with or without 0x prefix) as 32 bytes."""
     addr = address.lower().removeprefix("0x")
-    return bytes(20) + bytes.fromhex(addr.rjust(40, "0"))
+    return bytes(12) + bytes.fromhex(addr.rjust(40, "0"))
 
 
 def _abi_encode_bytes32(value: bytes) -> bytes:

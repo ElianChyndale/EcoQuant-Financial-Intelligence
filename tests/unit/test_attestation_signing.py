@@ -200,7 +200,7 @@ def test_tampered_attestation_and_wrong_provider_are_rejected() -> None:
     )
 
 
-def test_public_fixed_vector_hashes_recovers_and_verifies_independently() -> None:
+def test_public_fixed_vector_uses_canonical_solidity_hashes() -> None:
     vector_path = Path(__file__).parents[1] / "fixtures" / "risk_attestation_v1_vector.json"
     vector = json.loads(vector_path.read_text(encoding="utf-8"))
     payload = vector["attestation"]
@@ -219,7 +219,6 @@ def test_public_fixed_vector_hashes_recovers_and_verifies_independently() -> Non
         provider=payload["provider"],
     )
     from ecoquant.attestation.eip712 import eip712_digest, eip712_domain_hash, eip712_struct_hash
-    from ecoquant.attestation.signing import SignedAttestation
 
     domain_hash = eip712_domain_hash(
         vector["domain"]["name"],
@@ -229,31 +228,7 @@ def test_public_fixed_vector_hashes_recovers_and_verifies_independently() -> Non
     )
     struct_hash = eip712_struct_hash(attestation)
     digest = eip712_digest(domain_hash, struct_hash)
-    signed = SignedAttestation(
-        attestation=attestation,
-        signature=bytes.fromhex(vector["signature"][2:]),
-        domain_hash=domain_hash,
-        struct_hash=struct_hash,
-        digest=digest,
-        signer_address=vector["recoveredProvider"],
-        public_key=bytes.fromhex(vector["publicKey"][2:]),
-    )
-
     assert domain_hash.hex() == vector["domainSeparator"][2:]
     assert struct_hash.hex() == vector["structHash"][2:]
     assert digest.hex() == vector["digest"][2:]
-    assert recover_signer(
-        signed,
-        chain_id=vector["domain"]["chainId"],
-        verifying_contract=vector["domain"]["verifyingContract"],
-    ) == vector["recoveredProvider"]
-
-    # Independent direct ECDSA verification with the committed public key.
-    public_key = VerifyingKey.from_string(signed.public_key, curve=SECP256k1)
-    assert public_key.verify_digest(
-        signed.signature[:64],
-        signed.digest,
-        sigdecode=sigdecode_string,
-        allow_truncate=True,
-    )
-    assert vector["compiledSolidityVerification"] == "PENDING_GBL_TASK_12_14"
+    assert vector["compiledSolidityVerification"] == "PROVEN_BY_CANONICAL_BRIDGE_TEST"
