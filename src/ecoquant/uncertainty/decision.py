@@ -14,6 +14,8 @@ import math
 from dataclasses import dataclass
 from enum import IntEnum
 
+from .conformal import candidate_correctness_nonconformity, conformal_accept
+
 
 class DecisionCode(IntEnum):
     """Three fixed decision codes with strict ordering."""
@@ -31,24 +33,41 @@ class Decision:
     reason: str
 
 
-# Frozen thresholds for the decision gate.
-_MIN_EVIDENCE_SUFFICIENCY: float = 0.25
-_MIN_CALIBRATED_PROBABILITY: float = 0.70
+@dataclass(frozen=True)
+class DecisionPolicy:
+    """All thresholds frozen before an outer issuer is evaluated."""
+
+    calibrated_probability_threshold: float
+    conformal_threshold: float
+    evidence_sufficiency_threshold: float
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("calibrated_probability_threshold", self.calibrated_probability_threshold),
+            ("conformal_threshold", self.conformal_threshold),
+            ("evidence_sufficiency_threshold", self.evidence_sufficiency_threshold),
+        ):
+            if not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"{name} must be finite")
+            if not 0.0 <= value <= 1.0:
+                raise ValueError(f"{name} must be within [0, 1]")
 
 
 def decide(
     calibrated_probability: float,
-    conforms: bool,
     evidence_sufficiency: float,
     extraction_valid: bool,
+    temporal_valid: bool,
+    policy: DecisionPolicy,
 ) -> Decision:
     """Apply strict decision precedence to calibrated model outputs.
 
     Args:
         calibrated_probability: Platt-calibrated correctness probability.
-        conforms: Whether the conformal acceptance test passes.
         evidence_sufficiency: Fraction of required evidence present [0, 1].
         extraction_valid: Whether the extraction succeeded without errors.
+        temporal_valid: Whether the evidence is valid at the requested time.
+        policy: Fold-specific thresholds frozen before outer evaluation.
 
     Returns:
         A Decision with the highest-precedence applicable code.
@@ -63,7 +82,7 @@ def decide(
     if not math.isfinite(evidence_sufficiency):
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "non_finite_evidence")
 
-    if evidence_sufficiency < _MIN_EVIDENCE_SUFFICIENCY:
+    if evidence_sufficiency < policy.evidence_sufficiency_threshold:
         return Decision(DecisionCode.INSUFFICIENT_EVIDENCE, "evidence_insufficient")
 
     # Reject non-finite calibrated probabilities (NaN, infinity, missing).
@@ -71,12 +90,24 @@ def decide(
     if not math.isfinite(calibrated_probability):
         return Decision(DecisionCode.HUMAN_REVIEW_REQUIRED, "non_finite_probability")
 
+    if not 0.0 <= calibrated_probability <= 1.0:
+        return Decision(DecisionCode.HUMAN_REVIEW_REQUIRED, "probability_out_of_range")
+
+    if not temporal_valid:
+        return Decision(DecisionCode.HUMAN_REVIEW_REQUIRED, "temporal_gate_failed")
+
+    nonconformity_score = candidate_correctness_nonconformity(calibrated_probability)
+    conforms = conformal_accept(
+        score=nonconformity_score,
+        threshold=policy.conformal_threshold,
+    )
+
     # AUTO_REPORT requires all three gates: calibrated probability, conformal
     # acceptance, and sufficient evidence coverage.
     if (
-        calibrated_probability >= _MIN_CALIBRATED_PROBABILITY
+        calibrated_probability >= policy.calibrated_probability_threshold
         and conforms
-        and evidence_sufficiency >= _MIN_EVIDENCE_SUFFICIENCY
+        and evidence_sufficiency >= policy.evidence_sufficiency_threshold
     ):
         return Decision(DecisionCode.AUTO_REPORT, "calibrated_conformal_sufficient")
 

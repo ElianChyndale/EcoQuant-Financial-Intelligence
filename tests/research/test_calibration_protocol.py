@@ -32,7 +32,11 @@ from ecoquant.uncertainty.calibration import (
     area_under_risk_coverage,
 )
 from ecoquant.uncertainty.conformal import conformal_accept, compute_conformal_threshold
-from ecoquant.uncertainty.decision import DecisionCode, decide
+from ecoquant.uncertainty.decision import DecisionCode, DecisionPolicy, decide
+
+
+_PERMISSIVE_POLICY = DecisionPolicy(0.70, 0.50, 0.25)
+_STRICT_CONFORMAL_POLICY = DecisionPolicy(0.70, 0.01, 0.25)
 
 
 # ---------------------------------------------------------------------------
@@ -185,24 +189,17 @@ class TestPlattScaling:
         with pytest.raises(ValueError, match="non-empty"):
             PlattCalibrator.fit([], [])
 
-    def test_platt_calibrator_handles_degenerate_labels(self) -> None:
-        """All-True or all-False labels must not crash and must record status."""
+    def test_platt_calibrator_rejects_degenerate_labels(self) -> None:
+        """Final calibration cannot be fitted from one-class labels."""
         features = [
             UncertaintyFeatures(0.5, 0.5, 0.5, 0.5, 0.5),
             UncertaintyFeatures(0.6, 0.6, 0.6, 0.6, 0.6),
         ]
 
-        all_true = PlattCalibrator.fit(features, [True, True], seed=42)
-        assert all_true.degeneracy_status == "all_positive"
-
-        all_false = PlattCalibrator.fit(features, [False, False], seed=42)
-        assert all_false.degeneracy_status == "all_negative"
-
-        # Should produce finite probabilities
-        probs_true = all_true.predict_proba(features)
-        probs_false = all_false.predict_proba(features)
-        assert all(math.isfinite(p) for p in probs_true)
-        assert all(math.isfinite(p) for p in probs_false)
+        with pytest.raises(ValueError, match="both positive and negative"):
+            PlattCalibrator.fit(features, [True, True], seed=42)
+        with pytest.raises(ValueError, match="both positive and negative"):
+            PlattCalibrator.fit(features, [False, False], seed=42)
 
     def test_platt_calibrator_validates_finite_features(self) -> None:
         """Non-finite feature values must be rejected."""
@@ -347,7 +344,7 @@ class TestNestedIssuerIsolation:
 
         weights_sets = set()
         for fold in folds:
-            weight_key = tuple(round(w, 6) for w in fold.calibrator.weights)
+            weight_key = tuple(round(w, 6) for w in (*fold.calibrator.weights, fold.calibrator.bias))
             weights_sets.add(weight_key)
 
         # With different training data, we expect different weights
@@ -504,6 +501,14 @@ class TestThresholdFreezing:
                 [UncertaintyFeatures(0.2, 0.2, 0.3, 0.4, 0.2)] * 2,
                 [True] * 6 + [False] * 2,
             ),
+            "Enel": (
+                [UncertaintyFeatures(0.7, 0.7, 0.75, 0.8, 0.7)] * 4,
+                [True, False, True, False],
+            ),
+            "KfW": (
+                [UncertaintyFeatures(0.4, 0.4, 0.5, 0.6, 0.4)] * 4,
+                [False, True, False, True],
+            ),
         }
         folds = fit_calibration_folds(fold_data)
         threshold = freeze_threshold(folds, max_selective_error=0.10)
@@ -521,6 +526,14 @@ class TestThresholdFreezing:
             "ESB": (
                 [UncertaintyFeatures(0.6, 0.6, 0.6, 0.6, 0.6)] * 3,
                 [True, True, False],
+            ),
+            "Enel": (
+                [UncertaintyFeatures(0.4, 0.4, 0.4, 0.4, 0.4)] * 3,
+                [True, False, False],
+            ),
+            "KfW": (
+                [UncertaintyFeatures(0.7, 0.7, 0.7, 0.7, 0.7)] * 3,
+                [False, True, True],
             ),
         }
         folds = fit_calibration_folds(fold_data)
@@ -544,19 +557,25 @@ class TestThresholdFreezing:
                 [UncertaintyFeatures(0.4, 0.5, 0.6, 0.7, 0.5)] * 3,
                 [True, False, False],
             ),
+            "KfW": (
+                [UncertaintyFeatures(0.2, 0.3, 0.4, 0.5, 0.3)] * 3,
+                [False, True, True],
+            ),
         }
 
         folds1 = fit_calibration_folds(fold_data, seed=42)
-        t1 = freeze_threshold(folds1)
+        before = next(fold for fold in folds1 if fold.test_issuer == "Enel")
 
         # Modify Enel labels (outer test for some fold)
         modified = {k: (list(v[0]), list(v[1])) for k, v in fold_data.items()}
         modified["Enel"] = (modified["Enel"][0], [not l for l in modified["Enel"][1]])
 
         folds2 = fit_calibration_folds(modified, seed=42)
-        t2 = freeze_threshold(folds2)
+        after = next(fold for fold in folds2 if fold.test_issuer == "Enel")
 
-        assert t1 == t2, f"Threshold leaked: {t1} vs {t2}"
+        assert before.decision_threshold == after.decision_threshold
+        assert before.conformal_threshold == after.conformal_threshold
+        assert before.calibrator == after.calibrator
 
 
 # ---------------------------------------------------------------------------
@@ -569,73 +588,49 @@ class TestDecisionGate:
 
     def test_invalid_extraction_is_insufficient_evidence(self) -> None:
         decision = decide(
-            calibrated_probability=0.99,
-            conforms=True,
-            evidence_sufficiency=0.9,
-            extraction_valid=False,
+            0.99, 0.9, False, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
 
     def test_missing_evidence_is_insufficient(self) -> None:
         decision = decide(
-            calibrated_probability=0.99,
-            conforms=True,
-            evidence_sufficiency=0.0,
-            extraction_valid=True,
+            0.99, 0.0, True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
 
     def test_high_confidence_but_no_conformal_requires_review(self) -> None:
         decision = decide(
-            calibrated_probability=0.95,
-            conforms=False,
-            evidence_sufficiency=0.8,
-            extraction_valid=True,
+            0.95, 0.8, True, True, _STRICT_CONFORMAL_POLICY
         )
         assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
     def test_auto_report_requires_all_gates(self) -> None:
         decision = decide(
-            calibrated_probability=0.85,
-            conforms=True,
-            evidence_sufficiency=0.8,
-            extraction_valid=True,
+            0.85, 0.8, True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.AUTO_REPORT
 
     def test_non_finite_probability_rejected(self) -> None:
         """Non-finite values must not produce AUTO_REPORT."""
         decision = decide(
-            calibrated_probability=float("inf"),
-            conforms=True,
-            evidence_sufficiency=0.8,
-            extraction_valid=True,
+            float("inf"), 0.8, True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
         decision = decide(
-            calibrated_probability=float("nan"),
-            conforms=True,
-            evidence_sufficiency=0.8,
-            extraction_valid=True,
+            float("nan"), 0.8, True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.HUMAN_REVIEW_REQUIRED
 
     def test_non_finite_evidence_sufficiency_rejected(self) -> None:
         """Non-finite evidence_sufficiency must be checked BEFORE comparison."""
         decision = decide(
-            calibrated_probability=0.85,
-            conforms=True,
-            evidence_sufficiency=float("inf"),
-            extraction_valid=True,
+            0.85, float("inf"), True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
 
         decision = decide(
-            calibrated_probability=0.85,
-            conforms=True,
-            evidence_sufficiency=float("nan"),
-            extraction_valid=True,
+            0.85, float("nan"), True, True, _PERMISSIVE_POLICY
         )
         assert decision.code is DecisionCode.INSUFFICIENT_EVIDENCE
 
@@ -651,10 +646,7 @@ class TestDecisionGate:
             ]
             for prob, suff in cases:
                 decision = decide(
-                    calibrated_probability=prob,
-                    conforms=True,
-                    evidence_sufficiency=suff,
-                    extraction_valid=True,
+                    prob, suff, True, True, _PERMISSIVE_POLICY
                 )
                 assert decision.code is not DecisionCode.AUTO_REPORT, (
                     f"AUTO_REPORT with prob={prob}, suff={suff}"

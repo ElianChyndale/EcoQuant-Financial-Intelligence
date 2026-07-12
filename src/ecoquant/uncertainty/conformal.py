@@ -39,6 +39,36 @@ import math
 from typing import Sequence
 
 
+def correctness_nonconformity(
+    calibrated_probability: float,
+    *,
+    observed_correct: bool,
+) -> float:
+    """Return the binary correctness nonconformity for a calibration row.
+
+    The calibrated probability is the probability of the frozen target
+    ``correct_and_supported``.  A correct observation has score ``1 - p``;
+    an incorrect observation has score ``p``.  Larger scores are worse.
+    """
+    if not isinstance(calibrated_probability, (int, float)) or not math.isfinite(
+        calibrated_probability
+    ):
+        raise ValueError("calibrated_probability must be finite")
+    if not 0.0 <= calibrated_probability <= 1.0:
+        raise ValueError("calibrated_probability must be within [0, 1]")
+    if type(observed_correct) is not bool:
+        raise TypeError("observed_correct must be bool")
+    return 1.0 - calibrated_probability if observed_correct else calibrated_probability
+
+
+def candidate_correctness_nonconformity(calibrated_probability: float) -> float:
+    """Score the candidate label ``correct_and_supported=True`` at decision time."""
+    return correctness_nonconformity(
+        calibrated_probability,
+        observed_correct=True,
+    )
+
+
 def compute_conformal_threshold(
     calibration_scores: Sequence[float],
     *,

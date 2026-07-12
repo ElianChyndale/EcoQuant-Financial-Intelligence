@@ -23,7 +23,7 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from .conformal import compute_conformal_threshold, conformal_accept
+from .conformal import compute_conformal_threshold, correctness_nonconformity
 from .features import UncertaintyFeatures
 
 
@@ -45,6 +45,8 @@ class FeatureNormalization:
                 f.temporal_validity,
                 f.evidence_coverage,
             ]
+            if not all(math.isfinite(value) for value in vec):
+                raise ValueError("features contain a non-finite value")
             normalized = []
             for v, m, s in zip(vec, self.means, self.stds):
                 if s > 0:
@@ -58,7 +60,7 @@ class FeatureNormalization:
     def fit(cls, features: Sequence[UncertaintyFeatures]) -> "FeatureNormalization":
         """Fit normalization from training features only."""
         if not features:
-            return cls(means=(0.0,) * 5, stds=(1.0,) * 5)
+            raise ValueError("normalization features must be non-empty")
 
         n = len(features)
         sums = [0.0] * 5
@@ -72,6 +74,8 @@ class FeatureNormalization:
                 f.temporal_validity,
                 f.evidence_coverage,
             ]
+            if not all(math.isfinite(value) for value in vec):
+                raise ValueError("normalization features contain a non-finite value")
             for i, v in enumerate(vec):
                 sums[i] += v
                 sum_sq[i] += v * v
@@ -102,6 +106,8 @@ class PlattCalibrator:
     converged: bool = False
     iterations_run: int = 0
     degeneracy_status: str = "normal"
+    objective_value: float = math.inf
+    failure_reason: str | None = None
 
     @classmethod
     def fit(
@@ -137,112 +143,104 @@ class PlattCalibrator:
             raise ValueError("features and labels must have the same length")
         if not features:
             raise ValueError("features must be non-empty")
+        if regularization <= 0 or not math.isfinite(regularization):
+            raise ValueError("regularization must be positive and finite")
+        if max_iterations <= 0:
+            raise ValueError("max_iterations must be positive")
+        if convergence_threshold <= 0 or not math.isfinite(convergence_threshold):
+            raise ValueError("convergence_threshold must be positive and finite")
 
-        # Validate all feature values are finite
-        for i, f in enumerate(features):
-            for name, val in [
-                ("retrieval_margin", f.retrieval_margin),
-                ("cross_retriever_agreement", f.cross_retriever_agreement),
-                ("extraction_confidence", f.extraction_confidence),
-                ("temporal_validity", f.temporal_validity),
-                ("evidence_coverage", f.evidence_coverage),
-            ]:
-                if not math.isfinite(val):
-                    raise ValueError(f"features[{i}].{name} is non-finite: {val}")
-
-        n_features = 5
-        rng = random.Random(seed)
-
-        # Check for degenerate labels
-        positive_count = sum(labels)
-        negative_count = len(labels) - positive_count
-        degeneracy_status = "normal"
-        if positive_count == 0:
-            degeneracy_status = "all_negative"
-        elif negative_count == 0:
-            degeneracy_status = "all_positive"
-
-        # Initialize weights with small random values
-        weights = [rng.gauss(0, 0.1) for _ in range(n_features)]
-        bias = 0.0
-
-        # Convert features to arrays
-        X = [
-            [
-                f.retrieval_margin,
-                f.cross_retriever_agreement,
-                f.extraction_confidence,
-                f.temporal_validity,
-                f.evidence_coverage,
+        X: list[list[float]] = []
+        for i, feature in enumerate(features):
+            row = [
+                feature.retrieval_margin,
+                feature.cross_retriever_agreement,
+                feature.extraction_confidence,
+                feature.temporal_validity,
+                feature.evidence_coverage,
+                1.0,
             ]
-            for f in features
-        ]
+            if not all(math.isfinite(value) for value in row):
+                raise ValueError(f"features[{i}] contains a non-finite value")
+            X.append(row)
+
+        if any(type(label) is not bool for label in labels):
+            raise TypeError("labels must contain bool values")
+        positive_count = sum(labels)
+        if positive_count == 0 or positive_count == len(labels):
+            raise ValueError("calibration fitting requires both positive and negative labels")
         y = [1.0 if label else 0.0 for label in labels]
 
-        # Gradient descent with L2 regularization
+        # Deterministic regularized Newton/IRLS optimization.  The seed remains
+        # in the public contract but no random initialization is required.
+        parameters = [0.0] * 6
+        objective = _logistic_objective(X, y, parameters, regularization)
         converged = False
         iterations_run = 0
+        failure_reason: str | None = None
 
         for iteration in range(max_iterations):
             iterations_run = iteration + 1
-
-            # Compute predictions
-            predictions = []
-            for x_i in X:
-                logit = sum(w * x for w, x in zip(weights, x_i)) + bias
-                pred = _sigmoid(logit)
-                predictions.append(pred)
-
-            # Compute gradients
-            weight_gradients = [0.0] * n_features
-            bias_gradient = 0.0
-
-            for i in range(len(X)):
-                error = predictions[i] - y[i]
-                for j in range(n_features):
-                    weight_gradients[j] += error * X[i][j]
-                bias_gradient += error
-
-            # Add L2 regularization
-            for j in range(n_features):
-                weight_gradients[j] += regularization * weights[j]
-
-            # Average gradients
+            probabilities = [_sigmoid(sum(a * b for a, b in zip(parameters, row))) for row in X]
+            gradient = [0.0] * 6
+            hessian = [[0.0] * 6 for _ in range(6)]
             n = len(X)
-            for j in range(n_features):
-                weight_gradients[j] /= n
-            bias_gradient /= n
 
-            # Update weights
-            for j in range(n_features):
-                weights[j] -= learning_rate * weight_gradients[j]
-            bias -= learning_rate * bias_gradient
+            for row, target, probability in zip(X, y, probabilities):
+                error = probability - target
+                curvature = max(probability * (1.0 - probability), 1e-12)
+                for j in range(6):
+                    gradient[j] += error * row[j] / n
+                    for k in range(6):
+                        hessian[j][k] += curvature * row[j] * row[k] / n
 
-            # Check convergence
-            gradient_norm = math.sqrt(
-                sum(g ** 2 for g in weight_gradients) + bias_gradient ** 2
-            )
-            if gradient_norm < convergence_threshold:
+            for j in range(5):
+                gradient[j] += regularization * parameters[j]
+                hessian[j][j] += regularization
+            hessian[5][5] += 1e-10
+
+            step = _solve_linear_system(hessian, gradient)
+            step_scale = 1.0
+            candidate = [value - step_scale * delta for value, delta in zip(parameters, step)]
+            candidate_objective = _logistic_objective(X, y, candidate, regularization)
+            while candidate_objective > objective and step_scale > 1e-8:
+                step_scale *= 0.5
+                candidate = [value - step_scale * delta for value, delta in zip(parameters, step)]
+                candidate_objective = _logistic_objective(X, y, candidate, regularization)
+
+            if not math.isfinite(candidate_objective):
+                failure_reason = "non_finite_objective"
+                break
+
+            max_change = max(abs(step_scale * delta) for delta in step)
+            improvement = objective - candidate_objective
+            parameters = candidate
+            objective = candidate_objective
+            if max_change < convergence_threshold or (
+                improvement >= 0.0 and improvement < convergence_threshold
+            ):
                 converged = True
                 break
 
-        # Validate output probabilities for a test point
-        # (ensure the calibrator doesn't produce degenerate outputs)
-        test_logit = sum(w * 0.5 for w in weights) + bias
-        test_prob = _sigmoid(test_logit)
-        if not (0.0 <= test_prob <= 1.0):
-            degeneracy_status = "degenerate_output"
+        if not converged and failure_reason is None:
+            failure_reason = "maximum_iterations_reached"
+
+        if not all(math.isfinite(value) for value in parameters) or not math.isfinite(objective):
+            failure_reason = "non_finite_fitted_state"
+            converged = False
 
         return cls(
-            weights=tuple(weights),
-            bias=bias,
+            weights=tuple(parameters[:5]),
+            bias=parameters[5],
             regularization=regularization,
             learning_rate=learning_rate,
             max_iterations=max_iterations,
             convergence_threshold=convergence_threshold,
             converged=converged,
             iterations_run=iterations_run,
-            degeneracy_status=degeneracy_status,
+            degeneracy_status="normal",
+            objective_value=objective,
+            failure_reason=failure_reason,
         )
 
     def predict_proba(self, features: Sequence[UncertaintyFeatures]) -> list[float]:
@@ -281,6 +279,59 @@ def _sigmoid(x: float) -> float:
         return 1.0 / (1.0 + z)
     z = math.exp(x)
     return z / (1.0 + z)
+
+
+def _logistic_objective(
+    rows: Sequence[Sequence[float]],
+    labels: Sequence[float],
+    parameters: Sequence[float],
+    regularization: float,
+) -> float:
+    """Mean binary log loss plus L2 regularization (bias excluded)."""
+    total = 0.0
+    for row, target in zip(rows, labels):
+        logit = sum(a * b for a, b in zip(parameters, row))
+        # Stable logistic loss: log(1 + exp(logit)) - target * logit.
+        total += max(logit, 0.0) + math.log1p(math.exp(-abs(logit))) - target * logit
+    penalty = 0.5 * regularization * sum(value * value for value in parameters[:5])
+    return total / len(rows) + penalty
+
+
+def _solve_linear_system(matrix: Sequence[Sequence[float]], vector: Sequence[float]) -> list[float]:
+    """Solve a small dense system with deterministic partial pivoting."""
+    size = len(vector)
+    augmented = [list(row) + [float(value)] for row, value in zip(matrix, vector)]
+    for column in range(size):
+        pivot = max(range(column, size), key=lambda row: abs(augmented[row][column]))
+        if abs(augmented[pivot][column]) < 1e-14:
+            raise ValueError("calibration Hessian is singular")
+        augmented[column], augmented[pivot] = augmented[pivot], augmented[column]
+        divisor = augmented[column][column]
+        augmented[column] = [value / divisor for value in augmented[column]]
+        for row in range(size):
+            if row == column:
+                continue
+            factor = augmented[row][column]
+            augmented[row] = [
+                value - factor * pivot_value
+                for value, pivot_value in zip(augmented[row], augmented[column])
+            ]
+    return [augmented[row][-1] for row in range(size)]
+
+
+def require_final_calibration(calibrator: PlattCalibrator) -> None:
+    """Reject fitted state that is unsafe for a final research execution."""
+    if calibrator.degeneracy_status != "normal":
+        raise RuntimeError(
+            f"calibrator is not usable: degeneracy={calibrator.degeneracy_status}"
+        )
+    if not calibrator.converged:
+        reason = calibrator.failure_reason or "unknown"
+        raise RuntimeError(f"calibrator did not converge: {reason}")
+    if not math.isfinite(calibrator.objective_value):
+        raise RuntimeError("calibrator objective is non-finite")
+    if not all(math.isfinite(value) for value in (*calibrator.weights, calibrator.bias)):
+        raise RuntimeError("calibrator coefficients are non-finite")
 
 
 @dataclass(frozen=True)
@@ -357,28 +408,26 @@ def fit_calibration_folds(
         Tuple of CalibrationFold, one per issuer.
     """
     issuers = tuple(sorted(fold_data))
+    if len(issuers) < 4:
+        raise ValueError("nested issuer protocol requires at least four issuers")
+    for issuer, (features, labels) in fold_data.items():
+        if not features or len(features) != len(labels):
+            raise ValueError(f"issuer {issuer} must have non-empty aligned features and labels")
     folds: list[CalibrationFold] = []
 
     for outer_idx, test_issuer in enumerate(issuers):
         # Step 1: Outer train issuers = all except test_issuer
         train_issuers = tuple(i for i in issuers if i != test_issuer)
 
-        # Step 2: Create inner split among train_issuers
-        # Inner: first half for fitting, second half for calibration/threshold
-        # Use deterministic split based on seed
+        # Step 2: Create three disjoint inner roles among train issuers.
+        # At least one issuer is reserved for conformal calibration and one
+        # separate issuer for decision-threshold selection.
         rng = random.Random(seed + outer_idx)
         shuffled = list(train_issuers)
         rng.shuffle(shuffled)
-
-        if len(shuffled) >= 2:
-            split_point = max(1, len(shuffled) // 2)
-            inner_fit_issuers = tuple(shuffled[:split_point])
-            inner_cal_issuers = tuple(shuffled[split_point:])
-        else:
-            # With only 1 train issuer, use it for both fit and calibration
-            # (documented limitation for very small issuer sets)
-            inner_fit_issuers = tuple(shuffled)
-            inner_cal_issuers = tuple(shuffled)
+        inner_fit_issuers = tuple(shuffled[:-2])
+        inner_cal_issuers = (shuffled[-2],)
+        threshold_selection_issuers = (shuffled[-1],)
 
         # Step 3: Aggregate inner fit features and labels
         fit_features: list[UncertaintyFeatures] = []
@@ -402,7 +451,7 @@ def fit_calibration_folds(
             norm_fit_features,
             fit_labels,
             regularization=0.01,
-            learning_rate=0.1,
+            learning_rate=1.0,
             max_iterations=1000,
             seed=seed + outer_idx,
         )
@@ -421,20 +470,29 @@ def fit_calibration_folds(
         # Step 9: Get calibration probabilities
         cal_probs = calibrator.predict_proba(norm_cal_features)
 
-        # Step 10: Compute conformal threshold
-        # Nonconformity score = 1 - prob (larger = worse)
-        cal_nonconformity = [1.0 - p for p in cal_probs]
-        if cal_nonconformity:
-            conformal_threshold = compute_conformal_threshold(
-                cal_nonconformity, alpha=conformal_alpha
-            )
-        else:
-            conformal_threshold = 0.0
+        # Step 10: Compute label-aware correctness nonconformity.  At decision
+        # time the candidate label is correct_and_supported=True.
+        cal_nonconformity = [
+            correctness_nonconformity(probability, observed_correct=label)
+            for probability, label in zip(cal_probs, cal_labels)
+        ]
+        conformal_threshold = compute_conformal_threshold(
+            cal_nonconformity, alpha=conformal_alpha
+        )
 
-        # Step 11: Select decision threshold on calibration data
-        # Find lowest probability threshold achieving max_selective_error
+        # Step 11: Select the probability threshold on its own issuer role.
+        threshold_features: list[UncertaintyFeatures] = []
+        threshold_labels: list[bool] = []
+        for issuer in threshold_selection_issuers:
+            features, labels = fold_data[issuer]
+            threshold_features.extend(features)
+            threshold_labels.extend(labels)
+        normalized_threshold_features = normalization.normalize(threshold_features)
+        threshold_probs = calibrator.predict_proba(normalized_threshold_features)
         decision_threshold = _select_decision_threshold(
-            cal_probs, cal_labels, max_selective_error=max_selective_error
+            threshold_probs,
+            threshold_labels,
+            max_selective_error=max_selective_error,
         )
 
         # Step 12: Evaluate on outer test issuer (frozen coefficients)
@@ -448,10 +506,11 @@ def fit_calibration_folds(
             "held_out_issuer": test_issuer,
             "fit_issuers": list(inner_fit_issuers),
             "calibration_issuers": list(inner_cal_issuers),
-            "threshold_selection_issuers": list(inner_cal_issuers),
+            "threshold_selection_issuers": list(threshold_selection_issuers),
             "seed": seed + outer_idx,
             "fit_sample_count": len(fit_features),
             "cal_sample_count": len(cal_features),
+            "threshold_sample_count": len(threshold_features),
             "test_sample_count": len(test_features_raw),
             "fit_positive_count": sum(fit_labels),
             "fit_negative_count": len(fit_labels) - sum(fit_labels),
@@ -470,6 +529,8 @@ def fit_calibration_folds(
                 "converged": calibrator.converged,
                 "iterations_run": calibrator.iterations_run,
                 "degeneracy_status": calibrator.degeneracy_status,
+                "objective_value": calibrator.objective_value,
+                "failure_reason": calibrator.failure_reason,
             },
         }
 
@@ -502,14 +563,21 @@ def _select_decision_threshold(
     Selects on calibration data only (never outer test data).
     """
     if not probs:
-        return 0.0
+        raise ValueError("threshold-selection probabilities must be non-empty")
+    if len(probs) != len(labels):
+        raise ValueError("threshold-selection probabilities and labels must align")
+    if any(not math.isfinite(probability) or not 0.0 <= probability <= 1.0 for probability in probs):
+        raise ValueError("threshold-selection probabilities must be finite and within [0, 1]")
+    if any(type(label) is not bool for label in labels):
+        raise TypeError("threshold-selection labels must be bool")
 
     paired = sorted(zip(probs, labels), key=lambda x: -x[0])
     probs_sorted = [p for p, _ in paired]
     labels_sorted = [l for _, l in paired]
 
     n = len(probs_sorted)
-    best_threshold = 0.0
+    best_threshold = 1.0
+    found = False
 
     for i in range(n):
         threshold = probs_sorted[i]
@@ -520,9 +588,11 @@ def _select_decision_threshold(
 
         if selective_error <= max_selective_error:
             best_threshold = threshold
-            break
+            found = True
 
-    return best_threshold
+    # If no non-empty accepted prefix meets the target, threshold 1.0
+    # represents an abstain-all automatic policy for finite sigmoid outputs.
+    return best_threshold if found else 1.0
 
 
 def freeze_threshold(

@@ -55,9 +55,9 @@ from ecoquant.uncertainty.calibration import (
     expected_calibration_error,
     fit_calibration_folds,
     freeze_threshold,
+    require_final_calibration,
 )
-from ecoquant.uncertainty.conformal import conformal_accept
-from ecoquant.uncertainty.decision import DecisionCode, decide
+from ecoquant.uncertainty.decision import DecisionCode, DecisionPolicy, decide
 from ecoquant.uncertainty.features import UncertaintyFeatures
 
 # ---------------------------------------------------------------------------
@@ -278,7 +278,12 @@ def _build_features_for_question(
     six registered retrievers against the primary method's top-1, NOT duplicates
     within one method's top 5.
     """
-    method_results = all_results[qid].get(primary_method, ())
+    method_outputs = all_results[qid]
+    if set(method_outputs) != set(REGISTERED_METHOD_IDS):
+        raise RuntimeError(
+            "uncertainty features require the complete six-method retrieval contract"
+        )
+    method_results = method_outputs.get(primary_method, ())
     if not method_results:
         return None
 
@@ -291,15 +296,12 @@ def _build_features_for_question(
     # Feature 2: cross-retriever agreement
     # Compare each of the six retrievers' top-1 against the primary method's top-1
     agreement_count = 0
-    total_methods = 0
-    for other_name, other_results in all_results[qid].items():
+    for other_name in REGISTERED_METHOD_IDS:
+        other_results = method_outputs[other_name]
         if other_results:
-            total_methods += 1
             if other_results[0].evidence_id == top1.evidence_id:
                 agreement_count += 1
-    cross_retriever_agreement = (
-        agreement_count / total_methods if total_methods else 0.0
-    )
+    cross_retriever_agreement = agreement_count / len(REGISTERED_METHOD_IDS)
 
     # Feature 3: extraction confidence (normalised score)
     extraction_confidence = min(top1.score / 2.0, 1.0) if top1.score > 0 else 0.0
@@ -307,14 +309,16 @@ def _build_features_for_question(
     # Feature 4: temporal validity
     temporal_validity = 1.0 if top1.valid_time_match else 0.0
 
-    # Feature 5: evidence coverage (retriever-visible sufficiency, NOT gold-based)
-    top5_scores = [r.score for r in method_results[:5]]
-    if top5_scores:
-        avg_score = sum(top5_scores) / len(top5_scores)
-        max_possible = max(top5_scores) if top5_scores else 1.0
-        evidence_coverage = min(avg_score / max_possible, 1.0) if max_possible > 0 else 0.0
-    else:
-        evidence_coverage = 0.0
+    # Feature 5: score-scale-invariant, retriever-visible evidence coverage.
+    # The primary method is the graph+verification method.  Coverage is the
+    # proportion of five frozen evidence slots occupied by evidence that is
+    # both temporally valid and source-time verified.
+    verified_statuses = {"time_verified", "source_verified", "verified"}
+    supported_count = sum(
+        result.valid_time_match and result.verification_status in verified_statuses
+        for result in method_results[:5]
+    )
+    evidence_coverage = supported_count / 5.0
 
     return UncertaintyFeatures(
         retrieval_margin=retrieval_margin,
@@ -473,25 +477,22 @@ def _run_decision_gating(
         fold = fold_by_issuer[issuer]
         calibrator = fold.calibrator
         normalization = fold.normalization
+        require_final_calibration(calibrator)
 
         # Normalize features using the fold's fitted normalization
         norm_features = normalization.normalize([features])
         calibrated_prob = calibrator.predict_proba(norm_features)[0]
 
-        # Conformal acceptance: larger-is-worse nonconformity score
-        # score = 1 - calibrated_prob (higher = less conforming)
-        # accept iff score <= conformal_threshold
-        nonconformity_score = 1.0 - calibrated_prob
-        conforms = conformal_accept(
-            score=nonconformity_score,
-            threshold=fold.conformal_threshold,
-        )
-
         decision = decide(
-            calibrated_probability=calibrated_prob,
-            conforms=conforms,
-            evidence_sufficiency=evidence_sufficiency,
-            extraction_valid=True,
+            calibrated_prob,
+            evidence_sufficiency,
+            True,
+            bool(features.temporal_validity),
+            DecisionPolicy(
+                calibrated_probability_threshold=fold.decision_threshold,
+                conformal_threshold=fold.conformal_threshold,
+                evidence_sufficiency_threshold=0.25,
+            ),
         )
         counts[decision.code.name] += 1
 
