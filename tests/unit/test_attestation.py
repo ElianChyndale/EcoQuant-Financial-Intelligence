@@ -47,6 +47,10 @@ from ecoquant.valuation.bond_pricing import (
     compute_duration_convexity_numerically,
 )
 
+_CHAIN_ID = 31337
+_VERIFYING_CONTRACT = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+_DOMAIN = {"chain_id": _CHAIN_ID, "verifying_contract": _VERIFYING_CONTRACT}
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -64,7 +68,7 @@ def sample_attestation() -> RiskAttestationV1:
         recommended_haircut_bps=150,
         evidence_root=keccak256(b"evidence-root"),
         model_version=compute_model_version(),
-        decision_code=DecisionCode.AUTO_REPORT,
+        decision_code=int(DecisionCode.AUTO_REPORT),
         valid_until=1_720_100_000,
         nonce=42,
         provider="0xAbCdEf0123456789AbCdEf0123456789AbCdEf01",
@@ -228,7 +232,7 @@ class TestStrictModelValidation:
 
     def test_finite_timestamps_required(self) -> None:
         """Non-finite timestamps must be rejected."""
-        with pytest.raises(ValueError, match="finite"):
+        with pytest.raises(TypeError, match="integer"):
             RiskAttestationV1(
                 schema_version=1, asset_id=b"\x00" * 32,
                 as_of=float("inf"),
@@ -250,9 +254,9 @@ class TestSigningAndVerification:
     def test_sign_and_verify(self, sample_attestation: RiskAttestationV1) -> None:
         """Sign an attestation and verify the signer."""
         kp = generate_ephemeral_keypair()
-        signed = sign_attestation(sample_attestation, kp.private_key)
+        signed = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
         assert signed.signer_address.lower() == kp.address.lower()
-        assert verify_signature(signed, kp.address) is True
+        assert verify_signature(signed, kp.address, **_DOMAIN) is True
 
     def test_provider_verification(self, sample_attestation: RiskAttestationV1) -> None:
         """Provider must match the signer."""
@@ -271,15 +275,15 @@ class TestSigningAndVerification:
             nonce=sample_attestation.nonce,
             provider=kp.address,
         )
-        signed = sign_attestation(att, kp.private_key)
-        assert verify_provider(signed) is True
+        signed = sign_attestation(att, kp.private_key, **_DOMAIN)
+        assert verify_provider(signed, **_DOMAIN) is True
 
     def test_wrong_provider_fails_verification(self, sample_attestation: RiskAttestationV1) -> None:
         """Provider mismatch must fail verification."""
         kp = generate_ephemeral_keypair()
-        signed = sign_attestation(sample_attestation, kp.private_key)
+        signed = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
         # sample_attestation has a different provider than kp.address
-        assert verify_provider(signed) is False
+        assert verify_provider(signed, **_DOMAIN) is False
 
     def test_expiry_check_valid(self) -> None:
         """Non-expired attestation should pass expiry check."""
@@ -306,16 +310,16 @@ class TestSigningAndVerification:
     def test_signature_deterministic(self, sample_attestation: RiskAttestationV1) -> None:
         """Same key and attestation must produce same signature (RFC 6979)."""
         kp = generate_ephemeral_keypair()
-        signed1 = sign_attestation(sample_attestation, kp.private_key)
-        signed2 = sign_attestation(sample_attestation, kp.private_key)
+        signed1 = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
+        signed2 = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
         assert signed1.signature == signed2.signature
 
     def test_different_keys_produce_different_signatures(self, sample_attestation: RiskAttestationV1) -> None:
         """Different keys must produce different signatures."""
         kp1 = generate_ephemeral_keypair()
         kp2 = generate_ephemeral_keypair()
-        signed1 = sign_attestation(sample_attestation, kp1.private_key)
-        signed2 = sign_attestation(sample_attestation, kp2.private_key)
+        signed1 = sign_attestation(sample_attestation, kp1.private_key, **_DOMAIN)
+        signed2 = sign_attestation(sample_attestation, kp2.private_key, **_DOMAIN)
         assert signed1.signature != signed2.signature
 
     def test_different_attestations_produce_different_signatures(self) -> None:
@@ -335,21 +339,22 @@ class TestSigningAndVerification:
             decision_code=0, valid_until=2000, nonce=1,
             provider=kp.address,
         )
-        signed1 = sign_attestation(att1, kp.private_key)
-        signed2 = sign_attestation(att2, kp.private_key)
+        signed1 = sign_attestation(att1, kp.private_key, **_DOMAIN)
+        signed2 = sign_attestation(att2, kp.private_key, **_DOMAIN)
         assert signed1.signature != signed2.signature
 
-    def test_signature_is_64_bytes(self, sample_attestation: RiskAttestationV1) -> None:
-        """Signature must be exactly 64 bytes (r, s)."""
+    def test_signature_is_65_bytes(self, sample_attestation: RiskAttestationV1) -> None:
+        """Signature must be canonical recoverable r, s, v bytes."""
         kp = generate_ephemeral_keypair()
-        signed = sign_attestation(sample_attestation, kp.private_key)
-        assert len(signed.signature) == 64
+        signed = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
+        assert len(signed.signature) == 65
+        assert signed.signature[64] in (27, 28)
 
     def test_low_s_normalization(self, sample_attestation: RiskAttestationV1) -> None:
         """Signature s value must be in the lower half of the curve order."""
         from ecdsa import SECP256k1
         kp = generate_ephemeral_keypair()
-        signed = sign_attestation(sample_attestation, kp.private_key)
+        signed = sign_attestation(sample_attestation, kp.private_key, **_DOMAIN)
         s = int.from_bytes(signed.signature[32:64], "big")
         assert s <= SECP256k1.order // 2
 

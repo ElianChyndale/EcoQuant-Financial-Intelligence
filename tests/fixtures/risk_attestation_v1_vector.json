@@ -1,0 +1,30 @@
+{
+  "schema": "provisional-solidity-compatible-eip712-vector.v1",
+  "domain": {
+    "name": "EcoQuantRiskAttestation",
+    "version": "1",
+    "chainId": 31337,
+    "verifyingContract": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  },
+  "attestation": {
+    "schemaVersion": 1,
+    "assetId": "0x48883309155399790bfc7cea3b7578616a7c8d67aa02a2ed622edf8eb6a3d6c2",
+    "asOf": 1720000000,
+    "riskScoreBps": 3200,
+    "confidenceBps": 8500,
+    "recommendedHaircutBps": 150,
+    "evidenceRoot": "0x520f1d1215114bafb3a1b7792638a266b07e7fd87bc6ecc17e46c8a79026815a",
+    "modelVersion": "0xf5f5a739c3811068938ba23fe7cff652c36c492deff262b79f43e8215c6245d2",
+    "decisionCode": 2,
+    "validUntil": 1720100000,
+    "nonce": 42,
+    "provider": "0x0b057dc27f5184dbd83a5839e52072c8539a76e2"
+  },
+  "domainSeparator": "0x5ebc1687dc7a42b06cd71b4659a091d03cb20e80a7f3e18e8c7900fc7921022a",
+  "structHash": "0x5ba4ef5c90c4d4f4dbd3ee66e48df9b43177d2d0ba5eae005d9a2b1fe91c77be",
+  "digest": "0xe30ab357b052fdddae75c412b796c3c990c7073af48f30c01cf853e65b0d611e",
+  "publicKey": "0x06f2e211ef8e4c330b7f7661b547205b24fabf61cf5ec577a43801f9786022a7a89605a44d95671040d434609e797ace5b046c0af5cde8617392becd3505946a",
+  "signature": "0x78f6f565b244cd408fd5c3057dc626db6038c2b7bef30e089d3ba346228662e93139dd3659c793a327ebc84eacf7c8e1b59b3c7c4bccf01afe14c0f212bbe8731b",
+  "recoveredProvider": "0x0b057dc27f5184dbd83a5839e52072c8539a76e2",
+  "compiledSolidityVerification": "PENDING_GBL_TASK_12_14"
+}

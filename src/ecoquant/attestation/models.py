@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import re
 from dataclasses import dataclass
 
@@ -50,6 +49,7 @@ class RiskAttestationV1:
     provider: str  # hex address (40 hex chars, with or without 0x)
 
     def __post_init__(self) -> None:
+        _require_uint("schema_version", self.schema_version, 16)
         # schemaVersion must be exactly 1
         if self.schema_version != 1:
             raise ValueError(
@@ -63,12 +63,13 @@ class RiskAttestationV1:
             ("recommended_haircut_bps", self.recommended_haircut_bps),
         )
         for name, value in _bps_fields:
+            _require_uint(name, value, 16)
             if not (0 <= value <= 10_000):
                 raise ValueError(
                     f"{name} must be in [0, 10000], got {value}"
                 )
 
-        # decision_code must be 0, 1, or 2
+        _require_uint("decision_code", self.decision_code, 8)
         if self.decision_code not in (0, 1, 2):
             raise ValueError(
                 f"decision_code must be 0, 1, or 2, got {self.decision_code}"
@@ -93,14 +94,7 @@ class RiskAttestationV1:
             ("nonce", self.nonce),
         )
         for name, value in _uint64_fields:
-            if not isinstance(value, (int, float)):
-                raise TypeError(f"{name} must be numeric, got {type(value)}")
-            if not math.isfinite(float(value)):
-                raise ValueError(f"{name} must be finite, got {value}")
-            if value < 0 or value > 0xFFFFFFFFFFFFFFFF:
-                raise ValueError(
-                    f"{name} must be in uint64 range [0, 2^64-1], got {value}"
-                )
+            _require_uint(name, value, 64)
 
         # valid_until must be >= as_of
         if self.valid_until < self.as_of:
@@ -115,6 +109,15 @@ class RiskAttestationV1:
         addr_clean = self.provider.lower().removeprefix("0x")
         if int(addr_clean, 16) == 0:
             raise ValueError("provider must be a nonzero address")
+
+
+def _require_uint(name: str, value: object, bits: int) -> None:
+    """Require an exact Python integer in the corresponding Solidity range."""
+    if type(value) is not int:
+        raise TypeError(f"{name} must be an integer (bool and float are rejected)")
+    maximum = (1 << bits) - 1
+    if not 0 <= value <= maximum:
+        raise ValueError(f"{name} must be in uint{bits} range [0, {maximum}], got {value}")
 
 
 def _validate_address(address: str, field_name: str) -> None:
