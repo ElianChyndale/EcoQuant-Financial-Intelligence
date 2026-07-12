@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
@@ -251,6 +253,38 @@ def retrieval_manifest(methods: Sequence[Retriever]) -> Mapping[str, RetrievalMe
 
 def _terms(text: str) -> frozenset[str]:
     return frozenset("".join(character if character.isalnum() else " " for character in text.lower()).split())
+
+
+def corpus_fingerprint(corpus: Sequence[CorpusRecord]) -> str:
+    """Compute a deterministic SHA-256 fingerprint over canonical retriever-visible fields.
+
+    Fields per record (sorted deterministically by evidence_id):
+    - schema version (1)
+    - evidence_id
+    - issuer
+    - valid_time (ISO format)
+    - source_time (ISO format, or empty)
+    - text (normalized: stripped, lowered)
+    - numeric_value (string representation, or empty)
+
+    Returns:
+        Hex-encoded SHA-256 digest.
+    """
+    sorted_records = sorted(corpus, key=lambda r: r.evidence_id)
+    canonical_parts: list[str] = []
+    for record in sorted_records:
+        parts = [
+            "1",  # schema version
+            record.evidence_id,
+            record.issuer,
+            record.valid_time.isoformat(),
+            record.source_time.isoformat() if record.source_time else "",
+            record.text.strip().lower(),
+            str(record.numeric_value) if record.numeric_value is not None else "",
+        ]
+        canonical_parts.append("|".join(parts))
+    canonical_bytes = "\n".join(canonical_parts).encode("utf-8")
+    return hashlib.sha256(canonical_bytes).hexdigest()
 
 
 def all_retrievers(

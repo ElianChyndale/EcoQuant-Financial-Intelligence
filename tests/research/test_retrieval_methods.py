@@ -14,6 +14,7 @@ from ecoquant.retrieval.base import (
     RetrievalResult,
     all_retrievers,
     compare_retrievers,
+    corpus_fingerprint,
     validate_final_benchmark,
     retrieval_manifest,
 )
@@ -513,3 +514,56 @@ def test_paired_issuer_clustered_bootstrap_is_seeded_and_clusters_by_issuer() ->
     assert first.point_estimate == pytest.approx(0.5)
     assert first.lower <= first.point_estimate <= first.upper
     assert first.cluster_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Tests: Canonical corpus fingerprint
+# ---------------------------------------------------------------------------
+
+
+class TestCorpusFingerprint:
+    """Corpus fingerprint must be deterministic and corpus-sensitive."""
+
+    def test_fingerprint_is_deterministic(self) -> None:
+        corpus = frozen_corpus()
+        fp1 = corpus_fingerprint(corpus)
+        fp2 = corpus_fingerprint(corpus)
+        assert fp1 == fp2
+        assert len(fp1) == 64  # SHA-256 hex
+
+    def test_fingerprint_is_order_independent(self) -> None:
+        corpus = frozen_corpus()
+        reversed_corpus = tuple(reversed(corpus))
+        assert corpus_fingerprint(corpus) == corpus_fingerprint(reversed_corpus)
+
+    def test_different_corpus_produces_different_fingerprint(self) -> None:
+        corpus_a = frozen_corpus()
+        corpus_b = (
+            CorpusRecord("x-2022", "X", date(2022, 12, 31), "Different text", 99.9),
+            CorpusRecord("x-2023", "X", date(2023, 12, 31), "More text", 100.0),
+        )
+        assert corpus_fingerprint(corpus_a) != corpus_fingerprint(corpus_b)
+
+    def test_equal_length_different_corpus_fails_fingerprint_comparison(self) -> None:
+        """Two corpora with the same number of records but different content
+        must produce different fingerprints."""
+        corpus_a = (
+            CorpusRecord("a-1", "A", date(2023, 12, 31), "Alpha text", 1.0),
+            CorpusRecord("a-2", "A", date(2024, 12, 31), "Beta text", 2.0),
+        )
+        corpus_b = (
+            CorpusRecord("b-1", "B", date(2023, 12, 31), "Gamma text", 3.0),
+            CorpusRecord("b-2", "B", date(2024, 12, 31), "Delta text", 4.0),
+        )
+        assert len(corpus_a) == len(corpus_b)
+        assert corpus_fingerprint(corpus_a) != corpus_fingerprint(corpus_b)
+
+    def test_single_record_change_breaks_fingerprint(self) -> None:
+        corpus = frozen_corpus()
+        fp_original = corpus_fingerprint(corpus)
+        # Change numeric_value of one record
+        modified = tuple(
+            CorpusRecord(r.evidence_id, r.issuer, r.valid_time, r.text, 999.9 if r.evidence_id == "aib-2022" else r.numeric_value, r.source_time)
+            for r in corpus
+        )
+        assert corpus_fingerprint(modified) != fp_original
