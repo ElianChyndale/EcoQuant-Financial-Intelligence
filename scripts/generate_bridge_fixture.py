@@ -57,6 +57,8 @@ def build_bridge_fixture(
     verifying_contract: str,
     as_of: int,
     valid_until: int,
+    domain_name: str = "EcoQuantRiskAttestation",
+    domain_version: str = "1",
 ) -> tuple[RiskAttestationV1, SignedAttestation, bytes]:
     """Create one canonical public bridge fixture with an ephemeral provider."""
     keypair = generate_ephemeral_keypair()
@@ -79,6 +81,8 @@ def build_bridge_fixture(
         keypair.private_key,
         chain_id=chain_id,
         verifying_contract=verifying_contract,
+        domain_name=domain_name,
+        domain_version=domain_version,
     )
     return attestation, signed, _encode_fixture(attestation, signed.signature)
 
@@ -89,12 +93,16 @@ def main() -> int:
     parser.add_argument("--verifying-contract", required=True)
     parser.add_argument("--as-of", type=int, required=True)
     parser.add_argument("--valid-until", type=int, required=True)
+    parser.add_argument("--domain-name", default="EcoQuantRiskAttestation")
+    parser.add_argument("--domain-version", default="1")
     arguments = parser.parse_args()
     _, _, encoded = build_bridge_fixture(
         chain_id=arguments.chain_id,
         verifying_contract=arguments.verifying_contract,
         as_of=arguments.as_of,
         valid_until=arguments.valid_until,
+        domain_name=arguments.domain_name,
+        domain_version=arguments.domain_version,
     )
     sys.stdout.write("0x" + encoded.hex())
     return 0
