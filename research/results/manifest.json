@@ -1,0 +1,275 @@
+{
+  "seed": 20260710,
+  "mode": "fixture",
+  "corpus_size": 12,
+  "question_count": 64,
+  "methods": [
+    "bm25",
+    "dense",
+    "static_kg",
+    "temporal_kg",
+    "temporal_kg_rerank",
+    "temporal_kg_verify"
+  ],
+  "implementation_mode": "fixture",
+  "git_commit": "7cc3280649b02757191722e5fb64f720f0bce9cb",
+  "git_dirty": true,
+  "python_version": "3.13.14",
+  "platform": "Windows-11-10.0.22631-SP0",
+  "dependency_versions": {
+    "rank-bm25": "unknown",
+    "sentence-transformers": "5.6.0",
+    "networkx": "3.3",
+    "ecdsa": "0.19.2",
+    "pycryptodome": "3.23.0"
+  },
+  "model_names": {
+    "dense": "sentence-transformers/all-MiniLM-L6-v2",
+    "reranker": "BAAI/bge-reranker-base"
+  },
+  "model_revisions": {
+    "dense": "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c",
+    "reranker": "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5"
+  },
+  "conformal_alpha": 0.1,
+  "max_selective_error": 0.1,
+  "primary_method": "temporal_kg_verify",
+  "split_manifests": [
+    {
+      "outer_fold_id": 0,
+      "test_issuer": "AIB",
+      "held_out_issuer": "AIB",
+      "fit_issuers": [
+        "Enel"
+      ],
+      "calibration_issuers": [
+        "ESB"
+      ],
+      "threshold_selection_issuers": [
+        "KfW"
+      ],
+      "seed": 20260710,
+      "test_sample_count": 14,
+      "fit_sample_count": 14,
+      "cal_sample_count": 14,
+      "fit_positive_count": 8,
+      "fit_negative_count": 6,
+      "fitted_coefficients": {
+        "weights": [
+          0.5626838104213122,
+          2.6210457167550087,
+          0.0,
+          0.0,
+          -0.16805284735648193
+        ],
+        "bias": 0.04190635744575511
+      },
+      "normalization_parameters": {
+        "means": [
+          3.517857142857143,
+          0.8214285714285714,
+          1.0,
+          1.0,
+          0.3285714285714286
+        ],
+        "stds": [
+          3.3145570239937223,
+          0.23957871187497756,
+          1e-06,
+          1e-06,
+          0.09583148474999105
+        ]
+      },
+      "conformal_threshold": 0.8278043358860814,
+      "conformal_alpha": 0.1,
+      "decision_threshold": 0.8278043358860814,
+      "convergence_status": {
+        "converged": true,
+        "iterations_run": 5,
+        "degeneracy_status": "normal",
+        "objective_value": 0.25258104814667404,
+        "failure_reason": null
+      }
+    },
+    {
+      "outer_fold_id": 1,
+      "test_issuer": "ESB",
+      "held_out_issuer": "ESB",
+      "fit_issuers": [
+        "AIB"
+      ],
+      "calibration_issuers": [
+        "Enel"
+      ],
+      "threshold_selection_issuers": [
+        "KfW"
+      ],
+      "seed": 20260711,
+      "test_sample_count": 14,
+      "fit_sample_count": 14,
+      "cal_sample_count": 14,
+      "fit_positive_count": 8,
+      "fit_negative_count": 6,
+      "fitted_coefficients": {
+        "weights": [
+          0.3360350574857102,
+          2.6678775369245815,
+          0.0,
+          0.0,
+          -0.3515804667483804
+        ],
+        "bias": 0.03873446452628704
+      },
+      "normalization_parameters": {
+        "means": [
+          3.8035714285714284,
+          0.8214285714285714,
+          1.0,
+          1.0,
+          0.3285714285714286
+        ],
+        "stds": [
+          3.7609109974329686,
+          0.23957871187497756,
+          1e-06,
+          1e-06,
+          0.09583148474999105
+        ]
+      },
+      "conformal_threshold": 0.8294472718972199,
+      "conformal_alpha": 0.1,
+      "decision_threshold": 0.8294472718972199,
+      "convergence_status": {
+        "converged": true,
+        "iterations_run": 5,
+        "degeneracy_status": "normal",
+        "objective_value": 0.2544583571458071,
+        "failure_reason": null
+      }
+    },
+    {
+      "outer_fold_id": 2,
+      "test_issuer": "Enel",
+      "held_out_issuer": "Enel",
+      "fit_issuers": [
+        "KfW"
+      ],
+      "calibration_issuers": [
+        "ESB"
+      ],
+      "threshold_selection_issuers": [
+        "AIB"
+      ],
+      "seed": 20260712,
+      "test_sample_count": 14,
+      "fit_sample_count": 14,
+      "cal_sample_count": 14,
+      "fit_positive_count": 8,
+      "fit_negative_count": 6,
+      "fitted_coefficients": {
+        "weights": [
+          0.6323390797963293,
+          2.591842077330032,
+          0.0,
+          0.0,
+          -0.12427125802280731
+        ],
+        "bias": 0.02968244037351725
+      },
+      "normalization_parameters": {
+        "means": [
+          2.9464285714285716,
+          0.8214285714285714,
+          1.0,
+          1.0,
+          0.3285714285714286
+        ],
+        "stds": [
+          2.535777162198313,
+          0.23957871187497756,
+          1e-06,
+          1e-06,
+          0.09583148474999105
+        ]
+      },
+      "conformal_threshold": 0.8278621953582168,
+      "conformal_alpha": 0.1,
+      "decision_threshold": 0.8278621953582168,
+      "convergence_status": {
+        "converged": true,
+        "iterations_run": 6,
+        "degeneracy_status": "normal",
+        "objective_value": 0.2519097773068302,
+        "failure_reason": null
+      }
+    },
+    {
+      "outer_fold_id": 3,
+      "test_issuer": "KfW",
+      "held_out_issuer": "KfW",
+      "fit_issuers": [
+        "AIB"
+      ],
+      "calibration_issuers": [
+        "Enel"
+      ],
+      "threshold_selection_issuers": [
+        "ESB"
+      ],
+      "seed": 20260713,
+      "test_sample_count": 14,
+      "fit_sample_count": 14,
+      "cal_sample_count": 14,
+      "fit_positive_count": 8,
+      "fit_negative_count": 6,
+      "fitted_coefficients": {
+        "weights": [
+          0.3360350574857102,
+          2.6678775369245815,
+          0.0,
+          0.0,
+          -0.3515804667483804
+        ],
+        "bias": 0.03873446452628704
+      },
+      "normalization_parameters": {
+        "means": [
+          3.8035714285714284,
+          0.8214285714285714,
+          1.0,
+          1.0,
+          0.3285714285714286
+        ],
+        "stds": [
+          3.7609109974329686,
+          0.23957871187497756,
+          1e-06,
+          1e-06,
+          0.09583148474999105
+        ]
+      },
+      "conformal_threshold": 0.8294472718972199,
+      "conformal_alpha": 0.1,
+      "decision_threshold": 0.8294472718972199,
+      "convergence_status": {
+        "converged": true,
+        "iterations_run": 5,
+        "degeneracy_status": "normal",
+        "objective_value": 0.2544583571458071,
+        "failure_reason": null
+      }
+    }
+  ],
+  "frozen_threshold": 0.8278043358860814,
+  "valuation_convention": "Actual/Actual ICMA",
+  "attestation_schema": "RiskAttestationV1",
+  "artifact_hashes": {
+    "retrieval_results.csv": "412d6c76edb1037b259c66e3290bea262744802d1cec981f66060db2a776560b",
+    "calibration_results.csv": "57d7b759294534ccc9d78491487c97a1ac27ba65cb1146c145b566a9d24357a2",
+    "risk_coverage.csv": "3031dc67bb1b18f49dc035ce5eb361ce68ec37f208661ce48832b34bb56ee495",
+    "valuation_sensitivity.csv": "1b40bc76528acee0e93be6701dac229c3401bc421e1a20649fce9505dba19953",
+    "retrieval_summary.json": "5382d2da05dda3633d08aaf1861f4bbb486207755ed0bd898f775851d686777b",
+    "risk_attestation_fixture.json": "681721a534dc5581befecc8d0872cb1c0533110524d835a038205f3cf794645e",
+    "manifest.json": "f16687fb710da599f05fc1ed287d786549518739bcf33b6c54b53b0cb341950a"
+  }
+}

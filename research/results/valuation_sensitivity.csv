@@ -1,0 +1,2 @@
+scenario,status,base_spread_bps,adjusted_spread_bps,clean_price,dirty_price
+baseline,fixture_mode_no_valuation,0,0,0.0,0.0

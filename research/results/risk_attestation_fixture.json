@@ -1,0 +1,25 @@
+{
+  "schema": "provisional-solidity-compatible-eip712-vector.v1",
+  "attestation": {
+    "schemaVersion": 1,
+    "assetId": "0x48883309155399790bfc7cea3b7578616a7c8d67aa02a2ed622edf8eb6a3d6c2",
+    "asOf": 1720000000,
+    "riskScoreBps": 3200,
+    "confidenceBps": 8500,
+    "recommendedHaircutBps": 150,
+    "evidenceRoot": "0x9315a5c18a8928bafbd809875bf53bdf791852fcfaa385b0911518f91261cb27",
+    "modelVersion": "0xf5f5a739c3811068938ba23fe7cff652c36c492deff262b79f43e8215c6245d2",
+    "decisionCode": 2,
+    "validUntil": 1720100000,
+    "nonce": 1,
+    "provider": "0xed237a59c095db17b3393191c559a28c8bfc6d63"
+  },
+  "domainSeparator": "0x5ebc1687dc7a42b06cd71b4659a091d03cb20e80a7f3e18e8c7900fc7921022a",
+  "structHash": "0x5ecba9da7063c8c236f8fd4251522893090a6b28f8fc20349a99cbd6b0eadf10",
+  "digest": "0x38b74b42bff34bc4f582c0573b60bbde9ece5b56d5bdcfb3ac950994dbdcbc14",
+  "publicKey": "0x64d7bcae29aba28273b66ce2629ef55d0104a00db839616e0aa51fbe76cef739440bbe1e0059f039ace9ac3a44f4552a48ad5dae72d7910028b5ff61ccc432fa",
+  "signature": "0x1f8f015248ddca51f8c4da8caeb4b6e182c25b4a3902c6fc51fadf209fd7506e51a0c7a19c7c78d430ee7dc941404a7b43a4f112f4c27423dcf91a1945166c801b",
+  "recoveredProvider": "0xed237a59c095db17b3393191c559a28c8bfc6d63",
+  "compiledSolidityVerification": "PENDING_GBL_TASK_12_14",
+  "mode": "fixture"
+}

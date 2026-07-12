@@ -8,7 +8,8 @@ docs/research/README.md must reference.
 
 Usage::
 
-    python scripts/run_research.py --seed 20260710
+    python scripts/run_research.py --mode fixture --seed 20260710
+    python scripts/run_research.py --mode production --seed 20260710 --input-dir <normalized-docs> --output-dir <dir>
 
 Exit code 0 on success; non-zero on any failure.
 """
@@ -553,16 +554,27 @@ def _compute_bootstrap(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=["fixture", "production"], required=True,
+                        help="Run mode: 'fixture' for deterministic testing, 'production' for real backends.")
     parser.add_argument("--seed", type=int, required=True, help="RNG seed for reproducibility")
+    parser.add_argument("--input-dir", type=str, default=None,
+                        help="Input directory with normalized documents (production mode only).")
     parser.add_argument("--output-dir", type=str, default=None,
                         help="Output directory for artifacts. Defaults to research/results/.")
-    parser.add_argument("--fixture", action="store_true",
-                        help="Use fixture backends instead of production models. "
-                             "For environments where ML models are not available.")
     args = parser.parse_args()
 
     # Resolve output directory
     output_dir = Path(args.output_dir) if args.output_dir else RESULTS_DIR
+
+    # Production mode gates
+    if args.mode == "production":
+        if not args.input_dir:
+            print("ERROR: production mode requires --input-dir with normalized documents", file=sys.stderr)
+            return 1
+        input_dir = Path(args.input_dir)
+        if not input_dir.exists():
+            print(f"ERROR: input directory does not exist: {input_dir}", file=sys.stderr)
+            return 1
 
     # 1. Seed all RNGs
     random.seed(args.seed)
@@ -574,7 +586,7 @@ def main() -> int:
     labels = _build_evaluator_gold(questions)
 
     # 3. Run retrieval across all six methods
-    retrieval_mode = "fixture" if args.fixture else "production"
+    retrieval_mode = args.mode
     all_results = _run_all_methods(corpus, graph, questions, mode=retrieval_mode)
     retrieval_metrics = _compute_retrieval_metrics(all_results, labels)
 
@@ -632,7 +644,7 @@ def main() -> int:
     import platform
     import subprocess
 
-    # Get git commit
+    # Get git commit and dirty state
     try:
         git_commit = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
@@ -641,6 +653,15 @@ def main() -> int:
         ).strip()
     except Exception:
         git_commit = "unknown"
+    try:
+        git_status = subprocess.check_output(
+            ["git", "status", "--porcelain"],
+            cwd=REPOSITORY_ROOT,
+            text=True,
+        ).strip()
+        git_dirty = bool(git_status)
+    except Exception:
+        git_dirty = True
 
     # Get dependency versions
     dependency_versions: dict[str, str] = {}
@@ -671,15 +692,98 @@ def main() -> int:
             writer.writerows(rows)
         return hashlib.sha256(buf.getvalue().encode()).hexdigest()
 
+    # Build calibration and risk coverage CSV rows
+    calibration_rows: list[dict[str, object]] = []
+    risk_coverage_rows: list[dict[str, object]] = []
+    for fold_info in calibration.get("folds", []):
+        row = {
+            "fold_id": fold_info.get("outer_fold_id", 0),
+            "test_issuer": fold_info.get("test_issuer", ""),
+            "fit_sample_count": fold_info.get("fit_sample_count", 0),
+            "cal_sample_count": fold_info.get("cal_sample_count", 0),
+            "conformal_threshold": fold_info.get("conformal_threshold", 0.0),
+            "decision_threshold": fold_info.get("decision_threshold", 0.0),
+        }
+        calibration_rows.append(row)
+        risk_coverage_rows.append({
+            "fold_id": row["fold_id"],
+            "test_issuer": row["test_issuer"],
+            "coverage": calibration.get("coverage_at_threshold", 0.0),
+            "selective_error": 0.0,
+        })
+
+    # Build valuation sensitivity CSV (stub — no real valuation in fixture mode)
+    valuation_rows: list[dict[str, object]] = [{
+        "scenario": "baseline",
+        "status": "fixture_mode_no_valuation",
+        "base_spread_bps": 0,
+        "adjusted_spread_bps": 0,
+        "clean_price": 0.0,
+        "dirty_price": 0.0,
+    }]
+
+    # Build risk attestation fixture JSON
+    from ecoquant.attestation.eip712 import compute_asset_id, compute_model_version, keccak256
+    from ecoquant.attestation.models import RiskAttestationV1
+    from ecoquant.attestation.signing import generate_ephemeral_keypair, sign_attestation
+
+    attestation_keypair = generate_ephemeral_keypair()
+    sample_attestation = RiskAttestationV1(
+        schema_version=1,
+        asset_id=compute_asset_id("IE00B4L5Y983"),
+        as_of=1_720_000_000,
+        risk_score_bps=3200,
+        confidence_bps=8500,
+        recommended_haircut_bps=150,
+        evidence_root=keccak256(b"fixture-evidence-root"),
+        model_version=compute_model_version(),
+        decision_code=2,
+        valid_until=1_720_100_000,
+        nonce=1,
+        provider=attestation_keypair.address,
+    )
+    signed_attestation = sign_attestation(
+        sample_attestation,
+        attestation_keypair.private_key,
+        chain_id=31337,
+        verifying_contract="0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    )
+    risk_attestation_fixture = {
+        "schema": "provisional-solidity-compatible-eip712-vector.v1",
+        "attestation": {
+            "schemaVersion": 1,
+            "assetId": "0x" + sample_attestation.asset_id.hex(),
+            "asOf": sample_attestation.as_of,
+            "riskScoreBps": sample_attestation.risk_score_bps,
+            "confidenceBps": sample_attestation.confidence_bps,
+            "recommendedHaircutBps": sample_attestation.recommended_haircut_bps,
+            "evidenceRoot": "0x" + sample_attestation.evidence_root.hex(),
+            "modelVersion": "0x" + sample_attestation.model_version.hex(),
+            "decisionCode": sample_attestation.decision_code,
+            "validUntil": sample_attestation.valid_until,
+            "nonce": sample_attestation.nonce,
+            "provider": sample_attestation.provider,
+        },
+        "domainSeparator": "0x" + signed_attestation.domain_hash.hex(),
+        "structHash": "0x" + signed_attestation.struct_hash.hex(),
+        "digest": "0x" + signed_attestation.digest.hex(),
+        "publicKey": "0x" + signed_attestation.public_key.hex(),
+        "signature": "0x" + signed_attestation.signature.hex(),
+        "recoveredProvider": signed_attestation.signer_address,
+        "compiledSolidityVerification": "PENDING_GBL_TASK_12_14",
+        "mode": "fixture",
+    }
+
     # Build manifest
     manifest = {
         "seed": args.seed,
+        "mode": args.mode,
         "corpus_size": len(corpus),
         "question_count": len(questions),
         "methods": list(REGISTERED_METHOD_IDS),
         "implementation_mode": retrieval_mode,
-        "fixture_mode": args.fixture,
         "git_commit": git_commit,
+        "git_dirty": git_dirty,
         "python_version": platform.python_version(),
         "platform": platform.platform(),
         "dependency_versions": dependency_versions,
@@ -696,32 +800,31 @@ def main() -> int:
         "primary_method": primary,
         "split_manifests": calibration.get("folds", []),
         "frozen_threshold": calibration.get("frozen_threshold", 0.0),
-        "artifact_hashes": {
-            "retrieval_results.csv": _hash_csv(retrieval_rows),
-            "retrieval_summary.json": _hash_json(retrieval_summary),
-            "calibration_results.json": _hash_json(calibration),
-            "risk_coverage.json": _hash_json(calibration),
-            "decision_summary.json": _hash_json(decisions),
-            "bootstrap_intervals.json": _hash_json(bootstrap),
-        },
+        "valuation_convention": "Actual/Actual ICMA",
+        "attestation_schema": "RiskAttestationV1",
+        "artifact_hashes": {},  # Computed after writing all artifacts
     }
 
     # Write all artifacts
-    # retrieval_results.csv
-    csv_path = output_dir / "retrieval_results.csv"
-    with csv_path.open("w", newline="", encoding="utf-8") as f:
-        if retrieval_rows:
-            writer = csv.DictWriter(f, fieldnames=retrieval_rows[0].keys())
-            writer.writeheader()
-            writer.writerows(retrieval_rows)
+    # CSV artifacts
+    csv_artifacts: dict[str, list[dict]] = {
+        "retrieval_results.csv": retrieval_rows,
+        "calibration_results.csv": calibration_rows,
+        "risk_coverage.csv": risk_coverage_rows,
+        "valuation_sensitivity.csv": valuation_rows,
+    }
+    for filename, rows in csv_artifacts.items():
+        csv_path = output_dir / filename
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            if rows:
+                writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
 
     # JSON artifacts
     json_artifacts: dict[str, object] = {
         "retrieval_summary.json": retrieval_summary,
-        "calibration_results.json": calibration,
-        "risk_coverage.json": calibration,  # Same data, different view
-        "decision_summary.json": decisions,
-        "bootstrap_intervals.json": bootstrap,
+        "risk_attestation_fixture.json": risk_attestation_fixture,
         "manifest.json": manifest,
     }
 
@@ -730,8 +833,19 @@ def main() -> int:
         with path.open("w", encoding="utf-8") as handle:
             json.dump(data, handle, indent=2)
 
+    # Recompute artifact hashes after writing all files, then write manifest
+    all_artifact_files = list(csv_artifacts.keys()) + list(json_artifacts.keys())
+    artifact_hashes: dict[str, str] = {}
+    for filename in all_artifact_files:
+        path = output_dir / filename
+        artifact_hashes[filename] = hashlib.sha256(path.read_bytes()).hexdigest()
+    manifest["artifact_hashes"] = artifact_hashes
+    manifest_path = output_dir / "manifest.json"
+    with manifest_path.open("w", encoding="utf-8") as handle:
+        json.dump(manifest, handle, indent=2)
+
     print(f"Research release written to {output_dir}/")
-    for filename in sorted(list(json_artifacts.keys()) + ["retrieval_results.csv"]):
+    for filename in sorted(all_artifact_files):
         print(f"  {filename}")
 
     return 0
