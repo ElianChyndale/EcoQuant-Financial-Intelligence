@@ -658,3 +658,198 @@ class TestInputValidation:
         )
         with pytest.raises(ValueError, match="maturity"):
             price_bond(terms, 0.05)
+
+
+# ---------------------------------------------------------------------------
+# Tests: Zero coupon bond
+# ---------------------------------------------------------------------------
+
+
+class TestZeroCouponBond:
+    """Zero coupon bonds must price correctly as pure discount instruments."""
+
+    def test_zero_coupon_price_below_face(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.0, payment_frequency=2,
+            maturity_years=5.0,
+            settlement_date=date(2025, 1, 1),
+            issue_date=date(2025, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.05)
+        assert result.clean_price < 1000.0
+        assert result.accrued_interest == 0.0
+
+    def test_zero_coupon_duration_equals_maturity(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.0, payment_frequency=1,
+            maturity_years=5.0,
+            settlement_date=date(2025, 1, 1),
+            issue_date=date(2025, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.05)
+        assert abs(result.macaulay_duration - 5.0) < 0.1
+
+
+# ---------------------------------------------------------------------------
+# Tests: Between-coupon settlement
+# ---------------------------------------------------------------------------
+
+
+class TestBetweenCouponSettlement:
+    """Settlement between coupon dates must produce nonzero accrued interest."""
+
+    def test_settlement_mid_period_has_accrued(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.06, payment_frequency=2,
+            maturity_years=5.0,
+            settlement_date=date(2025, 4, 1),  # Between Jan and Jul coupons
+            issue_date=date(2025, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.06)
+        assert result.accrued_interest > 0.0
+        assert result.accrued_interest < 30.0  # Less than full coupon of 30
+
+    def test_settlement_at_coupon_date_has_zero_accrued(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.06, payment_frequency=2,
+            maturity_years=5.0,
+            settlement_date=date(2025, 7, 1),  # Exactly on coupon date
+            issue_date=date(2025, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.06)
+        assert result.accrued_interest == pytest.approx(0.0, abs=0.01)
+
+
+# ---------------------------------------------------------------------------
+# Tests: Fractional maturity
+# ---------------------------------------------------------------------------
+
+
+class TestFractionalMaturity:
+    """Fractional maturity years must produce correct schedules."""
+
+    def test_fractional_maturity_5_5_years(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
+            maturity_years=5.5,
+            settlement_date=date(2025, 1, 15),
+            issue_date=date(2025, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.05)
+        assert result.remaining_coupons > 0
+        assert result.clean_price > 0
+
+
+# ---------------------------------------------------------------------------
+# Tests: Leap year handling
+# ---------------------------------------------------------------------------
+
+
+class TestLeapYearHandling:
+    """Leap years must not break coupon schedule generation."""
+
+    def test_leap_year_coupon_schedule(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
+            maturity_years=2.0,
+            settlement_date=date(2024, 3, 1),  # 2024 is a leap year
+            issue_date=date(2024, 1, 1),
+        )
+        result = price_bond(terms, yield_to_maturity=0.05)
+        assert result.remaining_coupons > 0
+        assert result.clean_price > 0
+
+    def test_feb_29_issue_date(self) -> None:
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
+            maturity_years=2.0,
+            settlement_date=date(2024, 3, 1),
+            issue_date=date(2024, 2, 29),  # Leap day
+        )
+        result = price_bond(terms, yield_to_maturity=0.05)
+        assert result.clean_price > 0
+
+
+# ---------------------------------------------------------------------------
+# Tests: Unsupported mapping
+# ---------------------------------------------------------------------------
+
+
+class TestUnsupportedMapping:
+    """Unknown risk-channel mappings must return explicit unsupported status."""
+
+    def test_unsupported_mapping_returns_status(self) -> None:
+        from ecoquant.valuation.sensitivity import compute_sensitivity, UnsupportedMapping
+        from ecoquant.valuation.policy import PolicyResult
+        from ecoquant.uncertainty.decision import DecisionCode
+
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
+            maturity_years=10.0,
+            settlement_date=date(2025, 1, 15),
+            issue_date=date(2025, 1, 1),
+        )
+        policy = PolicyResult(
+            adjusted_spread_bps=150,
+            recommended_haircut_bps=100,
+            decision_code=DecisionCode.AUTO_REPORT,
+            adjustments={"unknown_factor": 50},
+        )
+        result = compute_sensitivity(
+            terms, 0.05, 100, policy,
+            risk_channel_map={},  # Empty map — no channel for unknown_factor
+            evidence_id="ev-001",
+            issuer="TestIssuer",
+            bond_id="BOND-001",
+        )
+        assert len(result.unsupported_mappings) == 1
+        assert result.unsupported_mappings[0].status == "unsupported_risk_mapping"
+        assert len(result.scenarios) == 0  # No adjustment applied
+
+
+# ---------------------------------------------------------------------------
+# Tests: Evidence provenance
+# ---------------------------------------------------------------------------
+
+
+class TestEvidenceProvenance:
+    """Every sensitivity result must preserve actual evidence provenance."""
+
+    def test_evidence_id_preserved_in_scenario(self) -> None:
+        from ecoquant.valuation.sensitivity import compute_sensitivity
+        from ecoquant.valuation.policy import PolicyResult
+        from ecoquant.uncertainty.decision import DecisionCode
+
+        terms = BondTerms(
+            face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
+            maturity_years=10.0,
+            settlement_date=date(2025, 1, 15),
+            issue_date=date(2025, 1, 1),
+        )
+        policy = PolicyResult(
+            adjusted_spread_bps=150,
+            recommended_haircut_bps=100,
+            decision_code=DecisionCode.AUTO_REPORT,
+            adjustments={"credit_spread": 50},
+        )
+        result = compute_sensitivity(
+            terms, 0.05, 100, policy,
+            risk_channel_map={"credit_spread": "credit"},
+            evidence_id="evidence-abc-123",
+            issuer="GreenCorp",
+            bond_id="GRNBOND-001",
+            rule_id="rule-v1",
+            rule_version="1.0",
+            valid_time="2025-01-15T00:00:00Z",
+            source_time="2025-01-14T12:00:00Z",
+        )
+        assert len(result.scenarios) == 1
+        scenario = result.scenarios[0]
+        assert scenario.evidence_id == "evidence-abc-123"
+        assert scenario.issuer == "GreenCorp"
+        assert scenario.bond_id == "GRNBOND-001"
+        assert scenario.rule_id == "rule-v1"
+        assert scenario.rule_version == "1.0"
+        assert scenario.valid_time == "2025-01-15T00:00:00Z"
+        assert scenario.source_time == "2025-01-14T12:00:00Z"
+        assert scenario.status == "adjusted"

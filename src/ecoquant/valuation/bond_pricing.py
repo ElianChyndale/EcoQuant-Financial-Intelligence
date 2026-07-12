@@ -10,7 +10,7 @@ Implements financially correct bond repricing with:
 - Stub period handling
 - Input validation
 
-Day-count convention: Actual/Actual ISDA (documented prototype choice).
+Day-count convention: Actual/Actual ICMA (coupon-period fraction).
 """
 
 from __future__ import annotations
@@ -88,11 +88,14 @@ def _validate_pricing_inputs(
     if maturity_years <= 0:
         raise ValueError(f"maturity_years must be positive, got {maturity_years}")
     # Check that maturity is in the future relative to issue
-    maturity_date = date(
-        issue_date.year + int(maturity_years),
-        issue_date.month,
-        issue_date.day,
-    )
+    maturity_year = issue_date.year + int(maturity_years)
+    try:
+        maturity_date = date(maturity_year, issue_date.month, issue_date.day)
+    except ValueError:
+        # Handle leap day issue (Feb 29 → Feb 28 in non-leap year)
+        import calendar
+        last_day = calendar.monthrange(maturity_year, issue_date.month)[1]
+        maturity_date = date(maturity_year, issue_date.month, min(issue_date.day, last_day))
     if maturity_date <= settlement_date:
         raise ValueError(
             f"maturity date ({maturity_date}) must be after settlement ({settlement_date})"
@@ -111,7 +114,12 @@ def _generate_coupon_dates(
     """
     months_between = 12 // payment_frequency
     maturity_year = issue_date.year + int(maturity_years)
-    maturity_date = date(maturity_year, issue_date.month, issue_date.day)
+    try:
+        maturity_date = date(maturity_year, issue_date.month, issue_date.day)
+    except ValueError:
+        import calendar
+        last_day = calendar.monthrange(maturity_year, issue_date.month)[1]
+        maturity_date = date(maturity_year, issue_date.month, min(issue_date.day, last_day))
 
     coupon_dates: list[date] = []
 
@@ -150,11 +158,10 @@ def _generate_coupon_dates(
 
 
 def _actual_actual_fraction(start: date, end: date, period_start: date, period_end: date) -> float:
-    """Compute Actual/Actual ISDA day count fraction for a period.
+    """Compute Actual/Actual ICMA coupon-period fraction.
 
-    The fraction is: days_in_period / days_in_coupon_period
-    where days_in_coupon_period is the length of the coupon period
-    containing the accrual.
+    The fraction is: days_accrued / days_in_coupon_period
+    where days_in_coupon_period is the length of the current coupon period.
     """
     days_accrued = (end - start).days
     days_in_period = (period_end - period_start).days
