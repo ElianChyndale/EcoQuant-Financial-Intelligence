@@ -553,10 +553,15 @@ def _compute_bootstrap(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed", type=int, required=True, help="RNG seed for reproducibility")
+    parser.add_argument("--output-dir", type=str, default=None,
+                        help="Output directory for artifacts. Defaults to research/results/.")
     parser.add_argument("--fixture", action="store_true",
                         help="Use fixture backends instead of production models. "
                              "For environments where ML models are not available.")
     args = parser.parse_args()
+
+    # Resolve output directory
+    output_dir = Path(args.output_dir) if args.output_dir else RESULTS_DIR
 
     # 1. Seed all RNGs
     random.seed(args.seed)
@@ -590,16 +595,39 @@ def main() -> int:
     )
 
     # 5. Decision gating (using fitted calibrators from nested folds)
-    # No non-calibrated fallback — raises RuntimeError if calibrator missing
     decisions = _run_decision_gating(all_results, labels, primary, folds)
 
     # 6. Bootstrap intervals
     bootstrap = _compute_bootstrap(all_results, labels, "bm25", "temporal_kg_verify")
 
-    # 7. Write artifacts
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    # 7. Build retrieval results CSV
+    retrieval_rows: list[dict[str, object]] = []
+    for qid in all_results:
+        for method_name, results in all_results[qid].items():
+            for r in results:
+                retrieval_rows.append({
+                    "question_id": qid,
+                    "method": method_name,
+                    "evidence_id": r.evidence_id,
+                    "rank": r.rank,
+                    "score": r.score,
+                    "valid_time_match": r.valid_time_match,
+                })
 
-    # Build manifest with all required fields
+    # 8. Build retrieval summary
+    retrieval_summary = {
+        "method_metrics": retrieval_metrics,
+        "question_count": len(questions),
+        "corpus_size": len(corpus),
+        "primary_method": primary,
+    }
+
+    # 9. Write artifacts
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    import csv
+    import hashlib
+    import io
     import platform
     import subprocess
 
@@ -614,57 +642,95 @@ def main() -> int:
         git_commit = "unknown"
 
     # Get dependency versions
-    dependency_versions = {}
-    try:
-        import rank_bm25
-        dependency_versions["rank-bm25"] = rank_bm25.__version__
-    except Exception:
-        dependency_versions["rank-bm25"] = "unknown"
-    try:
-        import sentence_transformers
-        dependency_versions["sentence-transformers"] = sentence_transformers.__version__
-    except Exception:
-        dependency_versions["sentence-transformers"] = "unknown"
-    try:
-        import networkx
-        dependency_versions["networkx"] = networkx.__version__
-    except Exception:
-        dependency_versions["networkx"] = "unknown"
+    dependency_versions: dict[str, str] = {}
+    for pkg_name, import_name in [
+        ("rank-bm25", "rank_bm25"),
+        ("sentence-transformers", "sentence_transformers"),
+        ("networkx", "networkx"),
+        ("ecdsa", "ecdsa"),
+        ("pycryptodome", "Crypto"),
+    ]:
+        try:
+            mod = __import__(import_name)
+            dependency_versions[pkg_name] = getattr(mod, "__version__", "unknown")
+        except Exception:
+            dependency_versions[pkg_name] = "unknown"
 
-    artifacts: dict[str, object] = {
-        "study_manifest.json": {
-            "seed": args.seed,
-            "corpus_size": len(corpus),
-            "question_count": len(questions),
-            "methods": list(REGISTERED_METHOD_IDS),
-            "implementation_mode": retrieval_mode,
-            "fixture_mode": args.fixture,
-            "git_commit": git_commit,
-            "python_version": platform.python_version(),
-            "platform": platform.platform(),
-            "dependency_versions": dependency_versions,
-            "model_names": {
-                "dense": "sentence-transformers/all-MiniLM-L6-v2",
-                "reranker": "BAAI/bge-reranker-base",
-            },
-            "model_revisions": {
-                "dense": "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c",
-                "reranker": "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5",
-            },
+    # Compute artifact hashes
+    def _hash_json(data: object) -> str:
+        return hashlib.sha256(
+            json.dumps(data, sort_keys=True, indent=2).encode()
+        ).hexdigest()
+
+    def _hash_csv(rows: list[dict]) -> str:
+        buf = io.StringIO()
+        if rows:
+            writer = csv.DictWriter(buf, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+        return hashlib.sha256(buf.getvalue().encode()).hexdigest()
+
+    # Build manifest
+    manifest = {
+        "seed": args.seed,
+        "corpus_size": len(corpus),
+        "question_count": len(questions),
+        "methods": list(REGISTERED_METHOD_IDS),
+        "implementation_mode": retrieval_mode,
+        "fixture_mode": args.fixture,
+        "git_commit": git_commit,
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+        "dependency_versions": dependency_versions,
+        "model_names": {
+            "dense": "sentence-transformers/all-MiniLM-L6-v2",
+            "reranker": "BAAI/bge-reranker-base",
         },
-        "retrieval_metrics.json": retrieval_metrics,
-        "calibration_result.json": calibration,
-        "decision_summary.json": decisions,
-        "bootstrap_intervals.json": bootstrap,
+        "model_revisions": {
+            "dense": "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c",
+            "reranker": "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5",
+        },
+        "conformal_alpha": 0.10,
+        "max_selective_error": 0.10,
+        "primary_method": primary,
+        "split_manifests": calibration.get("folds", []),
+        "frozen_threshold": calibration.get("frozen_threshold", 0.0),
+        "artifact_hashes": {
+            "retrieval_results.csv": _hash_csv(retrieval_rows),
+            "retrieval_summary.json": _hash_json(retrieval_summary),
+            "calibration_results.json": _hash_json(calibration),
+            "risk_coverage.json": _hash_json(calibration),
+            "decision_summary.json": _hash_json(decisions),
+            "bootstrap_intervals.json": _hash_json(bootstrap),
+        },
     }
 
-    for filename, data in artifacts.items():
-        path = RESULTS_DIR / filename
+    # Write all artifacts
+    # retrieval_results.csv
+    csv_path = output_dir / "retrieval_results.csv"
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        if retrieval_rows:
+            writer = csv.DictWriter(f, fieldnames=retrieval_rows[0].keys())
+            writer.writeheader()
+            writer.writerows(retrieval_rows)
+
+    # JSON artifacts
+    json_artifacts: dict[str, object] = {
+        "retrieval_summary.json": retrieval_summary,
+        "calibration_results.json": calibration,
+        "risk_coverage.json": calibration,  # Same data, different view
+        "decision_summary.json": decisions,
+        "bootstrap_intervals.json": bootstrap,
+        "manifest.json": manifest,
+    }
+
+    for filename, data in json_artifacts.items():
+        path = output_dir / filename
         with path.open("w", encoding="utf-8") as handle:
             json.dump(data, handle, indent=2)
 
-    print(f"Research release written to {RESULTS_DIR}/")
-    for filename in sorted(artifacts):
+    print(f"Research release written to {output_dir}/")
+    for filename in sorted(list(json_artifacts.keys()) + ["retrieval_results.csv"]):
         print(f"  {filename}")
 
     return 0
