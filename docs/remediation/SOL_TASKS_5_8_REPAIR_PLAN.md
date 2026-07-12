@@ -1,8 +1,8 @@
 # EcoQuant Tasks 5–8 Principal Repair Plan
 
-**Date:** 2026-07-12  
-**Baseline:** `d7d86adcf2c33017fa1e060cfe0f679bd301a097`  
-**Status:** Implementation plan; no task is declared GO  
+**Date:** 2026-07-12
+**Baseline:** `d7d86adcf2c33017fa1e060cfe0f679bd301a097`
+**Status:** Implementation plan; no task is declared GO
 **Order:** Task 6 → Task 7B → Task 7A → Task 5 → Task 8 → independent reviews
 
 ## Frozen baseline
