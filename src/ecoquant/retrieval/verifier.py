@@ -56,6 +56,7 @@ class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
     ) -> None:
         super().__init__(corpus, cutoff=cutoff, graph=graph)
         self.verifier: Callable[[CorpusRecord, Question], str] = _source_verifier
+        self._successful_verifier_execution = False
 
     def _verification_status(self, record: CorpusRecord, question: Question) -> str:
         """Apply source-time verification to the record."""
@@ -66,4 +67,13 @@ class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
                 linked = None
             if isinstance(linked, Document) and linked.source_time is not None:
                 record = replace(record, source_time=linked.source_time)
-        return self.verifier(record, question)
+        status = self.verifier(record, question)
+        self._successful_verifier_execution = True
+        return status
+
+    def _execution_proof_complete(self) -> bool:
+        return super()._execution_proof_complete() and self._successful_verifier_execution
+
+    def _begin_execution(self) -> None:
+        super()._begin_execution()
+        self._successful_verifier_execution = False

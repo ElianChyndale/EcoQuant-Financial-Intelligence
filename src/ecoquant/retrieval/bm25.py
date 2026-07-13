@@ -39,7 +39,7 @@ class BM25Retriever(BaseRetriever):
         uses_temporal_filter=True,
         uses_reranker=False,
         uses_verification=False,
-        backend_status="production_verified",
+        backend_status="production_unavailable",
     )
 
     def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date) -> None:

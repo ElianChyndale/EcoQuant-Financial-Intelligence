@@ -208,7 +208,7 @@ def test_final_boundary_rejects_unverified_production_backend_status() -> None:
         backend_status="production_unavailable",
     )
 
-    with pytest.raises(ValueError, match="production_verified"):
+    with pytest.raises(ValueError, match="factory-created"):
         compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
 
 
@@ -264,24 +264,24 @@ def test_final_boundary_rejects_missing_and_extra_methods() -> None:
         ),
     ),
 )
-def test_final_boundary_rejects_duplicate_or_noncanonical_ranks(
+def test_fabricated_final_retriever_cannot_bypass_trust_with_noncanonical_ranks(
     results: tuple[RetrievalResult, ...],
 ) -> None:
     methods = list(_final_hostile_methods())
     methods[0].results = results
 
-    with pytest.raises(ValueError, match="canonical ranks and score ordering"):
+    with pytest.raises(ValueError, match="factory-created"):
         compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
 
 
 @pytest.mark.parametrize("score", (float("nan"), float("inf"), float("-inf")))
-def test_final_boundary_rejects_non_finite_scores(score: float) -> None:
+def test_fabricated_final_retriever_cannot_bypass_trust_with_non_finite_scores(score: float) -> None:
     methods = list(_final_hostile_methods())
     methods[0].results = (
         RetrievalResult("bm25", "aib-assets-2023", "bad-score", 1, score, True, "unverified"),
     )
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match="factory-created"):
         compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
 
 
@@ -504,12 +504,12 @@ def test_retrievers_expose_frozen_metadata_and_final_benchmark_rejects_fixtures(
         RetrievalMetadata("bm25", "production", "", None, None, False, True, False, False).validate()
 
 
-def test_production_factory_fails_closed_while_reranker_revision_is_unverified() -> None:
-    """Fail-loud behavior is not counted as successful production execution."""
+def test_production_factory_rejects_handcrafted_corpus_before_backend_loading() -> None:
+    """Production construction starts only from authoritative adapter output."""
     corpus = frozen_corpus()
     graph = source_graph(corpus)
 
-    with pytest.raises(RuntimeError, match="Failed to load production"):
+    with pytest.raises(ValueError, match="adapter-produced AuthoritativeCorpus"):
         all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=graph, mode="production")
 
 

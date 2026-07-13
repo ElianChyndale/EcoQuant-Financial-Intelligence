@@ -10,7 +10,7 @@ In fixture mode, falls back to a deterministic token-overlap proxy.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import date
 
 import numpy as np
@@ -69,6 +69,7 @@ class DenseRetriever(BaseRetriever):
         self._embedder = None
         self._corpus_embeddings: np.ndarray | None = None
         self._model_loaded = False
+        self._successful_model_inference = False
         self._init_embeddings()
 
     def _init_embeddings(self) -> None:
@@ -92,7 +93,6 @@ class DenseRetriever(BaseRetriever):
                 normalize_embeddings=True,
             )
             self._model_loaded = True
-            self.metadata = replace(self.metadata, backend_status="production_verified")
         except Exception as e:
             # In production mode, fail clearly rather than silently degrade
             raise RuntimeError(
@@ -124,4 +124,16 @@ class DenseRetriever(BaseRetriever):
             convert_to_numpy=True,
             normalize_embeddings=True,
         )[0]
+        self._successful_model_inference = True
         return _cosine_similarity(query_embedding, self._corpus_embeddings[record_idx])
+
+    def _execution_proof_complete(self) -> bool:
+        return (
+            self._model_loaded
+            and self._successful_model_inference
+            and self._embedder is not None
+            and self._corpus_embeddings is not None
+        )
+
+    def _begin_execution(self) -> None:
+        self._successful_model_inference = False

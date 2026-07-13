@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
@@ -252,6 +253,7 @@ class Retriever(Protocol):
     method_name: str
     corpus: tuple[CorpusRecord, ...]
     cutoff: date
+    corpus_fingerprint: str
     metadata: RetrievalMetadata
 
     def retrieve(self, question: RetrieverQuery, top_k: int = 5) -> tuple[RetrievalResult, ...]: ...
@@ -291,12 +293,28 @@ class BaseRetriever:
             raise ValueError("top_k must be positive")
         if question.valid_at != self.cutoff:
             raise ValueError("question cutoff must equal the shared method cutoff")
+        self._begin_execution()
         ranked = self._rank_records(self._candidate_records(question), question)
-        return tuple(
+        results = tuple(
             RetrievalResult(self.method_name, question.question_id, record.evidence_id, rank, score,
                             record.valid_time <= question.valid_at, self._verification_status(record, question))
             for rank, (score, record) in enumerate(ranked[:top_k], start=1)
         )
+        from .provenance import backend_identity, _record_successful_execution
+
+        if backend_identity(self) is not None and self._execution_proof_complete():
+            self.metadata = replace(self.metadata, backend_status="production_verified")
+            self.metadata.validate()
+            _record_successful_execution(self, query=question, top_k=top_k, outputs=results)
+        return results
+
+    def _execution_proof_complete(self) -> bool:
+        """Whether this concrete backend completed all required runtime work."""
+
+        return True
+
+    def _begin_execution(self) -> None:
+        """Reset per-invocation execution evidence before backend work starts."""
 
     def _candidate_records(self, question: RetrieverQuery) -> list[CorpusRecord]:
         return [record for record in self.corpus if self._include(record, question)]
@@ -344,7 +362,7 @@ def compare_retrievers(
     _validate_shared_corpus_and_cutoff(methods, query)
 
     if final_benchmark:
-        validate_final_benchmark(methods)
+        _validate_final_setup(methods, clear_receipts=True)
 
     output: dict[str, tuple[RetrievalResult, ...]] = {}
     for method in methods:
@@ -371,6 +389,8 @@ def compare_retrievers(
                 "with deterministic evidence-ID tie-breaking"
             )
         output[method.method_name] = tuple(replace(item, rank=rank) for rank, item in enumerate(ordered, start=1))
+    if final_benchmark:
+        validate_final_benchmark(methods, query=query, top_k=top_k, outputs=output)
     return output
 
 
@@ -418,27 +438,101 @@ def _validate_shared_corpus_and_cutoff(
             )
 
 
-def validate_final_benchmark(methods: Sequence[Retriever]) -> None:
-    """Reject local fixtures before an output can be called a final benchmark."""
+def _validate_final_setup(methods: Sequence[Retriever], *, clear_receipts: bool) -> None:
+    """Validate factory, adapter, dependency, and fingerprint state before execution."""
 
+    from .provenance import (
+        backend_identity,
+        validate_backend_identity,
+        _clear_execution_receipt,
+    )
+
+    expected_run_id: str | None = None
+    expected_adapter_receipt_id: str | None = None
+    computed_fingerprints: list[tuple[Retriever, str]] = []
     for method in methods:
         method.metadata.validate()
         if method.metadata.implementation_mode != "production":
             raise ValueError(f"final benchmark rejects fixture-mode method: {method.method_name}")
+
+    for method in methods:
+        reported_fingerprint = getattr(method, "corpus_fingerprint", None)
+        if reported_fingerprint is None:
+            raise ValueError(
+                f"final benchmark method {method.method_name} is missing canonical corpus fingerprint"
+            )
+        validate_fingerprint_value(reported_fingerprint)
+        computed_fingerprint = corpus_fingerprint(method.corpus)
+        if not hmac.compare_digest(reported_fingerprint, computed_fingerprint):
+            raise ValueError(
+                f"reported corpus fingerprint does not match canonical corpus for {method.method_name}"
+            )
+        computed_fingerprints.append((method, computed_fingerprint))
+
+    for method, computed_fingerprint in computed_fingerprints:
+        identity = backend_identity(method)
+        if identity is None:
+            raise ValueError(
+                f"final benchmark requires a factory-created backend instance: {method.method_name}"
+            )
+        if identity.method_id != method.method_name:
+            raise ValueError("factory backend identity method does not match registered method")
+        if identity.corpus_fingerprint != computed_fingerprint:
+            raise ValueError("factory backend identity belongs to another corpus")
+        expected_run_id = expected_run_id or identity.run_id
+        expected_adapter_receipt_id = expected_adapter_receipt_id or identity.adapter_receipt_id
+        validate_backend_identity(
+            identity,
+            expected_run_id=expected_run_id,
+            expected_adapter_receipt_id=expected_adapter_receipt_id,
+        )
+        if clear_receipts:
+            _clear_execution_receipt(method)
+
+
+def validate_final_benchmark(
+    methods: Sequence[Retriever],
+    *,
+    query: RetrieverQuery | None = None,
+    top_k: int = 5,
+    outputs: Mapping[str, tuple[RetrievalResult, ...]] | None = None,
+) -> None:
+    """Require trusted execution evidence before results can be called final."""
+
+    from .provenance import backend_identity, execution_receipt, validate_execution_receipt
+
+    for method in methods:
+        if method.metadata.backend_status == "production_unavailable":
+            raise ValueError(
+                f"final benchmark requires production_verified backend status: {method.method_name}"
+            )
+    _validate_final_setup(methods, clear_receipts=False)
+    run_ids = {backend_identity(method).run_id for method in methods}
+    if len(run_ids) != 1:
+        raise ValueError("final benchmark requires one shared factory run ID")
+    expected_run_id = next(iter(run_ids))
+    if (query is None) != (outputs is None):
+        raise ValueError("final benchmark receipt validation requires both query and outputs")
+    for method in methods:
         if method.metadata.backend_status != "production_verified":
             raise ValueError(
                 f"final benchmark requires production_verified backend status: {method.method_name}"
             )
-        reported_fingerprint = getattr(method, "corpus_fingerprint", None)
-        if not reported_fingerprint:
-            raise ValueError(
-                f"final benchmark method {method.method_name} is missing canonical corpus fingerprint"
-            )
-        computed_fingerprint = corpus_fingerprint(method.corpus)
-        if reported_fingerprint != computed_fingerprint:
-            raise ValueError(
-                f"reported corpus fingerprint does not match canonical corpus for {method.method_name}"
-            )
+        if query is None or outputs is None:
+            if execution_receipt(method) is None:
+                raise ValueError(
+                    f"final benchmark requires successful execution evidence: {method.method_name}"
+                )
+            continue
+        if method.method_name not in outputs:
+            raise ValueError(f"final benchmark output missing method: {method.method_name}")
+        validate_execution_receipt(
+            method,
+            query=query,
+            top_k=top_k,
+            outputs=outputs[method.method_name],
+            expected_run_id=expected_run_id,
+        )
 
 
 def retrieval_manifest(methods: Sequence[Retriever]) -> Mapping[str, RetrievalMetadata]:
@@ -582,12 +676,6 @@ def all_retrievers(
         mode: "production" for real backends, "fixture" for deterministic testing.
     """
 
-    from .bm25 import BM25Retriever
-    from .dense import DenseRetriever
-    from .kg import StaticKGRetriever, TemporalKGRetriever
-    from .reranker import TemporalKGRerankRetriever
-    from .verifier import TemporalKGVerifyRetriever
-
     if mode == "fixture":
         # Return fixture-mode retrievers for unit testing
         from .fixture import (
@@ -607,12 +695,6 @@ def all_retrievers(
             FixtureTemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph),
         )
 
-    # Return production-mode retrievers
-    return (
-        BM25Retriever(corpus, cutoff=cutoff),
-        DenseRetriever(corpus, cutoff=cutoff),
-        StaticKGRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGRerankRetriever(corpus, cutoff=cutoff, graph=graph),
-        TemporalKGVerifyRetriever(corpus, cutoff=cutoff, graph=graph),
-    )
+    from .production_factory import production_retrievers
+
+    return production_retrievers(corpus, cutoff=cutoff, graph=graph)  # type: ignore[arg-type]

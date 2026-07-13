@@ -9,7 +9,6 @@ In production mode, raises an error if the model cannot be loaded.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import replace
 from datetime import date
 
 from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
@@ -55,6 +54,7 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         super().__init__(corpus, cutoff=cutoff, graph=graph)
         self._cross_encoder = None
         self._model_loaded = False
+        self._successful_reranker_inference = False
         self._init_reranker()
 
     def _init_reranker(self) -> None:
@@ -77,7 +77,6 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
                 revision=RERANKER_MODEL.revision,
             )
             self._model_loaded = True
-            self.metadata = replace(self.metadata, backend_status="production_verified")
         except Exception as e:
             # In production mode, fail clearly rather than silently degrade
             raise RuntimeError(
@@ -101,6 +100,7 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         # Use cross-encoder for reranking
         pairs = [(question.query, record.text) for record in candidates_list]
         scores = self._cross_encoder.predict(pairs)
+        self._successful_reranker_inference = True
         # Combine with base score (from parent) and reranker score
         base_scores = [(self._score_base(record, question), record) for record in candidates_list]
         reranked = [
@@ -109,6 +109,16 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         ]
 
         return sorted(reranked, key=lambda item: (-item[0], item[1].evidence_id))
+
+    def _execution_proof_complete(self) -> bool:
+        return (
+            self._model_loaded
+            and self._successful_reranker_inference
+            and self._cross_encoder is not None
+        )
+
+    def _begin_execution(self) -> None:
+        self._successful_reranker_inference = False
 
     def _score_base(self, record: CorpusRecord, question: Question) -> float:
         """Get base score from parent TemporalKGRetriever."""

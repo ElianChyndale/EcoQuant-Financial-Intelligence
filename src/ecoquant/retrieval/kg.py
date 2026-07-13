@@ -59,7 +59,7 @@ class StaticKGRetriever(_GraphRetriever):
         uses_temporal_filter=False,
         uses_reranker=False,
         uses_verification=False,
-        backend_status="production_verified",
+        backend_status="production_unavailable",
     )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
@@ -83,7 +83,7 @@ class TemporalKGRetriever(_GraphRetriever):
         uses_temporal_filter=True,
         uses_reranker=False,
         uses_verification=False,
-        backend_status="production_verified",
+        backend_status="production_unavailable",
     )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
