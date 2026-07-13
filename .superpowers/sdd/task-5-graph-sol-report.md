@@ -52,3 +52,24 @@ the central six-method comparison boundary is unchanged.
 This fixture graph uses issuer-to-document source links, so concept resolution
 is intentionally limited to source-visible issuer seeds. It does not infer
 financial relationships beyond the checked document structure.
+
+## SOL-4A completion — 2026-07-13
+
+- **Status:** Internally fixed; fresh review required. No GO.
+- **Implementation commit:** `4d9f04e`.
+- **Final boundary:** Exact six methods, top-five policy, explicit source cutoff,
+  canonical fingerprints/ranks/ties, finite scores, and verified production
+  status are enforced.
+- **Graph boundary:** Graph-derived IDs are resolved through an index; KG query
+  ranking no longer scans the complete issuer corpus.
+- **Temporal boundary:** Missing source time uses only an authoritative linked
+  `Document`; otherwise verification returns `missing_source_time` and temporal
+  retrieval excludes the record.
+- **Metrics:** Page/block top-five macro accuracy uses an immutable evidence
+  catalog. Empty contradiction evaluation emits portable `null` plus reason.
+- **Focused result:** 77 passed, 2 explicitly skipped successful real-model
+  integration tests.
+- **External blocker:** The verified dense cache lacks executable weights; the
+  reranker has neither verified immutable revision nor usable local snapshot.
+- **SOL-4B:** Task 8 still invokes non-final comparison and must implement the
+  root `SOL4B_INTEGRATION_CONTRACT.md` in a fresh session.

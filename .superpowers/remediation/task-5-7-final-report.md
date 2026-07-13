@@ -1,7 +1,7 @@
 # Tasks 5-7 Final Remediation Report
 
 **Date:** 2026-07-11
-**Status:** GO (independently verified)
+**Status:** PARTIALLY SUPERSEDED — no current GO; see SOL-4A repair below
 
 ## Task 5: Comparable Retrieval Methods and Evaluation
 
@@ -16,7 +16,7 @@
 - Implementation: Main agent
 - Review: Fresh retrieval methodology reviewer (read-only)
 
-### Status: GO
+### Status: INTERNALLY FIXED — FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
 
 ### Files Changed
 - `src/ecoquant/retrieval/bm25.py` — Genuine rank-bm25 implementation
@@ -31,25 +31,30 @@
 ### Commits
 - `f95b22b` — fix: complete production retrieval backends
 - `bb31804` — fix: address independent reviewer findings (retrieval fixes)
+- `7cc3280` — fix: enforce reproducible retrieval benchmark identity (incomplete boundary)
+- `4d9f04e` — fix: enforce reproducible retrieval benchmark identity (SOL-4A repair)
 
-### Green Tests
-- 216 total tests passing
-- 37 retrieval-specific tests
-- 7 production backend integration tests
+### Current Focused Tests
+- 77 Task 5/temporal-graph/production-backend tests passed
+- 2 successful real-model integration tests skipped with explicit external-blocker reasons
+- No full suite was run; that gate belongs to SOL-4B
 
 ### Independent Review
-- Reviewer: Fresh retrieval methodology reviewer
-- Verdict: GO (after fix round)
-- Key fix: RuntimeError on model load failure instead of silent degradation
+- The earlier GO verdict is superseded by SOL-4A.
+- Fresh independent review of `4d9f04e` is required.
 
 ### Claims Now Safe
-- Six methods implemented with genuine backends
+- The exact six-method final boundary is implemented and rejects unverified backends
+- KG candidates are graph-derived and ranked without a full issuer-corpus scan
+- Page/block citation metrics use an immutable evidence catalog
 - Production mode fails clearly on missing models
 - No gold data in retrieval
 - Evaluator-only edges blocked
 
 ### Claims Still Unsafe
 - Actual retrieval performance claims (requires real corpus and models)
+- Successful production dense or reranker execution
+- Final Task 8 release integration before SOL-4B
 
 ---
 
