@@ -232,3 +232,18 @@ def test_public_fixed_vector_uses_canonical_solidity_hashes() -> None:
     assert struct_hash.hex() == vector["structHash"][2:]
     assert digest.hex() == vector["digest"][2:]
     assert vector["compiledSolidityVerification"] == "PROVEN_BY_CANONICAL_BRIDGE_TEST"
+
+
+def test_task_7b_report_records_compiled_interoperability() -> None:
+    report_path = (
+        Path(__file__).parents[2]
+        / ".superpowers"
+        / "remediation"
+        / "task-7b-sol-repair-report.md"
+    )
+    report = report_path.read_text(encoding="utf-8")
+
+    assert "PENDING GBL Tasks 12/14" not in report
+    assert "252d195" in report
+    assert "132a187" in report
+    assert "forge test --ffi --match-path test/CanonicalBridge.t.sol -vv" in report
