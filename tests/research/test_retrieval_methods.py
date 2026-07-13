@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 from datetime import date
 from dataclasses import fields, replace
+from decimal import Decimal
 from inspect import signature
 
 import pytest
 
+from ecoquant.retrieval import base as retrieval_base
 from ecoquant.retrieval.base import (
     PRODUCTION_BACKEND_IDS,
     REGISTERED_METHOD_IDS,
@@ -132,16 +135,22 @@ class _FinalHostileRetriever(_HostileRetriever):
         self.corpus = corpus
         self.cutoff = frozen_question().cutoff
         self.corpus_fingerprint = fingerprint if fingerprint is not None else corpus_fingerprint(corpus)
+        requirement = retrieval_base.PRODUCTION_METADATA_REQUIREMENTS.get(method_name)
         self.metadata = RetrievalMetadata(
             method_name,
             "production",
-            PRODUCTION_BACKEND_IDS.get(method_name, "placeholder"),
-            f"test-{method_name}",
-            "0123456789abcdef0123456789abcdef01234567",
-            "kg" in method_name,
-            method_name != "static_kg",
-            "rerank" in method_name or "verify" in method_name,
-            method_name == "temporal_kg_verify",
+            requirement.backend_id if requirement is not None else "placeholder",
+            requirement.expected_model_name if requirement is not None else None,
+            (
+                requirement.expected_model_revision
+                or ("0123456789abcdef0123456789abcdef01234567" if requirement.requires_model_revision else None)
+                if requirement is not None
+                else None
+            ),
+            requirement.uses_graph if requirement is not None else False,
+            requirement.uses_temporal_filter if requirement is not None else False,
+            requirement.uses_reranker if requirement is not None else False,
+            requirement.uses_verification if requirement is not None else False,
             "production_verified",
         )
 
@@ -878,6 +887,116 @@ class TestCorpusFingerprint:
         reversed_corpus = tuple(reversed(corpus))
         assert corpus_fingerprint(corpus) == corpus_fingerprint(reversed_corpus)
 
+    def test_large_adjacent_integers_have_distinct_canonical_bytes_and_hashes(self) -> None:
+        lower = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 2**53),)
+        upper = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 2**53 + 1),)
+
+        lower_bytes = retrieval_base.canonical_corpus_bytes(lower)
+        upper_bytes = retrieval_base.canonical_corpus_bytes(upper)
+
+        assert lower_bytes != upper_bytes
+        assert json.loads(lower_bytes)[0]["numeric_value"] == {
+            "type": "integer",
+            "value": "9007199254740992",
+        }
+        assert json.loads(upper_bytes)[0]["numeric_value"] == {
+            "type": "integer",
+            "value": "9007199254740993",
+        }
+        assert corpus_fingerprint(lower) != corpus_fingerprint(upper)
+
+    def test_very_large_negative_integer_remains_exact(self) -> None:
+        value = -(10**100 + 7)
+        corpus = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", value),)
+
+        encoded = json.loads(retrieval_base.canonical_corpus_bytes(corpus))[0]["numeric_value"]
+
+        assert encoded == {"type": "integer", "value": str(value)}
+
+    def test_decimal_point_one_is_not_converted_through_binary_float(self) -> None:
+        corpus = (
+            CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", Decimal("0.1")),
+        )
+
+        encoded = json.loads(retrieval_base.canonical_corpus_bytes(corpus))[0]["numeric_value"]
+
+        assert encoded == {"type": "decimal", "value": "0.1"}
+
+    def test_decimal_canonicalization_removes_fractional_trailing_zeroes(self) -> None:
+        one = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", Decimal("1.0")),)
+        signed_zero = (
+            CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", Decimal("-0.000")),
+        )
+        exponent = (
+            CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", Decimal("1.2300E+3")),
+        )
+
+        assert json.loads(retrieval_base.canonical_corpus_bytes(one))[0]["numeric_value"] == {
+            "type": "decimal",
+            "value": "1",
+        }
+        assert json.loads(retrieval_base.canonical_corpus_bytes(signed_zero))[0]["numeric_value"] == {
+            "type": "decimal",
+            "value": "0",
+        }
+        assert json.loads(retrieval_base.canonical_corpus_bytes(exponent))[0]["numeric_value"] == {
+            "type": "decimal",
+            "value": "1230",
+        }
+
+    def test_binary_float_uses_exact_hexadecimal_representation(self) -> None:
+        corpus = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 0.1),)
+
+        encoded = json.loads(retrieval_base.canonical_corpus_bytes(corpus))[0]["numeric_value"]
+
+        assert encoded == {"type": "binary_float", "value": float.hex(0.1)}
+
+    def test_numeric_types_remain_distinct(self) -> None:
+        integer = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 1),)
+        decimal = (
+            CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", Decimal("1")),
+        )
+        binary_float = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 1.0),)
+        source_text = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", "1"),)
+
+        payloads = {
+            retrieval_base.canonical_corpus_bytes(corpus)
+            for corpus in (integer, decimal, binary_float, source_text)
+        }
+        fingerprints = {
+            corpus_fingerprint(corpus)
+            for corpus in (integer, decimal, binary_float, source_text)
+        }
+
+        assert len(payloads) == 4
+        assert len(fingerprints) == 4
+        assert json.loads(retrieval_base.canonical_corpus_bytes(source_text))[0]["numeric_value"] == {
+            "type": "source_text",
+            "value": "1",
+        }
+
+    def test_missing_numeric_value_uses_explicit_tagged_null(self) -> None:
+        corpus = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", None),)
+
+        encoded = json.loads(retrieval_base.canonical_corpus_bytes(corpus))[0]["numeric_value"]
+
+        assert encoded == {"type": "null"}
+
+    def test_bool_does_not_enter_integer_numeric_path(self) -> None:
+        corpus = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", True),)
+
+        with pytest.raises(ValueError, match="bool"):
+            retrieval_base.canonical_corpus_bytes(corpus)
+
+    def test_final_boundary_rejects_corpora_differing_only_by_exact_large_integer(self) -> None:
+        lower = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 2**53),)
+        upper = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "assets", 2**53 + 1),)
+        methods = list(_final_hostile_methods(lower))
+        methods[-1] = _FinalHostileRetriever(methods[-1].method_name, upper)
+
+        with pytest.raises(ValueError, match="corpus fingerprint"):
+            compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
     def test_different_corpus_produces_different_fingerprint(self) -> None:
         corpus_a = frozen_corpus()
         corpus_b = (
@@ -963,25 +1082,50 @@ class TestCorpusFingerprint:
 
         assert corpus_fingerprint((original,)) != corpus_fingerprint((changed,))
 
-    def test_unicode_text_uses_nfkc_normalization(self) -> None:
+    def test_unicode_text_preserves_exact_retriever_visible_code_points(self) -> None:
         composed = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "Caf\u00e9 assets")
         decomposed = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "Cafe\u0301 assets")
 
-        assert corpus_fingerprint((composed,)) == corpus_fingerprint((decomposed,))
+        assert corpus_fingerprint((composed,)) != corpus_fingerprint((decomposed,))
 
-    def test_numeric_null_is_not_ambiguous_with_empty_string(self) -> None:
-        valid = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB assets", None)
-        invalid = CorpusRecord(
-            "evidence-1", "AIB", date(2023, 12, 31), "AIB assets", ""  # type: ignore[arg-type]
+    @pytest.mark.parametrize(
+        ("left", "right"),
+        (("SS", "\u00df"), ("ABC", "\uff21\uff22\uff23"), ("Assets", "assets")),
+    )
+    def test_text_preprocessing_equivalences_do_not_collapse_shared_identity(
+        self, left: str, right: str
+    ) -> None:
+        left_record = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), left)
+        right_record = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), right)
+
+        assert left_record.text != right_record.text
+        assert retrieval_base.canonical_corpus_bytes((left_record,)) != retrieval_base.canonical_corpus_bytes(
+            (right_record,)
         )
+        assert corpus_fingerprint((left_record,)) != corpus_fingerprint((right_record,))
 
-        assert len(corpus_fingerprint((valid,))) == 64
-        with pytest.raises(ValueError, match="numeric_value must be a finite number or None"):
-            corpus_fingerprint((invalid,))
+    def test_exact_stored_text_is_deterministic_and_backend_metadata_is_separate(self) -> None:
+        corpus = (CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), " A/B Assets "),)
+        metadata_v1 = RetrievalMetadata(
+            "bm25", "production", "rank-bm25", "bm25-okapi", "0.2.2", False, True, False, False,
+            backend_status="production_verified",
+        )
+        metadata_v2 = replace(metadata_v1, model_revision="future-preprocessing-version")
 
-    @pytest.mark.parametrize("value", (float("nan"), float("inf"), float("-inf")))
-    def test_non_finite_numeric_values_are_rejected(self, value: float) -> None:
+        assert retrieval_base.canonical_corpus_bytes(corpus) == retrieval_base.canonical_corpus_bytes(corpus)
+        assert json.loads(retrieval_base.canonical_corpus_bytes(corpus))[0]["text"] == " A/B Assets "
+        assert metadata_v1 != metadata_v2
+        assert corpus_fingerprint(corpus) == corpus_fingerprint(corpus)
+
+    @pytest.mark.parametrize(
+        "value",
+        (
+            float("nan"), float("inf"), float("-inf"),
+            Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity"),
+        ),
+    )
+    def test_non_finite_numeric_values_are_rejected(self, value: object) -> None:
         record = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB assets", value)
 
-        with pytest.raises(ValueError, match="numeric_value must be a finite number or None"):
+        with pytest.raises(ValueError, match="finite"):
             corpus_fingerprint((record,))

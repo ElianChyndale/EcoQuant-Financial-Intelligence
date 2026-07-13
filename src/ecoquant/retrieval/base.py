@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import unicodedata
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
+from decimal import Decimal
 from math import isfinite
-from numbers import Real
 from types import MappingProxyType
 from typing import Literal, Protocol
 
@@ -20,17 +19,65 @@ REGISTERED_METHOD_IDS = (
     "bm25", "dense", "static_kg", "temporal_kg", "temporal_kg_rerank", "temporal_kg_verify",
 )
 
+CORPUS_FINGERPRINT_SCHEMA_VERSION = 2
+CorpusNumericValue = int | Decimal | float | str | None
+
 NON_PRODUCTION_BACKEND_IDS = frozenset({
     "deterministic-local", "exploratory", "fixture", "placeholder",
 })
 
+@dataclass(frozen=True)
+class ProductionMetadataRequirement:
+    """Immutable production contract selected only by canonical method ID."""
+
+    backend_id: str
+    uses_graph: bool
+    uses_temporal_filter: bool
+    uses_reranker: bool
+    uses_verification: bool
+    expected_model_name: str | None
+    expected_model_revision: str | None
+    requires_model_revision: bool
+    contract_versions: tuple[str, ...]
+
+
+PRODUCTION_METADATA_REQUIREMENTS: Mapping[str, ProductionMetadataRequirement] = MappingProxyType({
+    "bm25": ProductionMetadataRequirement(
+        "rank-bm25", False, True, False, False,
+        "bm25-okapi", "0.2.2", True,
+        ("rank-bm25==0.2.2", "bm25-tokenizer.v1"),
+    ),
+    "dense": ProductionMetadataRequirement(
+        "sentence-transformers", False, True, False, False,
+        "sentence-transformers/all-MiniLM-L6-v2",
+        "1110a243fdf4706b3f48f1d95db1a4f5529b4d41", True,
+        ("sentence-transformers>=3.0.0", "all-MiniLM-L6-v2@1110a243"),
+    ),
+    "static_kg": ProductionMetadataRequirement(
+        "temporal-evidence-graph", True, False, False, False,
+        None, None, False,
+        ("evidence-span.v1", "retrieval-safe-graph.v1"),
+    ),
+    "temporal_kg": ProductionMetadataRequirement(
+        "temporal-evidence-graph", True, True, False, False,
+        None, None, False,
+        ("evidence-span.v1", "retrieval-safe-graph.v1", "valid-source-time.v1"),
+    ),
+    "temporal_kg_rerank": ProductionMetadataRequirement(
+        "cross-encoder", True, True, True, False,
+        "BAAI/bge-reranker-base", None, True,
+        ("evidence-span.v1", "valid-source-time.v1", "cross-encoder-model-pin.v1"),
+    ),
+    "temporal_kg_verify": ProductionMetadataRequirement(
+        "source-time-verifier", True, True, True, True,
+        "deterministic-temporal-verifier", "1.0.0", True,
+        ("evidence-span.v1", "valid-source-time.v1", "source-time-verifier==1.0.0"),
+    ),
+})
+
 PRODUCTION_BACKEND_IDS: Mapping[str, str] = MappingProxyType({
-    "bm25": "rank-bm25",
-    "dense": "sentence-transformers",
-    "static_kg": "temporal-evidence-graph",
-    "temporal_kg": "temporal-evidence-graph",
-    "temporal_kg_rerank": "cross-encoder",
-    "temporal_kg_verify": "source-time-verifier",
+    method_id: requirement.backend_id
+    for method_id, requirement in PRODUCTION_METADATA_REQUIREMENTS.items()
 })
 
 
@@ -42,7 +89,7 @@ class CorpusRecord:
     issuer: str
     valid_time: date
     text: str
-    numeric_value: float | None = None
+    numeric_value: CorpusNumericValue = None
     source_time: date | None = None
 
 
@@ -106,7 +153,8 @@ class RetrievalMetadata:
         return cls(**values)  # type: ignore[arg-type]
 
     def validate(self) -> None:
-        if self.method_id not in REGISTERED_METHOD_IDS:
+        requirement = PRODUCTION_METADATA_REQUIREMENTS.get(self.method_id)
+        if requirement is None:
             raise ValueError(f"unknown registered method_id: {self.method_id}")
         if self.implementation_mode == "fixture" and self.backend_status not in {"fixture", "exploratory"}:
             raise ValueError("fixture metadata requires fixture or exploratory backend status")
@@ -124,24 +172,58 @@ class RetrievalMetadata:
                     "production metadata requires a genuine production backend identifier, "
                     "not fixture, exploratory, or placeholder"
                 )
-            expected_backend = PRODUCTION_BACKEND_IDS[self.method_id]
+            expected_backend = requirement.backend_id
             if self.backend != expected_backend:
                 raise ValueError(
                     f"production metadata requires backend identifier for {self.method_id}: "
                     f"{expected_backend}"
                 )
 
-            requires_model_identity = not self.uses_graph or self.uses_reranker
-            if requires_model_identity and (
+            if requirement.expected_model_name is not None and (
                 not isinstance(self.model_name, str) or not self.model_name.strip()
             ):
                 raise ValueError("production metadata requires a non-empty model_name")
             if (
+                requirement.expected_model_name is not None
+                and self.model_name != requirement.expected_model_name
+            ):
+                raise ValueError(
+                    f"production metadata requires model_name for {self.method_id}: "
+                    f"{requirement.expected_model_name}"
+                )
+            if (
                 self.backend_status == "production_verified"
-                and requires_model_identity
+                and requirement.requires_model_revision
                 and (not isinstance(self.model_revision, str) or not self.model_revision.strip())
             ):
                 raise ValueError("production metadata requires an immutable model_revision")
+            if (
+                requirement.expected_model_revision is not None
+                and self.model_revision is not None
+                and self.model_revision != requirement.expected_model_revision
+            ):
+                raise ValueError(
+                    f"production metadata requires model_revision for {self.method_id}: "
+                    f"{requirement.expected_model_revision}"
+                )
+
+            capabilities = (
+                self.uses_graph,
+                self.uses_temporal_filter,
+                self.uses_reranker,
+                self.uses_verification,
+            )
+            expected_capabilities = (
+                requirement.uses_graph,
+                requirement.uses_temporal_filter,
+                requirement.uses_reranker,
+                requirement.uses_verification,
+            )
+            if capabilities != expected_capabilities:
+                raise ValueError(
+                    f"production capability metadata for {self.method_id} must match "
+                    "method-derived requirements"
+                )
 
 
 class Retriever(Protocol):
@@ -339,49 +421,82 @@ def _terms(text: str) -> frozenset[str]:
     return frozenset("".join(character if character.isalnum() else " " for character in text.lower()).split())
 
 
-def corpus_fingerprint(corpus: Sequence[CorpusRecord]) -> str:
-    """Hash an unambiguous canonical JSON encoding of retriever-visible fields.
+def _canonical_decimal(value: Decimal) -> str:
+    """Return exact finite Decimal value in plain notation.
+
+    Fractional trailing zeroes are removed, exponent notation is expanded, and
+    every signed representation of zero is normalized to ``0``. Non-zero sign
+    and every significant decimal digit are preserved without binary-float
+    conversion.
+    """
+    if not value.is_finite():
+        raise ValueError("Decimal numeric_value must be finite")
+    if value.is_zero():
+        return "0"
+    plain = format(value, "f")
+    if "." in plain:
+        plain = plain.rstrip("0").rstrip(".")
+    return plain
+
+
+def _canonical_numeric_value(value: CorpusNumericValue) -> dict[str, str]:
+    """Encode one numeric field with an explicit, lossless type tag."""
+    if value is None:
+        return {"type": "null"}
+    if isinstance(value, bool):
+        raise ValueError("bool numeric_value is not an integer corpus value")
+    if isinstance(value, int):
+        return {"type": "integer", "value": str(value)}
+    if isinstance(value, Decimal):
+        return {"type": "decimal", "value": _canonical_decimal(value)}
+    if isinstance(value, float):
+        if not isfinite(value):
+            raise ValueError("binary float numeric_value must be finite")
+        return {"type": "binary_float", "value": value.hex()}
+    if isinstance(value, str):
+        return {"type": "source_text", "value": value}
+    raise ValueError(
+        "numeric_value must be None, int, Decimal, finite float, or source-text str"
+    )
+
+
+def canonical_corpus_bytes(corpus: Sequence[CorpusRecord]) -> bytes:
+    """Serialize exact retriever-visible corpus identity as canonical JSON.
 
     Records are sorted by stable evidence identity. Objects use explicit field
-    names and JSON ``null`` for absent values. Text uses NFKC normalization,
-    trimming, and Unicode case folding. Dates use ISO 8601 calendar format.
-    Finite numeric values use a stable 17-significant-digit representation.
-    Canonical JSON uses sorted keys, compact separators, UTF-8, and rejects
-    NaN or Infinity.
+    names. Stored text is preserved byte-for-byte through UTF-8 JSON encoding;
+    retriever-specific normalization is backend metadata, not corpus identity.
+    Dates use ISO 8601 calendar format. Numeric values use tagged exact
+    representations: arbitrary-precision integers, normalized exact Decimals,
+    exact ``float.hex()`` binary floats, exact source text, or explicit null.
 
     Returns:
-        Hex-encoded SHA-256 digest.
+        Canonical compact JSON encoded as UTF-8 bytes.
     """
     canonical_records: list[dict[str, object]] = []
     for record in sorted(corpus, key=lambda item: item.evidence_id):
-        numeric_value: str | None = None
-        if record.numeric_value is not None:
-            if (
-                isinstance(record.numeric_value, bool)
-                or not isinstance(record.numeric_value, Real)
-                or not isfinite(record.numeric_value)
-            ):
-                raise ValueError("numeric_value must be a finite number or None")
-            numeric_value = "0" if record.numeric_value == 0 else format(float(record.numeric_value), ".17g")
-
         canonical_records.append({
             "evidence_id": record.evidence_id,
             "issuer_id": record.issuer,
-            "numeric_value": numeric_value,
-            "schema_version": 1,
+            "numeric_value": _canonical_numeric_value(record.numeric_value),
+            "schema_version": CORPUS_FINGERPRINT_SCHEMA_VERSION,
             "source_time": record.source_time.isoformat() if record.source_time is not None else None,
-            "text": unicodedata.normalize("NFKC", record.text).strip().casefold(),
+            "text": record.text,
             "valid_time": record.valid_time.isoformat(),
         })
 
-    canonical_bytes = json.dumps(
+    return json.dumps(
         canonical_records,
         allow_nan=False,
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
-    return hashlib.sha256(canonical_bytes).hexdigest()
+
+
+def corpus_fingerprint(corpus: Sequence[CorpusRecord]) -> str:
+    """Return SHA-256 over the canonical retriever-visible corpus bytes."""
+    return hashlib.sha256(canonical_corpus_bytes(corpus)).hexdigest()
 
 
 def all_retrievers(

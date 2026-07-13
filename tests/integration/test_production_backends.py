@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from ecoquant.retrieval import base as retrieval_base
 from ecoquant.retrieval.base import (
     PRODUCTION_BACKEND_IDS,
     CorpusRecord,
@@ -212,7 +213,7 @@ def test_production_metadata_requires_backend_info():
     """Verify production metadata validation requires backend info."""
     # Valid production metadata
     valid = RetrievalMetadata(
-        "bm25", "production", "rank-bm25", "model", "rev", False, True, False, False,
+        "bm25", "production", "rank-bm25", "bm25-okapi", "0.2.2", False, True, False, False,
         backend_status="production_verified",
     )
     valid.validate()
@@ -283,20 +284,40 @@ def test_production_metadata_rejects_backend_incompatible_with_method():
 def test_all_six_final_methods_validate_complete_production_metadata():
     from ecoquant.retrieval.base import REGISTERED_METHOD_IDS
 
-    graph_methods = {"static_kg", "temporal_kg"}
-    for method_id in REGISTERED_METHOD_IDS:
-        uses_graph = "kg" in method_id
-        uses_reranker = "rerank" in method_id or "verify" in method_id
+    identities = {
+        "bm25": ("bm25-okapi", "0.2.2"),
+        "dense": (
+            "sentence-transformers/all-MiniLM-L6-v2",
+            "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+        ),
+        "static_kg": (None, None),
+        "temporal_kg": (None, None),
+        "temporal_kg_rerank": ("BAAI/bge-reranker-base", "0123456789abcdef"),
+        "temporal_kg_verify": ("deterministic-temporal-verifier", "1.0.0"),
+    }
+    capabilities = {
+        "bm25": (False, True, False, False),
+        "dense": (False, True, False, False),
+        "static_kg": (True, False, False, False),
+        "temporal_kg": (True, True, False, False),
+        "temporal_kg_rerank": (True, True, True, False),
+        "temporal_kg_verify": (True, True, True, True),
+    }
+    assert set(retrieval_base.PRODUCTION_METADATA_REQUIREMENTS) == set(REGISTERED_METHOD_IDS)
+    for method_id, requirement in retrieval_base.PRODUCTION_METADATA_REQUIREMENTS.items():
+        model_name, model_revision = identities[method_id]
+        uses_graph, uses_temporal_filter, uses_reranker, uses_verification = capabilities[method_id]
+        assert requirement.contract_versions
         metadata = RetrievalMetadata(
             method_id,
             "production",
             PRODUCTION_BACKEND_IDS[method_id],
-            None if method_id in graph_methods else f"test-{method_id}",
-            None if method_id in graph_methods else "0123456789abcdef",
+            model_name,
+            model_revision,
             uses_graph,
-            method_id != "static_kg",
+            uses_temporal_filter,
             uses_reranker,
-            method_id == "temporal_kg_verify",
+            uses_verification,
             backend_status="production_verified",
         )
 
@@ -319,3 +340,134 @@ def test_dense_and_reranker_unavailable_status_remains_blocked():
                 {"method_name": "dense", "metadata": DenseRetriever.metadata},
             )(),
         ))
+
+
+def test_dense_verified_requires_model_identity_despite_falsified_capability_flags():
+    metadata = RetrievalMetadata(
+        "dense",
+        "production",
+        "sentence-transformers",
+        None,
+        None,
+        True,
+        True,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="model_name"):
+        metadata.validate()
+
+
+def test_dense_verified_requires_revision_despite_falsified_capability_flags():
+    metadata = RetrievalMetadata(
+        "dense",
+        "production",
+        "sentence-transformers",
+        "sentence-transformers/all-MiniLM-L6-v2",
+        None,
+        True,
+        True,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="model_revision"):
+        metadata.validate()
+
+
+def test_reranker_verified_requires_model_identity_despite_falsified_capability_flags():
+    metadata = RetrievalMetadata(
+        "temporal_kg_rerank",
+        "production",
+        "cross-encoder",
+        None,
+        None,
+        True,
+        True,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="model_name"):
+        metadata.validate()
+
+
+def test_temporal_kg_rerank_cannot_inherit_weaker_temporal_kg_requirements():
+    metadata = RetrievalMetadata(
+        "temporal_kg_rerank",
+        "production",
+        "cross-encoder",
+        None,
+        None,
+        True,
+        True,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="uses_reranker|model_name"):
+        metadata.validate()
+
+
+def test_unknown_method_cannot_select_or_weaken_production_requirements():
+    metadata = RetrievalMetadata(
+        "unknown",
+        "production",
+        "rank-bm25",
+        None,
+        None,
+        False,
+        False,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="unknown registered method_id"):
+        metadata.validate()
+
+
+@pytest.mark.parametrize(
+    ("method_id", "backend", "model_name", "model_revision", "flags"),
+    (
+        ("bm25", "rank-bm25", "bm25-okapi", "0.2.2", (True, True, False, False)),
+        (
+            "dense", "sentence-transformers", "sentence-transformers/all-MiniLM-L6-v2",
+            "1110a243fdf4706b3f48f1d95db1a4f5529b4d41", (True, True, False, False),
+        ),
+        ("static_kg", "temporal-evidence-graph", None, None, (False, False, False, False)),
+        ("temporal_kg", "temporal-evidence-graph", None, None, (False, True, False, False)),
+        (
+            "temporal_kg_rerank", "cross-encoder", "BAAI/bge-reranker-base",
+            "0123456789abcdef", (True, True, False, False),
+        ),
+        (
+            "temporal_kg_verify", "source-time-verifier", "deterministic-temporal-verifier",
+            "1.0.0", (True, True, False, True),
+        ),
+    ),
+)
+def test_caller_capability_flags_cannot_change_method_requirements(
+    method_id, backend, model_name, model_revision, flags
+):
+    uses_graph, uses_temporal_filter, uses_reranker, uses_verification = flags
+    metadata = RetrievalMetadata(
+        method_id,
+        "production",
+        backend,
+        model_name,
+        model_revision,
+        uses_graph,
+        uses_temporal_filter,
+        uses_reranker,
+        uses_verification,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="capability metadata"):
+        metadata.validate()
