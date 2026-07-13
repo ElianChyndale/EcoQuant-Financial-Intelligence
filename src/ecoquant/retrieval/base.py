@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
 from math import isfinite
+from numbers import Real
+from types import MappingProxyType
 from typing import Literal, Protocol
 
 from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
@@ -16,6 +19,19 @@ from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
 REGISTERED_METHOD_IDS = (
     "bm25", "dense", "static_kg", "temporal_kg", "temporal_kg_rerank", "temporal_kg_verify",
 )
+
+NON_PRODUCTION_BACKEND_IDS = frozenset({
+    "deterministic-local", "exploratory", "fixture", "placeholder",
+})
+
+PRODUCTION_BACKEND_IDS: Mapping[str, str] = MappingProxyType({
+    "bm25": "rank-bm25",
+    "dense": "sentence-transformers",
+    "static_kg": "temporal-evidence-graph",
+    "temporal_kg": "temporal-evidence-graph",
+    "temporal_kg_rerank": "cross-encoder",
+    "temporal_kg_verify": "source-time-verifier",
+})
 
 
 @dataclass(frozen=True)
@@ -98,13 +114,34 @@ class RetrievalMetadata:
             "production_verified", "production_unavailable"
         }:
             raise ValueError("production metadata requires an explicit production backend status")
-        if self.implementation_mode == "production" and (not self.backend or not self.model_name):
-            if not (self.backend_status == "production_verified" and self.uses_graph and not self.uses_reranker):
-                raise ValueError("production metadata requires backend and model_name")
-        if self.implementation_mode == "production" and self.backend_status == "production_verified" and (
-            not self.uses_graph or self.uses_reranker
-        ) and not self.model_revision:
-            raise ValueError("production metadata requires backend, model_name, and model_revision")
+        if self.implementation_mode == "production":
+            if not isinstance(self.backend, str) or not self.backend.strip():
+                raise ValueError(
+                    "production metadata requires a non-empty production backend identifier"
+                )
+            if self.backend.strip().casefold() in NON_PRODUCTION_BACKEND_IDS:
+                raise ValueError(
+                    "production metadata requires a genuine production backend identifier, "
+                    "not fixture, exploratory, or placeholder"
+                )
+            expected_backend = PRODUCTION_BACKEND_IDS[self.method_id]
+            if self.backend != expected_backend:
+                raise ValueError(
+                    f"production metadata requires backend identifier for {self.method_id}: "
+                    f"{expected_backend}"
+                )
+
+            requires_model_identity = not self.uses_graph or self.uses_reranker
+            if requires_model_identity and (
+                not isinstance(self.model_name, str) or not self.model_name.strip()
+            ):
+                raise ValueError("production metadata requires a non-empty model_name")
+            if (
+                self.backend_status == "production_verified"
+                and requires_model_identity
+                and (not isinstance(self.model_revision, str) or not self.model_revision.strip())
+            ):
+                raise ValueError("production metadata requires an immutable model_revision")
 
 
 class Retriever(Protocol):
@@ -303,34 +340,47 @@ def _terms(text: str) -> frozenset[str]:
 
 
 def corpus_fingerprint(corpus: Sequence[CorpusRecord]) -> str:
-    """Compute a deterministic SHA-256 fingerprint over canonical retriever-visible fields.
+    """Hash an unambiguous canonical JSON encoding of retriever-visible fields.
 
-    Fields per record (sorted deterministically by evidence_id):
-    - schema version (1)
-    - evidence_id
-    - issuer
-    - valid_time (ISO format)
-    - source_time (ISO format, or empty)
-    - text (normalized: stripped, lowered)
-    - numeric_value (string representation, or empty)
+    Records are sorted by stable evidence identity. Objects use explicit field
+    names and JSON ``null`` for absent values. Text uses NFKC normalization,
+    trimming, and Unicode case folding. Dates use ISO 8601 calendar format.
+    Finite numeric values use a stable 17-significant-digit representation.
+    Canonical JSON uses sorted keys, compact separators, UTF-8, and rejects
+    NaN or Infinity.
 
     Returns:
         Hex-encoded SHA-256 digest.
     """
-    sorted_records = sorted(corpus, key=lambda r: r.evidence_id)
-    canonical_parts: list[str] = []
-    for record in sorted_records:
-        parts = [
-            "1",  # schema version
-            record.evidence_id,
-            record.issuer,
-            record.valid_time.isoformat(),
-            record.source_time.isoformat() if record.source_time else "",
-            record.text.strip().lower(),
-            str(record.numeric_value) if record.numeric_value is not None else "",
-        ]
-        canonical_parts.append("|".join(parts))
-    canonical_bytes = "\n".join(canonical_parts).encode("utf-8")
+    canonical_records: list[dict[str, object]] = []
+    for record in sorted(corpus, key=lambda item: item.evidence_id):
+        numeric_value: str | None = None
+        if record.numeric_value is not None:
+            if (
+                isinstance(record.numeric_value, bool)
+                or not isinstance(record.numeric_value, Real)
+                or not isfinite(record.numeric_value)
+            ):
+                raise ValueError("numeric_value must be a finite number or None")
+            numeric_value = "0" if record.numeric_value == 0 else format(float(record.numeric_value), ".17g")
+
+        canonical_records.append({
+            "evidence_id": record.evidence_id,
+            "issuer_id": record.issuer,
+            "numeric_value": numeric_value,
+            "schema_version": 1,
+            "source_time": record.source_time.isoformat() if record.source_time is not None else None,
+            "text": unicodedata.normalize("NFKC", record.text).strip().casefold(),
+            "valid_time": record.valid_time.isoformat(),
+        })
+
+    canonical_bytes = json.dumps(
+        canonical_records,
+        allow_nan=False,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
     return hashlib.sha256(canonical_bytes).hexdigest()
 
 

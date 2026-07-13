@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from ecoquant.retrieval.base import CorpusRecord, RetrievalMetadata, all_retrievers
+from ecoquant.retrieval.base import (
+    PRODUCTION_BACKEND_IDS,
+    CorpusRecord,
+    RetrievalMetadata,
+    all_retrievers,
+)
 from ecoquant.retrieval.evaluation import EvaluatorGold
 from ecoquant.evidence_graph.graph import Relation, TemporalEvidenceGraph
 from ecoquant.evidence_graph.models import Document, Issuer
@@ -219,3 +224,98 @@ def test_production_metadata_requires_backend_info():
             backend_status="production_verified",
         )
         invalid.validate()
+
+
+@pytest.mark.parametrize("backend", (None, "", "   ", "fixture", "exploratory", "placeholder"))
+def test_production_graph_metadata_rejects_invalid_backend(backend):
+    metadata = RetrievalMetadata(
+        "static_kg",
+        "production",
+        backend,
+        None,
+        None,
+        True,
+        False,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="production backend identifier"):
+        metadata.validate()
+
+
+def test_production_graph_metadata_accepts_real_backend_identifier():
+    metadata = RetrievalMetadata(
+        "static_kg",
+        "production",
+        "temporal-evidence-graph",
+        None,
+        None,
+        True,
+        False,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    metadata.validate()
+
+
+def test_production_metadata_rejects_backend_incompatible_with_method():
+    metadata = RetrievalMetadata(
+        "static_kg",
+        "production",
+        "rank-bm25",
+        None,
+        None,
+        True,
+        False,
+        False,
+        False,
+        backend_status="production_verified",
+    )
+
+    with pytest.raises(ValueError, match="backend identifier for static_kg"):
+        metadata.validate()
+
+
+def test_all_six_final_methods_validate_complete_production_metadata():
+    from ecoquant.retrieval.base import REGISTERED_METHOD_IDS
+
+    graph_methods = {"static_kg", "temporal_kg"}
+    for method_id in REGISTERED_METHOD_IDS:
+        uses_graph = "kg" in method_id
+        uses_reranker = "rerank" in method_id or "verify" in method_id
+        metadata = RetrievalMetadata(
+            method_id,
+            "production",
+            PRODUCTION_BACKEND_IDS[method_id],
+            None if method_id in graph_methods else f"test-{method_id}",
+            None if method_id in graph_methods else "0123456789abcdef",
+            uses_graph,
+            method_id != "static_kg",
+            uses_reranker,
+            method_id == "temporal_kg_verify",
+            backend_status="production_verified",
+        )
+
+        metadata.validate()
+
+
+def test_dense_and_reranker_unavailable_status_remains_blocked():
+    from ecoquant.retrieval.base import validate_final_benchmark
+    from ecoquant.retrieval.dense import DenseRetriever
+    from ecoquant.retrieval.reranker import TemporalKGRerankRetriever
+
+    for retriever_type in (DenseRetriever, TemporalKGRerankRetriever):
+        assert retriever_type.metadata.backend_status == "production_unavailable"
+
+    with pytest.raises(ValueError, match="production_verified"):
+        validate_final_benchmark((
+            type(
+                "UnavailableDense",
+                (),
+                {"method_name": "dense", "metadata": DenseRetriever.metadata},
+            )(),
+        ))

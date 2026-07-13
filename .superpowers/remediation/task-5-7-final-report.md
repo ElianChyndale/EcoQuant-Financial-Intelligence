@@ -16,7 +16,7 @@
 - Implementation: Main agent
 - Review: Fresh retrieval methodology reviewer (read-only)
 
-### Status: INTERNALLY FIXED — FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
+### Status: CORRECTED AFTER FAILED REVIEW — FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
 
 ### Files Changed
 - `src/ecoquant/retrieval/bm25.py` — Genuine rank-bm25 implementation
@@ -25,26 +25,39 @@
 - `src/ecoquant/retrieval/kg.py` — Production metadata
 - `src/ecoquant/retrieval/verifier.py` — Production metadata
 - `src/ecoquant/retrieval/fixture.py` — Deterministic test backends
-- `src/ecoquant/retrieval/base.py` — Mode support
-- `tests/integration/test_production_backends.py` — Production backend tests
+- `src/ecoquant/retrieval/base.py` — Mode support, canonical JSON corpus identity,
+  and method-compatible production backend validation
+- `tests/research/test_retrieval_methods.py` — Fingerprint collision and canonical
+  encoding adversaries
+- `tests/integration/test_production_backends.py` — Production backend metadata tests
 
 ### Commits
 - `f95b22b` — fix: complete production retrieval backends
 - `bb31804` — fix: address independent reviewer findings (retrieval fixes)
 - `7cc3280` — fix: enforce reproducible retrieval benchmark identity (incomplete boundary)
 - `4d9f04e` — fix: enforce reproducible retrieval benchmark identity (SOL-4A repair)
+- Correction commit in this change — fix: canonicalize retrieval corpus identity
 
 ### Current Focused Tests
-- 77 Task 5/temporal-graph/production-backend tests passed
+- 96 Task 5/temporal-graph/production-backend tests passed
 - 2 successful real-model integration tests skipped with explicit external-blocker reasons
 - No full suite was run; that gate belongs to SOL-4B
 
 ### Independent Review
-- The earlier GO verdict is superseded by SOL-4A.
-- Fresh independent review of `4d9f04e` is required.
+- The independent SOL-4A review failed because delimiter-only fingerprint
+  serialization allowed two distinct equal-length corpora to collide, and the
+  metadata validator accepted a production-verified graph method with an empty
+  backend identifier.
+- The correction uses canonical JSON with explicit field names/nulls, NFKC text
+  normalization, deterministic finite numeric encoding, and method-compatible
+  production backend identifiers.
+- Fresh independent review of the correction commit is required. No Task 5 GO
+  is declared.
 
-### Claims Now Safe
-- The exact six-method final boundary is implemented and rejects unverified backends
+### Claims Now Safe For Fresh Review
+- The exact six-method final boundary is implemented and rejects unverified,
+  empty, fixture, exploratory, placeholder, or method-incompatible backends
+- Canonical corpus identity is unambiguous and rejects non-finite numerical fields
 - KG candidates are graph-derived and ranked without a full issuer-corpus scan
 - Page/block citation metrics use an immutable evidence catalog
 - Production mode fails clearly on missing models
@@ -54,6 +67,7 @@
 ### Claims Still Unsafe
 - Actual retrieval performance claims (requires real corpus and models)
 - Successful production dense or reranker execution
+- A final SOL-4A GO before fresh independent review
 - Final Task 8 release integration before SOL-4B
 
 ---

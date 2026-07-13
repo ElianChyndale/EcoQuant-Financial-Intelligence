@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import date
-from dataclasses import fields
+from dataclasses import fields, replace
 from inspect import signature
 
 import pytest
 
 from ecoquant.retrieval.base import (
+    PRODUCTION_BACKEND_IDS,
     REGISTERED_METHOD_IDS,
     CorpusRecord,
     Question,
@@ -134,7 +135,7 @@ class _FinalHostileRetriever(_HostileRetriever):
         self.metadata = RetrievalMetadata(
             method_name,
             "production",
-            f"test-{method_name}",
+            PRODUCTION_BACKEND_IDS.get(method_name, "placeholder"),
             f"test-{method_name}",
             "0123456789abcdef0123456789abcdef01234567",
             "kg" in method_name,
@@ -199,6 +200,15 @@ def test_final_boundary_rejects_unverified_production_backend_status() -> None:
     )
 
     with pytest.raises(ValueError, match="production_verified"):
+        compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
+
+def test_final_boundary_rejects_fixture_backend_claimed_as_production() -> None:
+    methods = list(_final_hostile_methods())
+    graph_method = next(method for method in methods if method.method_name == "static_kg")
+    graph_method.metadata = replace(graph_method.metadata, backend="fixture")
+
+    with pytest.raises(ValueError, match="production backend identifier"):
         compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
 
 
@@ -840,6 +850,22 @@ def test_empty_contradiction_reference_and_prediction_are_portably_non_evaluable
 class TestCorpusFingerprint:
     """Corpus fingerprint must be deterministic and corpus-sensitive."""
 
+    @staticmethod
+    def _legacy_delimiter_payload(corpus: tuple[CorpusRecord, ...]) -> bytes:
+        """Reproduce the superseded ambiguous encoding for the RED fixture."""
+        rows = []
+        for record in sorted(corpus, key=lambda item: item.evidence_id):
+            rows.append("|".join((
+                "1",
+                record.evidence_id,
+                record.issuer,
+                record.valid_time.isoformat(),
+                record.source_time.isoformat() if record.source_time else "",
+                record.text.strip().lower(),
+                str(record.numeric_value) if record.numeric_value is not None else "",
+            )))
+        return "\n".join(rows).encode("utf-8")
+
     def test_fingerprint_is_deterministic(self) -> None:
         corpus = frozen_corpus()
         fp1 = corpus_fingerprint(corpus)
@@ -874,6 +900,39 @@ class TestCorpusFingerprint:
         assert len(corpus_a) == len(corpus_b)
         assert corpus_fingerprint(corpus_a) != corpus_fingerprint(corpus_b)
 
+    def test_corpus_fingerprint_rejects_delimiter_collision(self) -> None:
+        corpus_a = (
+            CorpusRecord(
+                "a|b", "c", date(2023, 12, 31), "same", 1.0, date(2024, 1, 1)
+            ),
+        )
+        corpus_b = (
+            CorpusRecord(
+                "a", "b|c", date(2023, 12, 31), "same", 1.0, date(2024, 1, 1)
+            ),
+        )
+
+        assert corpus_a != corpus_b
+        assert self._legacy_delimiter_payload(corpus_a) == self._legacy_delimiter_payload(corpus_b)
+        assert corpus_fingerprint(corpus_a) != corpus_fingerprint(corpus_b)
+
+    def test_final_boundary_rejects_delimiter_collision_corpora(self) -> None:
+        corpus_a = (
+            CorpusRecord(
+                "a|b", "c", date(2023, 12, 31), "same", 1.0, date(2024, 1, 1)
+            ),
+        )
+        corpus_b = (
+            CorpusRecord(
+                "a", "b|c", date(2023, 12, 31), "same", 1.0, date(2024, 1, 1)
+            ),
+        )
+        methods = list(_final_hostile_methods(corpus_a))
+        methods[-1] = _FinalHostileRetriever(methods[-1].method_name, corpus_b)
+
+        with pytest.raises(ValueError, match="corpus fingerprint"):
+            compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
     def test_single_record_change_breaks_fingerprint(self) -> None:
         corpus = frozen_corpus()
         fp_original = corpus_fingerprint(corpus)
@@ -897,3 +956,32 @@ class TestCorpusFingerprint:
 
         assert corpus_fingerprint((record,)) != corpus_fingerprint((changed_source,))
         assert corpus_fingerprint((record,)) != corpus_fingerprint((changed_valid,))
+
+    def test_normalized_text_change_breaks_fingerprint(self) -> None:
+        original = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB assets")
+        changed = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB liabilities")
+
+        assert corpus_fingerprint((original,)) != corpus_fingerprint((changed,))
+
+    def test_unicode_text_uses_nfkc_normalization(self) -> None:
+        composed = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "Caf\u00e9 assets")
+        decomposed = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "Cafe\u0301 assets")
+
+        assert corpus_fingerprint((composed,)) == corpus_fingerprint((decomposed,))
+
+    def test_numeric_null_is_not_ambiguous_with_empty_string(self) -> None:
+        valid = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB assets", None)
+        invalid = CorpusRecord(
+            "evidence-1", "AIB", date(2023, 12, 31), "AIB assets", ""  # type: ignore[arg-type]
+        )
+
+        assert len(corpus_fingerprint((valid,))) == 64
+        with pytest.raises(ValueError, match="numeric_value must be a finite number or None"):
+            corpus_fingerprint((invalid,))
+
+    @pytest.mark.parametrize("value", (float("nan"), float("inf"), float("-inf")))
+    def test_non_finite_numeric_values_are_rejected(self, value: float) -> None:
+        record = CorpusRecord("evidence-1", "AIB", date(2023, 12, 31), "AIB assets", value)
+
+        with pytest.raises(ValueError, match="numeric_value must be a finite number or None"):
+            corpus_fingerprint((record,))
