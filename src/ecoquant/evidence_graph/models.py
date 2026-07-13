@@ -23,7 +23,7 @@ class Bond:
 class Document:
     id: str
     valid_time: date
-    source_time: date
+    source_time: date | None
     issuer_id: str = ""
 
 

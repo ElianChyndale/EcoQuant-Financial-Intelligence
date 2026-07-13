@@ -6,12 +6,20 @@ import math
 import random
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .base import RetrievalResult
 
 
 BOOTSTRAP_SEED = 20260710
+
+
+@dataclass(frozen=True)
+class EvidenceLocation:
+    """Immutable page/block identity resolved from the retrieval evidence catalog."""
+
+    page_id: str
+    block_id: str
 
 
 @dataclass(frozen=True)
@@ -23,6 +31,8 @@ class EvaluatorGold:
     contradiction_evidence: Mapping[str, frozenset[str]]
     citation_evidence: Mapping[str, frozenset[str]]
     expected_numeric: Mapping[str, float]
+    gold_page_ids: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    gold_block_ids: Mapping[str, frozenset[str]] = field(default_factory=dict)
 
 
 # Compatibility name for the previously public evaluator-only record.
@@ -39,8 +49,18 @@ class RetrievalMetrics:
     ndcg_at_5: float
     temporal_accuracy: float
     stale_evidence_rate: float
-    contradiction_f1: float
+    contradiction_f1: float | None
+    contradiction_evaluable: bool
+    contradiction_reason: str | None
     citation_accuracy: float
+    page_accuracy_at_5: float | None
+    block_accuracy_at_5: float | None
+    evaluable_page_questions: int
+    evaluable_block_questions: int
+    non_evaluable_page_questions: int
+    non_evaluable_block_questions: int
+    page_accuracy_reason: str | None
+    block_accuracy_reason: str | None
     numerical_mismatch: float
     evaluable_question_count: int
     prediction_count: int
@@ -65,6 +85,7 @@ def score_retrieval(
     labels: EvaluatorGold,
     *,
     numeric_predictions: Mapping[str, float] | None = None,
+    evidence_catalog: Mapping[str, EvidenceLocation] | None = None,
 ) -> RetrievalMetrics:
     """Compute method-neutral retrieval and audit metrics over labelled outputs."""
 
@@ -78,6 +99,8 @@ def score_retrieval(
     ndcgs: list[float] = []
     temporal: list[float] = []
     citations: list[float] = []
+    page_hits: list[float] = []
+    block_hits: list[float] = []
     predicted_contradictions: set[tuple[str, str]] = set()
     expected_contradictions: set[tuple[str, str]] = set()
     stale_count = 0
@@ -98,6 +121,20 @@ def score_retrieval(
         ndcgs.append(dcg / ideal_dcg if ideal_dcg else 0.0)
         temporal.append(float(bool(results) and results[0].valid_time_match))
         citations.append(float(bool(results) and results[0].evidence_id in labels.citation_evidence.get(question_id, frozenset())))
+        gold_pages = labels.gold_page_ids.get(question_id, frozenset())
+        gold_blocks = labels.gold_block_ids.get(question_id, frozenset())
+        if gold_pages or gold_blocks:
+            catalog = evidence_catalog or {}
+            missing_ids = sorted(result.evidence_id for result in results if result.evidence_id not in catalog)
+            if missing_ids:
+                raise ValueError(
+                    f"missing evidence catalog entry for returned evidence: {', '.join(missing_ids)}"
+                )
+            locations = tuple(catalog[result.evidence_id] for result in results)
+            if gold_pages:
+                page_hits.append(float(any(location.page_id in gold_pages for location in locations)))
+            if gold_blocks:
+                block_hits.append(float(any(location.block_id in gold_blocks for location in locations)))
         stale_count += sum(not result.valid_time_match for result in results)
         retrieved_count += len(results)
         predicted_contradictions.update(
@@ -116,6 +153,7 @@ def score_retrieval(
     )
     mismatch_denominator = len(numeric_question_ids)
     mismatch_rate = mismatch_count / mismatch_denominator if mismatch_denominator else 0.0
+    contradiction_f1 = _f1(predicted_contradictions, expected_contradictions)
     return RetrievalMetrics(
         recall_at_5=_mean(recalls),
         hit_at_5=_mean(hits),
@@ -125,8 +163,18 @@ def score_retrieval(
         ndcg_at_5=_mean(ndcgs),
         temporal_accuracy=_mean(temporal),
         stale_evidence_rate=stale_count / retrieved_count if retrieved_count else 0.0,
-        contradiction_f1=_f1(predicted_contradictions, expected_contradictions),
+        contradiction_f1=contradiction_f1,
+        contradiction_evaluable=contradiction_f1 is not None,
+        contradiction_reason=None if contradiction_f1 is not None else "no_positive_reference_or_prediction",
         citation_accuracy=_mean(citations),
+        page_accuracy_at_5=_mean(page_hits) if page_hits else None,
+        block_accuracy_at_5=_mean(block_hits) if block_hits else None,
+        evaluable_page_questions=len(page_hits),
+        evaluable_block_questions=len(block_hits),
+        non_evaluable_page_questions=len(question_ids) - len(page_hits),
+        non_evaluable_block_questions=len(question_ids) - len(block_hits),
+        page_accuracy_reason=None if page_hits else "no_gold_page_annotations",
+        block_accuracy_reason=None if block_hits else "no_gold_block_annotations",
         numerical_mismatch=mismatch_rate,
         evaluable_question_count=mismatch_denominator,
         prediction_count=prediction_count,
@@ -189,14 +237,14 @@ def _numeric_prediction_matches(prediction: object | None, expected: float) -> b
     return math.isfinite(parsed) and math.isclose(parsed, expected, rel_tol=0.0, abs_tol=1e-9)
 
 
-def _f1(predicted: set[tuple[str, str]], expected: set[tuple[str, str]]) -> float:
+def _f1(predicted: set[tuple[str, str]], expected: set[tuple[str, str]]) -> float | None:
     """Compute F1 score.
 
-    When neither predictions nor labels contain contradictions, returns NaN
-    to indicate non-evaluable status (not a misleading perfect 1.0).
+    When neither predictions nor labels contain contradictions, returns None
+    so strict JSON serialization remains portable.
     """
     if not predicted and not expected:
-        return float("nan")
+        return None
     true_positive = len(predicted & expected)
     precision = true_positive / len(predicted) if predicted else 0.0
     recall = true_positive / len(expected) if expected else 0.0

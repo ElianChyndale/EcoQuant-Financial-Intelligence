@@ -19,6 +19,7 @@ from ecoquant.retrieval.base import (
     retrieval_manifest,
 )
 from ecoquant.retrieval.evaluation import (
+    EvidenceLocation,
     EvaluationLabels,
     paired_issuer_clustered_bootstrap,
     score_retrieval,
@@ -47,6 +48,7 @@ def frozen_question() -> Question:
         issuer="AIB",
         query="What were AIB total assets in 2023?",
         cutoff=date(2023, 12, 31),
+        source_cutoff=date(2023, 12, 31),
     )
 
 
@@ -115,6 +117,153 @@ def _hostile_methods() -> tuple[_HostileRetriever, ...]:
         )
         methods.append(_HostileRetriever(name, results))
     return tuple(methods)
+
+
+class _FinalHostileRetriever(_HostileRetriever):
+    def __init__(
+        self,
+        method_name: str,
+        corpus: tuple[CorpusRecord, ...],
+        *,
+        fingerprint: str | None = None,
+    ) -> None:
+        super().__init__(method_name, ())
+        self.corpus = corpus
+        self.cutoff = frozen_question().cutoff
+        self.corpus_fingerprint = fingerprint if fingerprint is not None else corpus_fingerprint(corpus)
+        self.metadata = RetrievalMetadata(
+            method_name,
+            "production",
+            f"test-{method_name}",
+            f"test-{method_name}",
+            "0123456789abcdef0123456789abcdef01234567",
+            "kg" in method_name,
+            method_name != "static_kg",
+            "rerank" in method_name or "verify" in method_name,
+            method_name == "temporal_kg_verify",
+            "production_verified",
+        )
+
+
+def _final_hostile_methods(
+    corpus: tuple[CorpusRecord, ...] | None = None,
+) -> tuple[_FinalHostileRetriever, ...]:
+    shared_corpus = corpus or frozen_corpus()
+    return tuple(_FinalHostileRetriever(name, shared_corpus) for name in REGISTERED_METHOD_IDS)
+
+
+def test_final_boundary_rejects_equal_length_different_corpora() -> None:
+    methods = list(_final_hostile_methods())
+    changed = tuple(
+        CorpusRecord(
+            record.evidence_id,
+            record.issuer,
+            record.valid_time,
+            "changed evidence" if index == 0 else record.text,
+            record.numeric_value,
+            record.source_time,
+        )
+        for index, record in enumerate(frozen_corpus())
+    )
+    methods[-1] = _FinalHostileRetriever(methods[-1].method_name, changed)
+
+    with pytest.raises(ValueError, match="corpus fingerprint"):
+        compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
+
+def test_final_boundary_rejects_missing_or_unverified_reported_fingerprint() -> None:
+    missing = list(_final_hostile_methods())
+    del missing[-1].corpus_fingerprint
+    with pytest.raises(ValueError, match="missing canonical corpus fingerprint"):
+        compare_retrievers(missing, frozen_question(), top_k=5, final_benchmark=True)
+
+    mismatched = list(_final_hostile_methods())
+    mismatched[-1].corpus_fingerprint = "0" * 64
+    with pytest.raises(ValueError, match="reported corpus fingerprint"):
+        compare_retrievers(mismatched, frozen_question(), top_k=5, final_benchmark=True)
+
+
+def test_final_boundary_rejects_unverified_production_backend_status() -> None:
+    methods = list(_final_hostile_methods())
+    methods[0].metadata = RetrievalMetadata(
+        "bm25",
+        "production",
+        "rank-bm25",
+        "bm25-okapi",
+        "0.2.2",
+        False,
+        True,
+        False,
+        False,
+        backend_status="production_unavailable",
+    )
+
+    with pytest.raises(ValueError, match="production_verified"):
+        compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
+
+@pytest.mark.parametrize("top_k", (4, 6))
+def test_final_boundary_requires_exactly_five_results(top_k: int) -> None:
+    with pytest.raises(ValueError, match="top_k=5"):
+        compare_retrievers(_final_hostile_methods(), frozen_question(), top_k=top_k, final_benchmark=True)
+
+
+def test_final_boundary_requires_explicit_source_cutoff() -> None:
+    implicit = Question("q", "AIB", "assets", date(2023, 12, 31))
+
+    with pytest.raises(ValueError, match="explicit source_cutoff"):
+        compare_retrievers(_final_hostile_methods(), implicit, top_k=5, final_benchmark=True)
+
+
+def test_exploratory_comparison_is_explicitly_non_final() -> None:
+    compared = compare_retrievers(_hostile_methods(), frozen_question(), top_k=4, final_benchmark=False)
+
+    assert set(compared) == set(REGISTERED_METHOD_IDS)
+    assert all(len(results) == 4 for results in compared.values())
+
+
+def test_final_boundary_rejects_missing_and_extra_methods() -> None:
+    methods = _final_hostile_methods()
+    with pytest.raises(ValueError, match="exactly the six"):
+        compare_retrievers(methods[:-1], frozen_question(), top_k=5, final_benchmark=True)
+
+    extra = _FinalHostileRetriever("extra", frozen_corpus())
+    with pytest.raises(ValueError, match="exactly the six|registered"):
+        compare_retrievers((*methods, extra), frozen_question(), top_k=5, final_benchmark=True)
+
+
+@pytest.mark.parametrize(
+    "results",
+    (
+        (
+            RetrievalResult("bm25", "aib-assets-2023", "a", 1, 1.0, True, "unverified"),
+            RetrievalResult("bm25", "aib-assets-2023", "b", 1, 0.5, True, "unverified"),
+        ),
+        (
+            RetrievalResult("bm25", "aib-assets-2023", "b", 1, 1.0, True, "unverified"),
+            RetrievalResult("bm25", "aib-assets-2023", "a", 2, 1.0, True, "unverified"),
+        ),
+    ),
+)
+def test_final_boundary_rejects_duplicate_or_noncanonical_ranks(
+    results: tuple[RetrievalResult, ...],
+) -> None:
+    methods = list(_final_hostile_methods())
+    methods[0].results = results
+
+    with pytest.raises(ValueError, match="canonical ranks and score ordering"):
+        compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
+
+
+@pytest.mark.parametrize("score", (float("nan"), float("inf"), float("-inf")))
+def test_final_boundary_rejects_non_finite_scores(score: float) -> None:
+    methods = list(_final_hostile_methods())
+    methods[0].results = (
+        RetrievalResult("bm25", "aib-assets-2023", "bad-score", 1, score, True, "unverified"),
+    )
+
+    with pytest.raises(ValueError, match="finite"):
+        compare_retrievers(methods, frozen_question(), top_k=5, final_benchmark=True)
 
 
 def test_comparison_boundary_passes_one_cutoff_and_normalizes_hostile_outputs() -> None:
@@ -322,6 +471,7 @@ def test_retrievers_expose_frozen_metadata_and_final_benchmark_rejects_fixtures(
     assert all({field.name for field in fields(method.metadata)} == {
         "method_id", "implementation_mode", "backend", "model_name", "model_revision",
         "uses_graph", "uses_temporal_filter", "uses_reranker", "uses_verification",
+        "backend_status",
     } for method in methods)
     with pytest.raises((AttributeError, TypeError)):
         methods[0].metadata.backend = "mutated"  # type: ignore[misc]
@@ -332,30 +482,13 @@ def test_retrievers_expose_frozen_metadata_and_final_benchmark_rejects_fixtures(
         RetrievalMetadata("bm25", "production", "", None, None, False, True, False, False).validate()
 
 
-def test_production_retrievers_have_production_metadata() -> None:
-    """Verify production-mode retrievers have production metadata.
-
-    In production mode, model-loading failures raise RuntimeError rather than
-    silently degrading. This test verifies either successful loading or proper
-    error raising.
-    """
+def test_production_factory_fails_closed_while_reranker_revision_is_unverified() -> None:
+    """Fail-loud behavior is not counted as successful production execution."""
     corpus = frozen_corpus()
     graph = source_graph(corpus)
 
-    try:
-        production_methods = all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=graph, mode="production")
-        # Models loaded successfully
-        for method in production_methods:
-            assert method.metadata.implementation_mode == "production"
-            assert method.metadata.backend is not None and method.metadata.backend != ""
-            # Model name and revision may be None for graph-based methods
-            if method.method_name in ("bm25", "dense", "temporal_kg_rerank", "temporal_kg_verify"):
-                assert method.metadata.model_name is not None
-                assert method.metadata.model_revision is not None
-    except RuntimeError as e:
-        # Model not available - verify the error message is clear
-        assert "Failed to load production" in str(e)
-        assert "A production run must not silently fall back" in str(e)
+    with pytest.raises(RuntimeError, match="Failed to load production"):
+        all_retrievers(corpus, cutoff=frozen_question().cutoff, graph=graph, mode="production")
 
 
 def test_fixture_retrievers_reject_gold_shaped_inputs() -> None:
@@ -451,6 +584,58 @@ def test_kg_candidates_require_a_source_derived_graph_path_and_honor_source_cuto
     assert methods["temporal_kg"].retrieve(query) == methods["temporal_kg"].retrieve(query)
 
 
+def test_kg_ranking_resolves_only_graph_reachable_ids_without_scanning_corpus() -> None:
+    records = tuple(
+        CorpusRecord(
+            f"record-{index}",
+            "AIB",
+            date(2023, 12, 31),
+            "AIB total assets exact answer" if index else "AIB weak evidence",
+            source_time=date(2023, 1, 1),
+        )
+        for index in range(20)
+    )
+    graph = TemporalEvidenceGraph()
+    graph.add_node(Issuer("AIB", date(2023, 1, 1), date(2023, 1, 1), "AIB"))
+    graph.add_node(Document("record-0", date(2023, 12, 31), date(2023, 1, 1), "AIB"))
+    graph.add_edge("AIB", "record-0", Relation.CONTAINS)
+    method = {
+        item.method_name: item
+        for item in all_retrievers(records, cutoff=date(2023, 12, 31), graph=graph, mode="fixture")
+    }["static_kg"]
+
+    class NoQueryTimeCorpusScan:
+        def __iter__(self):
+            raise AssertionError("KG query enumerated the complete corpus")
+
+    method.corpus = NoQueryTimeCorpusScan()  # type: ignore[assignment]
+    results = method.retrieve(Question("q", "AIB", "total assets exact answer", date(2023, 12, 31)))
+
+    assert [result.evidence_id for result in results] == ["record-0"]
+
+
+def test_removing_source_derived_graph_path_removes_retrieval_candidate() -> None:
+    corpus = (
+        CorpusRecord(
+            "reachable",
+            "AIB",
+            date(2023, 12, 31),
+            "AIB assets",
+            source_time=date(2023, 1, 1),
+        ),
+    )
+    graph = source_graph(corpus)
+    method = {
+        item.method_name: item
+        for item in all_retrievers(corpus, cutoff=date(2023, 12, 31), graph=graph, mode="fixture")
+    }["static_kg"]
+    query = Question("q", "AIB", "AIB assets", date(2023, 12, 31))
+
+    assert [result.evidence_id for result in method.retrieve(query)] == ["reachable"]
+    graph.remove_edge("AIB", "reachable", Relation.CONTAINS)
+    assert method.retrieve(query) == ()
+
+
 @pytest.mark.parametrize("evaluator_relation", (Relation.CONTRADICTS, Relation.SUPERSEDES))
 def test_evaluator_only_edges_cannot_create_retrieval_paths_or_access_labels(
     monkeypatch: pytest.MonkeyPatch, evaluator_relation: Relation
@@ -501,6 +686,40 @@ def test_verifier_distinguishes_valid_and_source_time_failures() -> None:
     assert verifier._verification_status(source_before_valid, query) == "invalid_for_requested_time"  # type: ignore[attr-defined]
 
 
+def test_verifier_uses_authoritative_linked_document_source_time() -> None:
+    record = CorpusRecord("linked", "AIB", date(2023, 12, 31), "AIB assets", source_time=None)
+    graph = TemporalEvidenceGraph()
+    graph.add_node(Issuer("AIB", date(2023, 1, 1), date(2023, 1, 1), "AIB"))
+    graph.add_node(Document("linked", date(2023, 12, 31), date(2024, 1, 1), "AIB"))
+    graph.add_edge("AIB", "linked", Relation.CONTAINS)
+    verifier = {
+        method.method_name: method
+        for method in all_retrievers((record,), cutoff=date(2023, 12, 31), graph=graph, mode="fixture")
+    }["temporal_kg_verify"]
+
+    query_2023 = Question("q", "AIB", "assets", date(2023, 12, 31), source_cutoff=date(2023, 12, 31))
+    query_2024 = Question("q", "AIB", "assets", date(2023, 12, 31), source_cutoff=date(2024, 1, 1))
+
+    assert verifier._verification_status(record, query_2023) == "published_after_source_cutoff"  # type: ignore[attr-defined]
+    assert verifier._verification_status(record, query_2024) == "time_verified"  # type: ignore[attr-defined]
+
+
+def test_verifier_reports_missing_source_time_without_authoritative_document_time() -> None:
+    record = CorpusRecord("missing-time", "AIB", date(2023, 12, 31), "AIB assets", source_time=None)
+    graph = TemporalEvidenceGraph()
+    graph.add_node(Issuer("AIB", date(2023, 1, 1), date(2023, 1, 1), "AIB"))
+    graph.add_node(Document("missing-time", date(2023, 12, 31), None, "AIB"))
+    graph.add_edge("AIB", "missing-time", Relation.CONTAINS)
+    verifier = {
+        method.method_name: method
+        for method in all_retrievers((record,), cutoff=date(2023, 12, 31), graph=graph, mode="fixture")
+    }["temporal_kg_verify"]
+    query = Question("q", "AIB", "assets", date(2023, 12, 31), source_cutoff=date(2023, 12, 31))
+
+    assert verifier._verification_status(record, query) == "missing_source_time"  # type: ignore[attr-defined]
+    assert verifier.retrieve(query) == ()
+
+
 def test_paired_issuer_clustered_bootstrap_is_seeded_and_clusters_by_issuer() -> None:
     baseline = {"q1": 0.0, "q2": 0.0, "q3": 1.0, "q4": 1.0}
     candidate = {"q1": 1.0, "q2": 1.0, "q3": 1.0, "q4": 1.0}
@@ -514,6 +733,103 @@ def test_paired_issuer_clustered_bootstrap_is_seeded_and_clusters_by_issuer() ->
     assert first.point_estimate == pytest.approx(0.5)
     assert first.lower <= first.point_estimate <= first.upper
     assert first.cluster_count == 2
+
+
+def test_page_and_block_accuracy_at_five_use_catalog_identity_and_macro_aggregation() -> None:
+    def result(question_id: str, evidence_id: str, rank: int) -> RetrievalResult:
+        return RetrievalResult("bm25", question_id, evidence_id, rank, 6.0 - rank, True, "unverified")
+
+    results = {
+        "page-rank-1": (result("page-rank-1", "p1", 1),),
+        "page-rank-5": tuple(result("page-rank-5", f"p5-{rank}", rank) for rank in range(1, 6)),
+        "page-miss": (result("page-miss", "miss", 1),),
+        "block-only": (result("block-only", "block", 1),),
+        "unannotated": (result("unannotated", "ignored", 1),),
+    }
+    labels = EvaluationLabels(
+        relevant_evidence={question_id: frozenset() for question_id in results},
+        issuer_by_question={question_id: "AIB" for question_id in results},
+        contradiction_evidence={},
+        citation_evidence={},
+        expected_numeric={},
+        gold_page_ids={
+            "page-rank-1": frozenset({"gold-page", "alternate-page"}),
+            "page-rank-5": frozenset({"rank-five-page"}),
+            "page-miss": frozenset({"gold-page"}),
+        },
+        gold_block_ids={
+            "page-rank-1": frozenset({"different-block"}),
+            "page-rank-5": frozenset({"rank-five-block", "alternate-block"}),
+            "block-only": frozenset({"gold-block"}),
+        },
+    )
+    catalog = {
+        "p1": EvidenceLocation("gold-page", "wrong-block"),
+        **{f"p5-{rank}": EvidenceLocation("other-page", "other-block") for rank in range(1, 5)},
+        "p5-5": EvidenceLocation("rank-five-page", "rank-five-block"),
+        "miss": EvidenceLocation("wrong-page", "wrong-block"),
+        "block": EvidenceLocation("page-without-gold", "gold-block"),
+        "ignored": EvidenceLocation("ignored-page", "ignored-block"),
+    }
+
+    metrics = score_retrieval(results, labels, evidence_catalog=catalog)
+
+    assert metrics.page_accuracy_at_5 == pytest.approx(2 / 3)
+    assert metrics.block_accuracy_at_5 == pytest.approx(2 / 3)
+    assert metrics.evaluable_page_questions == 3
+    assert metrics.evaluable_block_questions == 3
+    assert metrics.non_evaluable_page_questions == 2
+    assert metrics.non_evaluable_block_questions == 2
+
+
+def test_page_and_block_accuracy_are_portably_non_evaluable_without_gold_annotations() -> None:
+    labels = EvaluationLabels(
+        relevant_evidence={"q1": frozenset()},
+        issuer_by_question={"q1": "AIB"},
+        contradiction_evidence={},
+        citation_evidence={},
+        expected_numeric={},
+    )
+
+    metrics = score_retrieval({}, labels, evidence_catalog={})
+
+    assert metrics.page_accuracy_at_5 is None
+    assert metrics.block_accuracy_at_5 is None
+    assert metrics.page_accuracy_reason == "no_gold_page_annotations"
+    assert metrics.block_accuracy_reason == "no_gold_block_annotations"
+
+
+def test_citation_metric_rejects_missing_catalog_entries_for_returned_evidence() -> None:
+    results = {
+        "q1": (RetrievalResult("bm25", "q1", "missing", 1, 1.0, True, "unverified"),),
+    }
+    labels = EvaluationLabels(
+        relevant_evidence={"q1": frozenset()},
+        issuer_by_question={"q1": "AIB"},
+        contradiction_evidence={},
+        citation_evidence={},
+        expected_numeric={},
+        gold_page_ids={"q1": frozenset({"page-1"})},
+    )
+
+    with pytest.raises(ValueError, match="missing evidence catalog entry"):
+        score_retrieval(results, labels, evidence_catalog={})
+
+
+def test_empty_contradiction_reference_and_prediction_are_portably_non_evaluable() -> None:
+    labels = EvaluationLabels(
+        relevant_evidence={"q1": frozenset()},
+        issuer_by_question={"q1": "AIB"},
+        contradiction_evidence={},
+        citation_evidence={},
+        expected_numeric={},
+    )
+
+    metrics = score_retrieval({}, labels)
+
+    assert metrics.contradiction_f1 is None
+    assert metrics.contradiction_evaluable is False
+    assert metrics.contradiction_reason == "no_positive_reference_or_prediction"
 
 
 # ---------------------------------------------------------------------------
@@ -567,3 +883,17 @@ class TestCorpusFingerprint:
             for r in corpus
         )
         assert corpus_fingerprint(modified) != fp_original
+
+    def test_source_time_and_valid_time_changes_break_fingerprint(self) -> None:
+        record = CorpusRecord(
+            "evidence-1", "AIB", date(2023, 12, 31), "AIB assets", 1.0, date(2024, 1, 1)
+        )
+        changed_source = CorpusRecord(
+            "evidence-1", "AIB", date(2023, 12, 31), "AIB assets", 1.0, date(2024, 1, 2)
+        )
+        changed_valid = CorpusRecord(
+            "evidence-1", "AIB", date(2024, 12, 31), "AIB assets", 1.0, date(2024, 1, 1)
+        )
+
+        assert corpus_fingerprint((record,)) != corpus_fingerprint((changed_source,))
+        assert corpus_fingerprint((record,)) != corpus_fingerprint((changed_valid,))

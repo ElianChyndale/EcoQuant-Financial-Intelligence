@@ -10,7 +10,7 @@ In fixture mode, falls back to a deterministic token-overlap proxy.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 
 import numpy as np
@@ -22,13 +22,13 @@ from .base import BaseRetriever, CorpusRecord, Question, RetrievalMetadata
 class ModelPin:
     """Immutable model identification for reproducibility."""
     name: str
-    revision: str
+    revision: str | None
 
 
 # Pinned model for reproducibility
 DENSE_MODEL = ModelPin(
     "sentence-transformers/all-MiniLM-L6-v2",
-    "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c",
+    "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
 )
 
 
@@ -61,6 +61,7 @@ class DenseRetriever(BaseRetriever):
         uses_temporal_filter=True,
         uses_reranker=False,
         uses_verification=False,
+        backend_status="production_unavailable",
     )
 
     def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date) -> None:
@@ -91,6 +92,7 @@ class DenseRetriever(BaseRetriever):
                 normalize_embeddings=True,
             )
             self._model_loaded = True
+            self.metadata = replace(self.metadata, backend_status="production_verified")
         except Exception as e:
             # In production mode, fail clearly rather than silently degrade
             raise RuntimeError(

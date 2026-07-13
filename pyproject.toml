@@ -22,9 +22,8 @@ pythonpath = ["src", "."]
 
 [tool.ecoquant.retrieval_models]
 dense_name = "sentence-transformers/all-MiniLM-L6-v2"
-dense_revision = "ba3e1e695e999e29d2a0e9ea40e54b0e4a6d2a4c"
+dense_revision = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 reranker_name = "BAAI/bge-reranker-base"
-reranker_revision = "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5"
 
 [tool.setuptools.packages.find]
 where = ["src", "."]

@@ -7,9 +7,11 @@ This is a deterministic verification stage, not a learned model.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import replace
 from datetime import date
 
 from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
+from ecoquant.evidence_graph.models import Document
 
 from .base import CorpusRecord, Question, RetrievalMetadata
 from .reranker import TemporalKGRerankRetriever
@@ -25,7 +27,9 @@ def _source_verifier(record: CorpusRecord, question: Question) -> str:
     """
     if record.valid_time > question.valid_at:
         return "invalid_for_requested_time"
-    if record.source_time is not None and record.source_time > question.effective_source_cutoff:
+    if record.source_time is None:
+        return "missing_source_time"
+    if record.source_time > question.effective_source_cutoff:
         return "published_after_source_cutoff"
     return "time_verified"
 
@@ -44,6 +48,7 @@ class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
         uses_temporal_filter=True,
         uses_reranker=True,
         uses_verification=True,
+        backend_status="production_unavailable",
     )
 
     def __init__(
@@ -54,4 +59,11 @@ class TemporalKGVerifyRetriever(TemporalKGRerankRetriever):
 
     def _verification_status(self, record: CorpusRecord, question: Question) -> str:
         """Apply source-time verification to the record."""
+        if record.source_time is None:
+            try:
+                linked = self.graph.node(record.evidence_id)
+            except KeyError:
+                linked = None
+            if isinstance(linked, Document) and linked.source_time is not None:
+                record = replace(record, source_time=linked.source_time)
         return self.verifier(record, question)

@@ -55,6 +55,23 @@ class TemporalEvidenceGraph:
         if edge not in self._edges:
             self._edges.append(edge)
 
+    def remove_edge(
+        self,
+        source_id: str,
+        target_id: str,
+        relation: Relation,
+        *,
+        evaluator_only: bool = False,
+    ) -> None:
+        """Remove one exact immutable edge without changing graph semantics."""
+        try:
+            edge = Edge(source_id, target_id, Relation(relation), evaluator_only)
+        except (TypeError, ValueError) as error:
+            raise ValueError(f"relation must be one of {[item.value for item in Relation]}") from error
+        if edge not in self._edges:
+            raise ValueError("edge does not exist")
+        self._edges.remove(edge)
+
     def add_evidence(self, asset_id: str, valid_time: date, evidence: EvidenceSpanV1) -> None:
         self._evidence.append((asset_id, valid_time, evidence))
 
@@ -112,7 +129,8 @@ class TemporalEvidenceGraph:
     def temporal_retrieval_candidate_evidence_ids(self, issuer_id: str, query: str, valid_at: date, source_cutoff: date) -> frozenset[str]:
         """Graph candidates whose claim time and publication time are both eligible."""
         return frozenset(node_id for node_id in self.retrieval_candidate_evidence_ids(issuer_id, query)
-                         if (node := self._nodes[node_id]).valid_time <= valid_at and node.source_time <= source_cutoff)
+                         if (node := self._nodes[node_id]).valid_time <= valid_at
+                         and node.source_time is not None and node.source_time <= source_cutoff)
 
     def candidate_evidence_ids(self, issuer_id: str, query: str) -> frozenset[str]:
         """Static graph traversal: deliberately does not apply valid-time filtering."""

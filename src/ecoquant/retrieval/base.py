@@ -77,13 +77,14 @@ class RetrievalMetadata:
     uses_temporal_filter: bool
     uses_reranker: bool
     uses_verification: bool
+    backend_status: Literal["production_verified", "production_unavailable", "fixture", "exploratory"] = "fixture"
 
     @classmethod
     def fixture(cls, method_id: str, **overrides: object) -> "RetrievalMetadata":
         values: dict[str, object] = {
             "method_id": method_id, "implementation_mode": "fixture", "backend": "deterministic-local",
             "model_name": None, "model_revision": None, "uses_graph": False, "uses_temporal_filter": False,
-            "uses_reranker": False, "uses_verification": False,
+            "uses_reranker": False, "uses_verification": False, "backend_status": "fixture",
         }
         values.update(overrides)
         return cls(**values)  # type: ignore[arg-type]
@@ -91,7 +92,18 @@ class RetrievalMetadata:
     def validate(self) -> None:
         if self.method_id not in REGISTERED_METHOD_IDS:
             raise ValueError(f"unknown registered method_id: {self.method_id}")
-        if self.implementation_mode == "production" and (not self.backend or not self.model_name or not self.model_revision):
+        if self.implementation_mode == "fixture" and self.backend_status not in {"fixture", "exploratory"}:
+            raise ValueError("fixture metadata requires fixture or exploratory backend status")
+        if self.implementation_mode == "production" and self.backend_status not in {
+            "production_verified", "production_unavailable"
+        }:
+            raise ValueError("production metadata requires an explicit production backend status")
+        if self.implementation_mode == "production" and (not self.backend or not self.model_name):
+            if not (self.backend_status == "production_verified" and self.uses_graph and not self.uses_reranker):
+                raise ValueError("production metadata requires backend and model_name")
+        if self.implementation_mode == "production" and self.backend_status == "production_verified" and (
+            not self.uses_graph or self.uses_reranker
+        ) and not self.model_revision:
             raise ValueError("production metadata requires backend, model_name, and model_revision")
 
 
@@ -113,12 +125,14 @@ class BaseRetriever:
 
     def __init__(self, corpus: Iterable[CorpusRecord], *, cutoff: date) -> None:
         self.corpus = tuple(corpus)
+        self.corpus_fingerprint = corpus_fingerprint(self.corpus)
         self.cutoff = cutoff
         identifiers = [record.evidence_id for record in self.corpus]
         if not self.corpus:
             raise ValueError("corpus must contain at least one record")
         if len(identifiers) != len(set(identifiers)):
             raise ValueError("corpus evidence_id values must be unique")
+        self._corpus_by_evidence_id = {record.evidence_id: record for record in self.corpus}
         self.metadata.validate()
 
     def retrieve(self, question: RetrieverQuery, top_k: int = 5) -> tuple[RetrievalResult, ...]:
@@ -169,6 +183,8 @@ def compare_retrievers(
             f"final benchmark mode requires top_k=5, got {top_k}. "
             f"The authoritative comparison boundary requires exactly top_k=5."
         )
+    if final_benchmark and query.source_cutoff is None:
+        raise ValueError("final benchmark requires an explicit source_cutoff")
     method_ids = [method.method_name for method in methods]
     if len(method_ids) != len(set(method_ids)):
         raise ValueError("duplicate method identifiers are not comparable")
@@ -184,6 +200,8 @@ def compare_retrievers(
     output: dict[str, tuple[RetrievalResult, ...]] = {}
     for method in methods:
         method.metadata.validate()
+        if method.metadata.method_id != method.method_name:
+            raise ValueError("retriever metadata method_id must match the registered method name")
         raw = tuple(method.retrieve(query, top_k=top_k))
         if any(result.method != method.method_name for result in raw):
             raise ValueError("retriever returned a result for another method")
@@ -194,6 +212,15 @@ def compare_retrievers(
         if any(not isfinite(result.score) for result in raw):
             raise ValueError("retriever result scores must be finite")
         ordered = sorted(raw, key=lambda item: (-item.score, item.evidence_id))[:top_k]
+        if final_benchmark and (
+            len(raw) > top_k
+            or tuple(raw) != tuple(ordered)
+            or [item.rank for item in raw] != list(range(1, len(raw) + 1))
+        ):
+            raise ValueError(
+                "final benchmark results require canonical ranks and score ordering "
+                "with deterministic evidence-ID tie-breaking"
+            )
         output[method.method_name] = tuple(replace(item, rank=rank) for rank, item in enumerate(ordered, start=1))
     return output
 
@@ -221,6 +248,7 @@ def _validate_shared_corpus_and_cutoff(
         return
 
     reference_corpus_size = len(methods_with_corpus[0].corpus)
+    reference_fingerprint = corpus_fingerprint(methods_with_corpus[0].corpus)
     reference_cutoff = methods_with_corpus[0].cutoff
 
     for method in methods_with_corpus[1:]:
@@ -228,6 +256,11 @@ def _validate_shared_corpus_and_cutoff(
             raise ValueError(
                 f"corpus size mismatch: {method.method_name} has "
                 f"{len(method.corpus)} records, expected {reference_corpus_size}"
+            )
+        if corpus_fingerprint(method.corpus) != reference_fingerprint:
+            raise ValueError(
+                f"corpus fingerprint mismatch: {method.method_name} does not share "
+                "the canonical comparison corpus"
             )
         if method.cutoff != reference_cutoff:
             raise ValueError(
@@ -243,6 +276,20 @@ def validate_final_benchmark(methods: Sequence[Retriever]) -> None:
         method.metadata.validate()
         if method.metadata.implementation_mode != "production":
             raise ValueError(f"final benchmark rejects fixture-mode method: {method.method_name}")
+        if method.metadata.backend_status != "production_verified":
+            raise ValueError(
+                f"final benchmark requires production_verified backend status: {method.method_name}"
+            )
+        reported_fingerprint = getattr(method, "corpus_fingerprint", None)
+        if not reported_fingerprint:
+            raise ValueError(
+                f"final benchmark method {method.method_name} is missing canonical corpus fingerprint"
+            )
+        computed_fingerprint = corpus_fingerprint(method.corpus)
+        if reported_fingerprint != computed_fingerprint:
+            raise ValueError(
+                f"reported corpus fingerprint does not match canonical corpus for {method.method_name}"
+            )
 
 
 def retrieval_manifest(methods: Sequence[Retriever]) -> Mapping[str, RetrievalMetadata]:

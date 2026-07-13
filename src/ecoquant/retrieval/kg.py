@@ -27,8 +27,12 @@ class _GraphRetriever(BaseRetriever):
 
     def _candidate_records(self, question: Question) -> list[CorpusRecord]:
         candidate_ids = self._graph_candidate_ids(question)
-        candidates = super()._candidate_records(question)
-        return [record for record in candidates if record.evidence_id in candidate_ids]
+        return [
+            record
+            for evidence_id in sorted(candidate_ids)
+            if (record := self._corpus_by_evidence_id.get(evidence_id)) is not None
+            and self._include(record, question)
+        ]
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
         raise NotImplementedError
@@ -43,12 +47,13 @@ class StaticKGRetriever(_GraphRetriever):
         method_id="static_kg",
         implementation_mode="production",
         backend="temporal-evidence-graph",
-        model_name="temporal-evidence-graph",
-        model_revision="custom",
+        model_name=None,
+        model_revision=None,
         uses_graph=True,
         uses_temporal_filter=False,
         uses_reranker=False,
         uses_verification=False,
+        backend_status="production_verified",
     )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
@@ -66,12 +71,13 @@ class TemporalKGRetriever(_GraphRetriever):
         method_id="temporal_kg",
         implementation_mode="production",
         backend="temporal-evidence-graph",
-        model_name="temporal-evidence-graph",
-        model_revision="custom",
+        model_name=None,
+        model_revision=None,
         uses_graph=True,
         uses_temporal_filter=True,
         uses_reranker=False,
         uses_verification=False,
+        backend_status="production_verified",
     )
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:

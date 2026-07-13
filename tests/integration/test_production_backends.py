@@ -8,6 +8,7 @@ silently degrading to proxy scoring.
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -80,21 +81,43 @@ def test_production_bm25_retriever_loads_and_scores(corpus, graph):
     assert all(r.score >= 0 for r in results)
 
 
-def test_production_dense_retriever_raises_on_missing_model(corpus, graph):
-    """Verify dense retriever raises RuntimeError when model is unavailable."""
+def test_production_dense_retriever_fails_loudly_when_model_load_fails(corpus, monkeypatch):
+    """Fail-loud behavior is distinct from proof of successful production execution."""
+    from sentence_transformers import SentenceTransformer
     from ecoquant.retrieval.dense import DenseRetriever
 
-    # If the model IS available, the test should verify it loads
-    # If the model is NOT available, it should raise RuntimeError
-    try:
-        retriever = DenseRetriever(corpus, cutoff=date(2023, 12, 31))
-        # Model loaded successfully
-        assert retriever.metadata.implementation_mode == "production"
-        assert retriever._model_loaded is True
-    except RuntimeError as e:
-        # Model not available - this is expected in CI/test environments
-        assert "Failed to load production dense model" in str(e)
-        assert "A production run must not silently fall back" in str(e)
+    def fail_load(*args, **kwargs):
+        raise OSError("model unavailable")
+
+    monkeypatch.setattr(SentenceTransformer, "__init__", fail_load)
+    with pytest.raises(RuntimeError, match="Failed to load production dense model"):
+        DenseRetriever(corpus, cutoff=date(2023, 12, 31))
+
+
+def test_production_dense_retriever_loads_verified_local_snapshot(corpus, monkeypatch):
+    from ecoquant.retrieval.base import RetrieverQuery
+    from ecoquant.retrieval.dense import DENSE_MODEL, DenseRetriever
+
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
+    monkeypatch.setenv("TRANSFORMERS_OFFLINE", "1")
+    assert DENSE_MODEL.revision == "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+    snapshot = (
+        Path.home()
+        / ".cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots"
+        / DENSE_MODEL.revision
+    )
+    if not any((snapshot / filename).exists() for filename in ("model.safetensors", "pytorch_model.bin")):
+        pytest.skip("EXTERNAL_BLOCKER: verified dense snapshot is missing executable model weights")
+
+    retriever = DenseRetriever(corpus, cutoff=date(2023, 12, 31))
+    results = retriever.retrieve(
+        RetrieverQuery("test", "AIB", "AIB total assets", date(2023, 12, 31)),
+        top_k=3,
+    )
+
+    assert retriever._model_loaded is True
+    assert results
+    assert all(result.score == pytest.approx(result.score) for result in results)
 
 
 def test_production_kg_retrievers_require_graph(corpus):
@@ -133,19 +156,27 @@ def test_production_kg_retrievers_load_with_graph(corpus, graph):
     assert len(temporal_results) >= 0
 
 
-def test_production_reranker_raises_on_missing_model(corpus, graph):
-    """Verify reranker raises RuntimeError when model is unavailable."""
+def test_production_reranker_fails_loudly_when_model_load_fails(corpus, graph, monkeypatch):
+    from sentence_transformers import CrossEncoder
     from ecoquant.retrieval.reranker import TemporalKGRerankRetriever
 
-    try:
-        retriever = TemporalKGRerankRetriever(corpus, cutoff=date(2023, 12, 31), graph=graph)
-        # Model loaded successfully
-        assert retriever.metadata.implementation_mode == "production"
-        assert retriever._model_loaded is True
-    except RuntimeError as e:
-        # Model not available - this is expected in CI/test environments
-        assert "Failed to load production reranker model" in str(e)
-        assert "A production run must not silently fall back" in str(e)
+    def fail_load(*args, **kwargs):
+        raise OSError("model unavailable")
+
+    monkeypatch.setattr(CrossEncoder, "__init__", fail_load)
+    with pytest.raises(RuntimeError, match="Failed to load production reranker model"):
+        TemporalKGRerankRetriever(corpus, cutoff=date(2023, 12, 31), graph=graph)
+
+
+def test_production_reranker_loads_verified_snapshot(corpus, graph, monkeypatch):
+    from ecoquant.retrieval.reranker import RERANKER_MODEL, TemporalKGRerankRetriever
+
+    if RERANKER_MODEL.revision is None:
+        pytest.skip("EXTERNAL_BLOCKER: no verified immutable local reranker revision")
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
+    monkeypatch.setenv("TRANSFORMERS_OFFLINE", "1")
+    retriever = TemporalKGRerankRetriever(corpus, cutoff=date(2023, 12, 31), graph=graph)
+    assert retriever._model_loaded is True
 
 
 def test_fixture_retrievers_work_without_models(corpus, graph):
@@ -175,10 +206,16 @@ def test_fixture_retrievers_work_without_models(corpus, graph):
 def test_production_metadata_requires_backend_info():
     """Verify production metadata validation requires backend info."""
     # Valid production metadata
-    valid = RetrievalMetadata("bm25", "production", "rank-bm25", "model", "rev", False, True, False, False)
+    valid = RetrievalMetadata(
+        "bm25", "production", "rank-bm25", "model", "rev", False, True, False, False,
+        backend_status="production_verified",
+    )
     valid.validate()
 
     # Invalid: empty backend
     with pytest.raises(ValueError, match="production metadata"):
-        invalid = RetrievalMetadata("bm25", "production", "", None, None, False, True, False, False)
+        invalid = RetrievalMetadata(
+            "bm25", "production", "", None, None, False, True, False, False,
+            backend_status="production_verified",
+        )
         invalid.validate()

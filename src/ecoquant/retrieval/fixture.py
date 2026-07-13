@@ -7,9 +7,11 @@ They are used only in unit tests and must not be used for final benchmarks.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import replace
 from datetime import date
 
 from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
+from ecoquant.evidence_graph.models import Document
 
 from .base import BaseRetriever, CorpusRecord, Question, RetrievalMetadata, _terms
 
@@ -79,8 +81,12 @@ class _FixtureGraphRetriever(BaseRetriever):
 
     def _candidate_records(self, question: Question) -> list[CorpusRecord]:
         candidate_ids = self._graph_candidate_ids(question)
-        candidates = super()._candidate_records(question)
-        return [record for record in candidates if record.evidence_id in candidate_ids]
+        return [
+            record
+            for evidence_id in sorted(candidate_ids)
+            if (record := self._corpus_by_evidence_id.get(evidence_id)) is not None
+            and self._include(record, question)
+        ]
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:
         raise NotImplementedError
@@ -162,7 +168,9 @@ class FixtureTemporalKGRerankRetriever(FixtureTemporalKGRetriever):
 def _source_verifier(record: CorpusRecord, question: Question) -> str:
     if record.valid_time > question.valid_at:
         return "invalid_for_requested_time"
-    if record.source_time is not None and record.source_time > question.effective_source_cutoff:
+    if record.source_time is None:
+        return "missing_source_time"
+    if record.source_time > question.effective_source_cutoff:
         return "published_after_source_cutoff"
     return "time_verified"
 
@@ -188,4 +196,11 @@ class FixtureTemporalKGVerifyRetriever(FixtureTemporalKGRerankRetriever):
         self.verifier = _source_verifier
 
     def _verification_status(self, record: CorpusRecord, question: Question) -> str:
+        if record.source_time is None:
+            try:
+                linked = self.graph.node(record.evidence_id)
+            except KeyError:
+                linked = None
+            if isinstance(linked, Document) and linked.source_time is not None:
+                record = replace(record, source_time=linked.source_time)
         return self.verifier(record, question)

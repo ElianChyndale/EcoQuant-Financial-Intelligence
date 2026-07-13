@@ -9,7 +9,7 @@ In production mode, raises an error if the model cannot be loaded.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import replace
 from datetime import date
 
 from ecoquant.evidence_graph.graph import TemporalEvidenceGraph
@@ -22,7 +22,7 @@ from .kg import TemporalKGRetriever
 # Pinned reranker model for reproducibility
 RERANKER_MODEL = ModelPin(
     "BAAI/bge-reranker-base",
-    "1d6ab2b8e0f0e2a5e5e5e5e5e5e5e5e5e5e5e5e5",
+    None,
 )
 
 
@@ -46,6 +46,7 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         uses_temporal_filter=True,
         uses_reranker=True,
         uses_verification=False,
+        backend_status="production_unavailable",
     )
 
     def __init__(
@@ -62,6 +63,12 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
         In production mode, raises RuntimeError if the model cannot be loaded.
         This prevents silent degradation of production results.
         """
+        if RERANKER_MODEL.revision is None:
+            raise RuntimeError(
+                f"Failed to load production reranker model '{RERANKER_MODEL.name}': "
+                "no verified immutable revision is configured. "
+                "A production run must not silently fall back to proxy scoring."
+            )
         try:
             from sentence_transformers import CrossEncoder
 
@@ -70,6 +77,7 @@ class TemporalKGRerankRetriever(TemporalKGRetriever):
                 revision=RERANKER_MODEL.revision,
             )
             self._model_loaded = True
+            self.metadata = replace(self.metadata, backend_status="production_verified")
         except Exception as e:
             # In production mode, fail clearly rather than silently degrade
             raise RuntimeError(
