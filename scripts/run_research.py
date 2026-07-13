@@ -56,7 +56,9 @@ from ecoquant.uncertainty.calibration import (
     expected_calibration_error,
     fit_calibration_folds,
     freeze_threshold,
+    risk_coverage_curve,
     require_final_calibration,
+    selective_metrics_at_threshold,
 )
 from ecoquant.uncertainty.decision import DecisionCode, DecisionPolicy, decide
 from ecoquant.uncertainty.features import UncertaintyFeatures
@@ -261,6 +263,20 @@ def _compute_retrieval_metrics(
 # Calibration
 # ---------------------------------------------------------------------------
 
+_SUPPORTED_VERIFICATION_STATUSES = frozenset(
+    {"time_verified", "source_verified", "verified"}
+)
+
+
+def _has_visible_support(result: object) -> bool:
+    """Return whether a retrieval result is temporally valid and source verified."""
+    return bool(
+        getattr(result, "valid_time_match", False)
+        and getattr(result, "verification_status", None)
+        in _SUPPORTED_VERIFICATION_STATUSES
+    )
+
+
 def _build_features_for_question(
     qid: str,
     all_results: dict[str, dict[str, tuple]],
@@ -314,9 +330,8 @@ def _build_features_for_question(
     # The primary method is the graph+verification method.  Coverage is the
     # proportion of five frozen evidence slots occupied by evidence that is
     # both temporally valid and source-time verified.
-    verified_statuses = {"time_verified", "source_verified", "verified"}
     supported_count = sum(
-        result.valid_time_match and result.verification_status in verified_statuses
+        _has_visible_support(result)
         for result in method_results[:5]
     )
     evidence_coverage = supported_count / 5.0
@@ -352,7 +367,7 @@ def _build_fold_data(
         method_results = all_results[qid].get(primary_method, ())
         top1 = method_results[0]
         gold_ids = labels.relevant_evidence.get(qid, frozenset())
-        label = top1.evidence_id in gold_ids
+        label = top1.evidence_id in gold_ids and _has_visible_support(top1)
 
         if issuer not in fold_data:
             fold_data[issuer] = ([], [])
@@ -379,15 +394,31 @@ def _run_calibration(
 
     all_probs: list[float] = []
     all_labels: list[bool] = []
+    all_thresholds: list[float] = []
     for fold in folds:
         all_probs.extend(fold.test_probs)
         all_labels.extend(fold.test_labels)
+        all_thresholds.extend([fold.decision_threshold] * len(fold.test_probs))
 
     brier = brier_score(all_probs, all_labels)
     ece = expected_calibration_error(all_probs, all_labels)
     aurc = area_under_risk_coverage(all_probs, all_labels)
-    accepted = sum(1 for p in all_probs if p >= threshold)
-    coverage = accepted / len(all_probs) if all_probs else 0.0
+    selective = selective_metrics_at_threshold(all_probs, all_labels, all_thresholds)
+    risk_coverage = [
+        {
+            "rank": rank,
+            "fold_id": "pooled_outer",
+            "test_issuer": "all_outer_folds",
+            "coverage": coverage,
+            "selective_risk": risk,
+            "evaluable": True,
+            "reason": None,
+        }
+        for rank, (coverage, risk) in enumerate(
+            risk_coverage_curve(all_probs, all_labels),
+            start=1,
+        )
+    ]
 
     return {
         "frozen_threshold": threshold,
@@ -395,7 +426,13 @@ def _run_calibration(
         "ece": ece,
         "aurc": aurc,
         "aurc_convention": "includes_coverage_zero_to_first_point",
-        "coverage_at_threshold": coverage,
+        "coverage_at_threshold": selective["coverage"],
+        "coverage_at_threshold_evaluable": selective["coverage_evaluable"],
+        "coverage_at_threshold_reason": selective["coverage_reason"],
+        "selective_risk_at_threshold": selective["selective_risk"],
+        "selective_risk_at_threshold_evaluable": selective["selective_risk_evaluable"],
+        "selective_risk_at_threshold_reason": selective["selective_risk_reason"],
+        "risk_coverage": risk_coverage,
         "fold_count": len(folds),
         "total_samples": len(all_probs),
         "conformal_alpha": conformal_alpha,
@@ -418,6 +455,7 @@ def _run_calibration(
                 "conformal_threshold": f.split_manifest.get("conformal_threshold", 0.0),
                 "conformal_alpha": f.split_manifest.get("conformal_alpha", conformal_alpha),
                 "decision_threshold": f.split_manifest.get("decision_threshold", 0.0),
+                "decision_policy": f.split_manifest.get("decision_policy", {}),
                 "convergence_status": f.split_manifest.get("convergence_status", {}),
             }
             for i, f in enumerate(folds)
@@ -480,6 +518,19 @@ def _run_decision_gating(
         normalization = fold.normalization
         require_final_calibration(calibrator)
 
+        policy_state = fold.split_manifest.get("decision_policy")
+        required_policy_fields = {
+            "calibrated_probability_threshold",
+            "conformal_threshold",
+            "evidence_sufficiency_threshold",
+            "extraction_validity_required",
+            "temporal_validity_required",
+        }
+        if not isinstance(policy_state, dict) or set(policy_state) != required_policy_fields:
+            raise RuntimeError(
+                f"incomplete frozen decision policy for issuer '{issuer}'"
+            )
+
         # Normalize features using the fold's fitted normalization
         norm_features = normalization.normalize([features])
         calibrated_prob = calibrator.predict_proba(norm_features)[0]
@@ -489,11 +540,7 @@ def _run_decision_gating(
             evidence_sufficiency,
             True,
             bool(features.temporal_validity),
-            DecisionPolicy(
-                calibrated_probability_threshold=fold.decision_threshold,
-                conformal_threshold=fold.conformal_threshold,
-                evidence_sufficiency_threshold=0.25,
-            ),
+            DecisionPolicy(**policy_state),
         )
         counts[decision.code.name] += 1
 
@@ -694,7 +741,6 @@ def main() -> int:
 
     # Build calibration and risk coverage CSV rows
     calibration_rows: list[dict[str, object]] = []
-    risk_coverage_rows: list[dict[str, object]] = []
     for fold_info in calibration.get("folds", []):
         row = {
             "fold_id": fold_info.get("outer_fold_id", 0),
@@ -705,12 +751,7 @@ def main() -> int:
             "decision_threshold": fold_info.get("decision_threshold", 0.0),
         }
         calibration_rows.append(row)
-        risk_coverage_rows.append({
-            "fold_id": row["fold_id"],
-            "test_issuer": row["test_issuer"],
-            "coverage": calibration.get("coverage_at_threshold", 0.0),
-            "selective_error": 0.0,
-        })
+    risk_coverage_rows = [dict(row) for row in calibration.get("risk_coverage", [])]
 
     # Build valuation sensitivity CSV (stub — no real valuation in fixture mode)
     valuation_rows: list[dict[str, object]] = [{

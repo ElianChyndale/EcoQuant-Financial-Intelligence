@@ -386,6 +386,7 @@ def fit_calibration_folds(
     *,
     conformal_alpha: float = 0.10,
     max_selective_error: float = 0.10,
+    evidence_sufficiency_threshold: float = 0.25,
     seed: int = 20260710,
 ) -> tuple[CalibrationFold, ...]:
     """Fit nested leave-one-issuer-out calibration folds.
@@ -402,12 +403,18 @@ def fit_calibration_folds(
         fold_data: {issuer: (features, labels)} per issuer.
         conformal_alpha: Target miscoverage for split-conformal.
         max_selective_error: Max selective error for decision threshold.
+        evidence_sufficiency_threshold: Frozen evidence coverage gate.
         seed: Base seed for deterministic splits.
 
     Returns:
         Tuple of CalibrationFold, one per issuer.
     """
     issuers = tuple(sorted(fold_data))
+    if (
+        not math.isfinite(evidence_sufficiency_threshold)
+        or not 0.0 <= evidence_sufficiency_threshold <= 1.0
+    ):
+        raise ValueError("evidence_sufficiency_threshold must be finite and within [0, 1]")
     if len(issuers) < 4:
         raise ValueError("nested issuer protocol requires at least four issuers")
     for issuer, (features, labels) in fold_data.items():
@@ -525,6 +532,13 @@ def fit_calibration_folds(
             "conformal_threshold": conformal_threshold,
             "conformal_alpha": conformal_alpha,
             "decision_threshold": decision_threshold,
+            "decision_policy": {
+                "calibrated_probability_threshold": decision_threshold,
+                "conformal_threshold": conformal_threshold,
+                "evidence_sufficiency_threshold": evidence_sufficiency_threshold,
+                "extraction_validity_required": True,
+                "temporal_validity_required": True,
+            },
             "convergence_status": {
                 "converged": calibrator.converged,
                 "iterations_run": calibrator.iterations_run,
@@ -616,8 +630,66 @@ def freeze_threshold(
     return min(fold.decision_threshold for fold in folds)
 
 
+def selective_metrics_at_threshold(
+    probs: Sequence[float],
+    labels: Sequence[bool],
+    thresholds: Sequence[float],
+) -> dict[str, float | bool | str | None]:
+    """Evaluate selective coverage/risk using each record's frozen threshold."""
+    if len(probs) != len(labels) or len(probs) != len(thresholds):
+        raise ValueError("probabilities, labels, and thresholds must align")
+    if not probs:
+        return {
+            "coverage": None,
+            "coverage_evaluable": False,
+            "coverage_reason": "empty_evaluation",
+            "selective_risk": None,
+            "selective_risk_evaluable": False,
+            "selective_risk_reason": "empty_evaluation",
+        }
+    if any(type(label) is not bool for label in labels):
+        raise TypeError("labels must contain bool values")
+    for name, values in (("probabilities", probs), ("thresholds", thresholds)):
+        if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in values):
+            raise ValueError(f"{name} must be finite and within [0, 1]")
+
+    accepted_labels = [
+        label
+        for probability, label, threshold in zip(probs, labels, thresholds)
+        if probability >= threshold
+    ]
+    coverage = len(accepted_labels) / len(probs)
+    if not accepted_labels:
+        return {
+            "coverage": coverage,
+            "coverage_evaluable": True,
+            "coverage_reason": None,
+            "selective_risk": None,
+            "selective_risk_evaluable": False,
+            "selective_risk_reason": "no_accepted_records",
+        }
+    return {
+        "coverage": coverage,
+        "coverage_evaluable": True,
+        "coverage_reason": None,
+        "selective_risk": 1.0 - sum(accepted_labels) / len(accepted_labels),
+        "selective_risk_evaluable": True,
+        "selective_risk_reason": None,
+    }
+
+
+def _validate_metric_inputs(probs: Sequence[float], labels: Sequence[bool]) -> None:
+    if len(probs) != len(labels):
+        raise ValueError("probabilities and labels must align")
+    if any(not math.isfinite(probability) or not 0.0 <= probability <= 1.0 for probability in probs):
+        raise ValueError("probabilities must be finite and within [0, 1]")
+    if any(type(label) is not bool for label in labels):
+        raise TypeError("labels must contain bool values")
+
+
 def brier_score(probs: Sequence[float], labels: Sequence[bool]) -> float:
     """Mean squared error between predicted probabilities and binary labels."""
+    _validate_metric_inputs(probs, labels)
     if not probs:
         return 0.0
     return sum((p - float(l)) ** 2 for p, l in zip(probs, labels)) / len(probs)
@@ -630,6 +702,9 @@ def expected_calibration_error(
     n_bins: int = 10,
 ) -> float:
     """Expected calibration error over equal-width bins."""
+    _validate_metric_inputs(probs, labels)
+    if n_bins <= 0:
+        raise ValueError("n_bins must be positive")
     if not probs:
         return 0.0
 
@@ -663,6 +738,7 @@ def risk_coverage_curve(
     point. The first point has coverage 1/n and risk = 0 or 1 depending
     on whether the highest-confidence prediction is correct.
     """
+    _validate_metric_inputs(probs, labels)
     if not probs:
         return []
 
@@ -694,7 +770,7 @@ def area_under_risk_coverage(
     the standard convention for selective prediction AURC.
     """
     curve = risk_coverage_curve(probs, labels)
-    if len(curve) < 2:
+    if not curve:
         return 0.0
 
     aurc = 0.0

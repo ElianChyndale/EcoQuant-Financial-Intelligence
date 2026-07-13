@@ -40,6 +40,8 @@ class DecisionPolicy:
     calibrated_probability_threshold: float
     conformal_threshold: float
     evidence_sufficiency_threshold: float
+    extraction_validity_required: bool = True
+    temporal_validity_required: bool = True
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -51,6 +53,10 @@ class DecisionPolicy:
                 raise ValueError(f"{name} must be finite")
             if not 0.0 <= value <= 1.0:
                 raise ValueError(f"{name} must be within [0, 1]")
+        if self.extraction_validity_required is not True:
+            raise ValueError("extraction_validity_required must be true")
+        if self.temporal_validity_required is not True:
+            raise ValueError("temporal_validity_required must be true")
 
 
 def decide(
