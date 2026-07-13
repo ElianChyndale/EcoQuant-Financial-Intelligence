@@ -28,11 +28,11 @@
 - Test: `tests/research/test_retrieval_methods.py`
 - Test: `tests/integration/test_pdf_manager_adapter.py`
 
-- [ ] **Step 1: Add failing tests for document/page/block identity, deterministic span conversion, missing document ID, handcrafted-final rejection, schema-v3 bytes, strict fingerprint syntax, and every NumPy scalar case.**
-- [ ] **Step 2: Run only those tests and confirm failures are caused by missing adapter/schema/validation behavior.**
-- [ ] **Step 3: Implement the sealed `AuthoritativeCorpus`, exact EvidenceSpan mapping, expanded `CorpusRecord`, schema-v3 serialization, strict fingerprint validator, and document-to-span graph index connection.**
-- [ ] **Step 4: Re-run the new identity tests and existing fingerprint/graph tests until green.**
-- [ ] **Step 5: Commit as `fix: bind retrieval corpus identity to normalized evidence`.**
+- [x] **Step 1: Add failing tests for document/page/block identity, deterministic span conversion, missing document ID, handcrafted-final rejection, schema-v3 bytes, strict fingerprint syntax, and every NumPy scalar case.**
+- [x] **Step 2: Run only those tests and confirm failures are caused by missing adapter/schema/validation behavior.**
+- [x] **Step 3: Implement the sealed `AuthoritativeCorpus`, exact EvidenceSpan mapping, expanded `CorpusRecord`, schema-v3 serialization, strict fingerprint validator, and document-to-span graph index connection.**
+- [x] **Step 4: Re-run the new identity tests and existing fingerprint/graph tests until green.**
+- [x] **Step 5: Commit as `fix: bind retrieval corpus identity to normalized evidence` (`a421f71`).**
 
 ### Task 3: Backend provenance and execution receipts
 
@@ -47,12 +47,12 @@
 - Test: `tests/integration/test_production_backends.py`
 - Test: `tests/research/test_retrieval_methods.py`
 
-- [ ] **Step 1: Add failing hostile tests for fabricated methods/metadata/flags, copied backend identities, cross-corpus/query/method receipts, constructor-only reranker, partial dense state, and incomplete composite chains.**
-- [ ] **Step 2: Run the hostile group and verify each expected RED failure.**
-- [ ] **Step 3: Implement immutable dependency identities, the factory-only instance registry, post-execution receipts, exact dependency-chain validation, and final comparison receipt checks.**
-- [ ] **Step 4: Move dense/reranker verification transitions to successful inference and require verifier execution.**
-- [ ] **Step 5: Re-run the hostile group and the complete focused SOL-4A suite until green.**
-- [ ] **Step 6: Commit as `fix: bind production verification to executed backends`.**
+- [x] **Step 1: Add failing hostile tests for fabricated methods/metadata/flags, copied backend identities, cross-corpus/query/method receipts, constructor-only reranker, partial dense state, and incomplete composite chains.**
+- [x] **Step 2: Run the hostile group and verify each expected RED failure.**
+- [x] **Step 3: Implement immutable dependency identities, the factory-only instance registry, post-execution receipts, exact dependency-chain validation, and final comparison receipt checks.**
+- [x] **Step 4: Move all production verification transitions to successful factory-registered execution and require dense/reranker/verifier runtime evidence.**
+- [x] **Step 5: Re-run the hostile group and the complete focused SOL-4A suite until green.**
+- [x] **Step 6: Commit as `fix: bind production verification to executed backends` (`42d1f9d`).**
 
 ### Task 4: Coordination and final evidence
 
@@ -63,7 +63,7 @@
 - Modify: root `docs/remediation/SOL4B_INTEGRATION_CONTRACT.md`
 - Modify: root `portfolio-package/CODEX_TASK_LOG.md`
 
-- [ ] **Step 1: Run the exact focused suite and record pass/skip counts without treating skips as verification.**
-- [ ] **Step 2: Update all coordination records with the third failed review, repair commits, frozen contract, exact results, blockers, and fresh-review requirement; declare no PASS/GO.**
+- [x] **Step 1: Run the exact focused suite and record 188 passed / 2 skipped without treating skips as verification.**
+- [x] **Step 2: Update all coordination records with the third failed review, repair commits, frozen contract, exact results, blockers, and fresh-review requirement; declare no PASS/GO.**
 - [ ] **Step 3: Commit EcoQuant documentation and root coordination separately without unrelated root files.**
 - [ ] **Step 4: Run `git diff --check`, `git diff --stat`, `git status --short`, and the exact focused suite again before handoff.**

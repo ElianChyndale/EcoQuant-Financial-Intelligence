@@ -16,7 +16,7 @@
 - Implementation: Main agent
 - Review: Fresh retrieval methodology reviewer (read-only)
 
-### Status: CORRECTED AFTER SECOND FAILED REVIEW — FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
+### Status: ARCHITECTURALLY CORRECTED AFTER THIRD FAILED REVIEW — CONTRACT-LIMITED FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
 
 ### Files Changed
 - `src/ecoquant/retrieval/bm25.py` — Genuine rank-bm25 implementation
@@ -26,7 +26,12 @@
 - `src/ecoquant/retrieval/verifier.py` — Production metadata
 - `src/ecoquant/retrieval/fixture.py` — Deterministic test backends
 - `src/ecoquant/retrieval/base.py` — Mode support, exact typed canonical JSON
-  corpus identity, and immutable method-derived production requirements
+  corpus identity, immutable method-derived requirements, and final receipt validation
+- `src/ecoquant/retrieval/corpus_adapter.py` — Sealed authoritative
+  `EvidenceSpanV1` to schema-v3 retrieval corpus boundary
+- `src/ecoquant/retrieval/production_factory.py` — Approved six-backend construction boundary
+- `src/ecoquant/retrieval/provenance.py` — Factory instance identities, complete
+  dependency chains, and run-scoped successful-execution receipts
 - `tests/research/test_retrieval_methods.py` — Fingerprint collision and canonical
   encoding adversaries
 - `tests/integration/test_production_backends.py` — Production backend metadata tests
@@ -38,9 +43,11 @@
 - `4d9f04e` — fix: enforce reproducible retrieval benchmark identity (SOL-4A repair)
 - `c132d78` — fix: canonicalize retrieval corpus identity (first correction)
 - `f17c03f` — fix: close retrieval identity and metadata bypasses (second correction)
+- `a421f71` — fix: bind retrieval corpus identity to normalized evidence (final identity architecture)
+- `42d1f9d` — fix: bind production verification to executed backends (final provenance architecture)
 
 ### Current Focused Tests
-- 122 Task 5/temporal-graph/production-backend tests passed
+- 188 Task 5/adapter/provenance/temporal-graph/production-backend tests passed
 - 2 successful real-model integration tests skipped with explicit external-blocker reasons
 - No full suite was run; that gate belongs to SOL-4B
 
@@ -56,7 +63,18 @@
 - The second correction uses corpus schema v2 with exact stored text and tagged
   numeric values, and selects immutable production requirements only by canonical
   method ID. Caller capability flags must exactly match the selected method.
-- Fresh independent review of `f17c03f` is required. No Task 5 GO is declared.
+- The third independent review failed because document identity and the
+  `EvidenceSpanV1` adapter were absent, NumPy float64 entered implicitly,
+  fingerprint values were not strictly typed, composite provenance was
+  incomplete, and final mode still trusted caller-created metadata and
+  constructor-only model state.
+- The final architectural correction freezes
+  `docs/remediation/SOL4A_FINAL_ACCEPTANCE_CONTRACT.md`, maps authoritative
+  evidence to schema-v3 records, rejects NumPy scalars, validates exact built-in
+  lowercase SHA-256 strings, and accepts final results only from factory-created
+  backend instances with matching run-scoped execution receipts.
+- Fresh review is limited to the frozen final acceptance contract and commits
+  `a421f71` and `42d1f9d`. No Task 5 GO is declared.
 
 ### Frozen Corpus Identity V2
 - `None` is `{"type":"null"}`.
@@ -72,6 +90,23 @@
 - The exact stored corpus text is encoded without fingerprint-only NFKC,
   case-folding, trimming, tokenization, or whitespace/punctuation rewriting.
 
+### Frozen Final Architecture V3
+- The sealed production adapter preserves source schema, evidence/document,
+  issuer/asset, page/block, exact text, valid interval, source time, bounding
+  box, hashes, provider, confidence, and named structured numerical identity.
+- Handcrafted records remain fixture-capable but cannot enter the production
+  factory or final mode.
+- NumPy and unsupported third-party scalar values are rejected; supported
+  built-in Python numbers retain the v2 exact policies.
+- Final fingerprints must be exact built-in 64-character lowercase hexadecimal
+  strings before constant-time comparison with independently recomputed hashes.
+- Factory identities bind method, concrete backend type, instance/run IDs,
+  adapter receipt, corpus fingerprint, actual package versions, model pins,
+  graph/temporal contracts, reranker identity, and verifier identity.
+- Successful receipts bind corpus, query, valid/source cutoffs, top-k,
+  dependencies, output digest, method, instance, and run. Every invocation
+  resets prior inference state; constructors and stale status cannot create a receipt.
+
 ### Claims Now Safe For Fresh Review
 - The exact six-method final boundary is implemented and rejects unverified,
   empty, fixture, exploratory, placeholder, or method-incompatible backends
@@ -79,6 +114,8 @@
   independently testable at the serialized-byte boundary
 - Production model and revision requirements cannot be weakened through
   caller-supplied capability flags
+- Caller-created metadata, receipt-shaped values, copied provenance, and
+  fabricated retrievers cannot satisfy final mode
 - KG candidates are graph-derived and ranked without a full issuer-corpus scan
 - Page/block citation metrics use an immutable evidence catalog
 - Production mode fails clearly on missing models
