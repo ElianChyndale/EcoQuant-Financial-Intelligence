@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
@@ -19,7 +20,8 @@ REGISTERED_METHOD_IDS = (
     "bm25", "dense", "static_kg", "temporal_kg", "temporal_kg_rerank", "temporal_kg_verify",
 )
 
-CORPUS_FINGERPRINT_SCHEMA_VERSION = 2
+CORPUS_FINGERPRINT_SCHEMA_VERSION = 3
+CORPUS_RECORD_SCHEMA_VERSION = "retrieval-corpus-record.v3"
 CorpusNumericValue = int | Decimal | float | str | None
 
 NON_PRODUCTION_BACKEND_IDS = frozenset({
@@ -91,6 +93,26 @@ class CorpusRecord:
     text: str
     numeric_value: CorpusNumericValue = None
     source_time: date | None = None
+    schema_version: str = CORPUS_RECORD_SCHEMA_VERSION
+    source_schema_version: str | None = None
+    document_id: str | None = None
+    source_id: str | None = None
+    asset_id: str | None = None
+    valid_to: date | None = None
+    page_id: str | None = None
+    block_id: str | None = None
+    report_period: str | None = None
+    bbox: tuple[float, float, float, float] | None = None
+    section: str | None = None
+    text_hash: str | None = None
+    content_hash: str | None = None
+    extraction_confidence: float | None = None
+    provider: str | None = None
+    structured_values: tuple[tuple[str, CorpusNumericValue], ...] = ()
+
+    @property
+    def valid_from(self) -> date:
+        return self.valid_time
 
 
 @dataclass(frozen=True)
@@ -252,6 +274,14 @@ class BaseRetriever:
         if len(identifiers) != len(set(identifiers)):
             raise ValueError("corpus evidence_id values must be unique")
         self._corpus_by_evidence_id = {record.evidence_id: record for record in self.corpus}
+        records_by_document_id: dict[str, list[CorpusRecord]] = {}
+        for record in self.corpus:
+            if record.document_id is not None:
+                records_by_document_id.setdefault(record.document_id, []).append(record)
+        self._corpus_by_document_id = {
+            document_id: tuple(sorted(records, key=lambda item: item.evidence_id))
+            for document_id, records in records_by_document_id.items()
+        }
         self.metadata.validate()
 
     def retrieve(self, question: RetrieverQuery, top_k: int = 5) -> tuple[RetrievalResult, ...]:
@@ -445,19 +475,28 @@ def _canonical_numeric_value(value: CorpusNumericValue) -> dict[str, str]:
         return {"type": "null"}
     if isinstance(value, bool):
         raise ValueError("bool numeric_value is not an integer corpus value")
-    if isinstance(value, int):
+    if type(value) is int:
         return {"type": "integer", "value": str(value)}
-    if isinstance(value, Decimal):
+    if type(value) is Decimal:
         return {"type": "decimal", "value": _canonical_decimal(value)}
-    if isinstance(value, float):
+    if type(value) is float:
         if not isfinite(value):
             raise ValueError("binary float numeric_value must be finite")
         return {"type": "binary_float", "value": value.hex()}
-    if isinstance(value, str):
+    if type(value) is str:
         return {"type": "source_text", "value": value}
     raise ValueError(
-        "numeric_value must be None, int, Decimal, finite float, or source-text str"
+        "numeric_value must be a supported built-in Python value; NumPy and unsupported "
+        "third-party scalar types are rejected"
     )
+
+
+def validate_fingerprint_value(value: object) -> str:
+    """Return one strictly represented lowercase SHA-256 fingerprint."""
+
+    if type(value) is not str or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+        raise ValueError("fingerprint must be a built-in lowercase SHA-256 hexadecimal string")
+    return value
 
 
 def canonical_corpus_bytes(corpus: Sequence[CorpusRecord]) -> bytes:
@@ -473,16 +512,47 @@ def canonical_corpus_bytes(corpus: Sequence[CorpusRecord]) -> bytes:
     Returns:
         Canonical compact JSON encoded as UTF-8 bytes.
     """
+    identifiers = [record.evidence_id for record in corpus]
+    if len(identifiers) != len(set(identifiers)):
+        raise ValueError("canonical corpus evidence_id values must be unique")
+
     canonical_records: list[dict[str, object]] = []
     for record in sorted(corpus, key=lambda item: item.evidence_id):
+        structured_values = [
+            {"name": name, "value": _canonical_numeric_value(value)}
+            for name, value in sorted(record.structured_values, key=lambda item: item[0])
+        ]
+        bbox = None
+        if record.bbox is not None:
+            bbox = [_canonical_numeric_value(value)["value"] for value in record.bbox]
         canonical_records.append({
+            "asset_id": record.asset_id,
+            "bbox": bbox,
+            "block_id": record.block_id,
+            "content_hash": record.content_hash,
+            "document_id": record.document_id,
             "evidence_id": record.evidence_id,
+            "extraction_confidence": (
+                _canonical_numeric_value(record.extraction_confidence)
+                if record.extraction_confidence is not None
+                else {"type": "null"}
+            ),
+            "fingerprint_schema_version": CORPUS_FINGERPRINT_SCHEMA_VERSION,
             "issuer_id": record.issuer,
             "numeric_value": _canonical_numeric_value(record.numeric_value),
-            "schema_version": CORPUS_FINGERPRINT_SCHEMA_VERSION,
+            "page_id": record.page_id,
+            "provider": record.provider,
+            "report_period": record.report_period,
+            "schema_version": record.schema_version,
+            "section": record.section,
+            "source_id": record.source_id,
+            "source_schema_version": record.source_schema_version,
             "source_time": record.source_time.isoformat() if record.source_time is not None else None,
+            "structured_values": structured_values,
             "text": record.text,
-            "valid_time": record.valid_time.isoformat(),
+            "text_hash": record.text_hash,
+            "valid_from": record.valid_from.isoformat(),
+            "valid_to": record.valid_to.isoformat() if record.valid_to is not None else None,
         })
 
     return json.dumps(

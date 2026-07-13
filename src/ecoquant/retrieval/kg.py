@@ -27,11 +27,17 @@ class _GraphRetriever(BaseRetriever):
 
     def _candidate_records(self, question: Question) -> list[CorpusRecord]:
         candidate_ids = self._graph_candidate_ids(question)
+        resolved: dict[str, CorpusRecord] = {}
+        for candidate_id in sorted(candidate_ids):
+            direct = self._corpus_by_evidence_id.get(candidate_id)
+            if direct is not None:
+                resolved[direct.evidence_id] = direct
+            for record in self._corpus_by_document_id.get(candidate_id, ()):
+                resolved[record.evidence_id] = record
         return [
             record
-            for evidence_id in sorted(candidate_ids)
-            if (record := self._corpus_by_evidence_id.get(evidence_id)) is not None
-            and self._include(record, question)
+            for record in sorted(resolved.values(), key=lambda item: item.evidence_id)
+            if self._include(record, question)
         ]
 
     def _graph_candidate_ids(self, question: Question) -> frozenset[str]:

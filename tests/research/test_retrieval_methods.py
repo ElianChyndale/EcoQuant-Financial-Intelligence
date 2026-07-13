@@ -333,7 +333,10 @@ def test_retrieval_does_not_accept_gold_labels_and_is_deterministic(method) -> N
 
 def test_retriever_visible_corpus_has_no_evaluation_annotations() -> None:
     assert {field.name for field in fields(CorpusRecord)} == {
-        "evidence_id", "issuer", "valid_time", "text", "numeric_value", "source_time"
+        "evidence_id", "issuer", "valid_time", "text", "numeric_value", "source_time",
+        "schema_version", "source_schema_version", "document_id", "source_id", "asset_id",
+        "valid_to", "page_id", "block_id", "report_period", "bbox", "section", "text_hash",
+        "content_hash", "extraction_confidence", "provider", "structured_values",
     }
 
 
