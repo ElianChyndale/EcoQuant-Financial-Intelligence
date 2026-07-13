@@ -482,7 +482,7 @@ class TestBondPricing:
             face_value=1000.0,
             coupon_rate=0.05,
             payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -559,13 +559,13 @@ class TestBondPricing:
         """settlement_date must affect pricing (not be ignored)."""
         terms_early = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 5),
             issue_date=date(2025, 1, 1),
         )
         terms_late = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 6, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -599,7 +599,7 @@ class TestInputValidation:
     def _valid_terms(self) -> BondTerms:
         return BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -607,7 +607,7 @@ class TestInputValidation:
     def test_rejects_zero_face_value(self) -> None:
         terms = BondTerms(
             face_value=0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -617,7 +617,7 @@ class TestInputValidation:
     def test_rejects_negative_face_value(self) -> None:
         terms = BondTerms(
             face_value=-1000, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -627,7 +627,7 @@ class TestInputValidation:
     def test_rejects_invalid_frequency(self) -> None:
         terms = BondTerms(
             face_value=1000, coupon_rate=0.05, payment_frequency=3,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -642,7 +642,7 @@ class TestInputValidation:
     def test_rejects_settlement_before_issue(self) -> None:
         terms = BondTerms(
             face_value=1000, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2024, 1, 1),
             issue_date=date(2025, 1, 1),
         )
@@ -652,7 +652,7 @@ class TestInputValidation:
     def test_rejects_zero_maturity(self) -> None:
         terms = BondTerms(
             face_value=1000, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=0,
+            maturity_date=date(2025, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -671,7 +671,7 @@ class TestZeroCouponBond:
     def test_zero_coupon_price_below_face(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.0, payment_frequency=2,
-            maturity_years=5.0,
+            maturity_date=date(2030, 1, 1),
             settlement_date=date(2025, 1, 1),
             issue_date=date(2025, 1, 1),
         )
@@ -682,7 +682,7 @@ class TestZeroCouponBond:
     def test_zero_coupon_duration_equals_maturity(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.0, payment_frequency=1,
-            maturity_years=5.0,
+            maturity_date=date(2030, 1, 1),
             settlement_date=date(2025, 1, 1),
             issue_date=date(2025, 1, 1),
         )
@@ -701,7 +701,7 @@ class TestBetweenCouponSettlement:
     def test_settlement_mid_period_has_accrued(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.06, payment_frequency=2,
-            maturity_years=5.0,
+            maturity_date=date(2030, 1, 1),
             settlement_date=date(2025, 4, 1),  # Between Jan and Jul coupons
             issue_date=date(2025, 1, 1),
         )
@@ -712,7 +712,7 @@ class TestBetweenCouponSettlement:
     def test_settlement_at_coupon_date_has_zero_accrued(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.06, payment_frequency=2,
-            maturity_years=5.0,
+            maturity_date=date(2030, 1, 1),
             settlement_date=date(2025, 7, 1),  # Exactly on coupon date
             issue_date=date(2025, 1, 1),
         )
@@ -725,13 +725,13 @@ class TestBetweenCouponSettlement:
 # ---------------------------------------------------------------------------
 
 
-class TestFractionalMaturity:
-    """Fractional maturity years must produce correct schedules."""
+class TestExplicitMaturity:
+    """Explicit non-integer-year maturity dates must remain exact."""
 
-    def test_fractional_maturity_5_5_years(self) -> None:
+    def test_explicit_five_and_a_half_year_maturity(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=5.5,
+            maturity_date=date(2030, 7, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -751,7 +751,7 @@ class TestLeapYearHandling:
     def test_leap_year_coupon_schedule(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=2.0,
+            maturity_date=date(2026, 1, 1),
             settlement_date=date(2024, 3, 1),  # 2024 is a leap year
             issue_date=date(2024, 1, 1),
         )
@@ -762,7 +762,7 @@ class TestLeapYearHandling:
     def test_feb_29_issue_date(self) -> None:
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=2.0,
+            maturity_date=date(2026, 2, 28),
             settlement_date=date(2024, 3, 1),
             issue_date=date(2024, 2, 29),  # Leap day
         )
@@ -785,7 +785,7 @@ class TestUnsupportedMapping:
 
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -800,7 +800,11 @@ class TestUnsupportedMapping:
             risk_channel_map={},  # Empty map — no channel for unknown_factor
             evidence_id="ev-001",
             issuer="TestIssuer",
-            bond_id="BOND-001",
+            asset_id="BOND-001",
+            rule_id="rule-v1",
+            rule_version="1.0",
+            valid_time="2025-01-15T00:00:00Z",
+            source_time="2025-01-14T12:00:00Z",
         )
         assert len(result.unsupported_mappings) == 1
         assert result.unsupported_mappings[0].status == "unsupported_risk_mapping"
@@ -822,7 +826,7 @@ class TestEvidenceProvenance:
 
         terms = BondTerms(
             face_value=1000.0, coupon_rate=0.05, payment_frequency=2,
-            maturity_years=10.0,
+            maturity_date=date(2035, 1, 1),
             settlement_date=date(2025, 1, 15),
             issue_date=date(2025, 1, 1),
         )
@@ -837,7 +841,7 @@ class TestEvidenceProvenance:
             risk_channel_map={"credit_spread": "credit"},
             evidence_id="evidence-abc-123",
             issuer="GreenCorp",
-            bond_id="GRNBOND-001",
+            asset_id="GRNBOND-001",
             rule_id="rule-v1",
             rule_version="1.0",
             valid_time="2025-01-15T00:00:00Z",

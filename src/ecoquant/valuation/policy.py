@@ -5,7 +5,8 @@ All outputs are model-driven parameters, not investment recommendations.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
 
 from ecoquant.uncertainty.decision import DecisionCode
 
@@ -28,6 +29,7 @@ class PolicyInput:
     evidence_ids: tuple[str, ...]
     risk_factors: dict[str, float]
     extraction_valid: bool
+    risk_channel_map: dict[str, str] = field(default_factory=dict)
     base_spread_bps: int = 145
     max_spread_delta_bps: int = 50
     max_haircut_bps: int = 500
@@ -48,11 +50,49 @@ class PolicyResult:
     recommended_haircut_bps: int | None
     decision_code: DecisionCode
     adjustments: dict[str, int]
+    unsupported_risk_factors: tuple[str, ...] = ()
 
 
 def _clamp(value: int, lo: int, hi: int) -> int:
     """Constrain *value* to [lo, hi]."""
     return max(lo, min(hi, value))
+
+
+def _validate_policy_input(inp: PolicyInput) -> None:
+    if not isinstance(inp.decision_code, DecisionCode):
+        raise TypeError("decision_code must be a DecisionCode")
+    if type(inp.extraction_valid) is not bool:
+        raise TypeError("extraction_valid must be bool")
+    if not isinstance(inp.evidence_ids, tuple) or any(
+        not isinstance(identifier, str) or not identifier
+        for identifier in inp.evidence_ids
+    ):
+        raise ValueError("evidence_ids must be a tuple of non-empty strings")
+    if not isinstance(inp.risk_factors, dict):
+        raise TypeError("risk_factors must be a dict")
+    for factor, score in inp.risk_factors.items():
+        if not isinstance(factor, str) or not factor:
+            raise ValueError("risk factor names must be non-empty strings")
+        if not isinstance(score, (int, float)) or not math.isfinite(score):
+            raise ValueError("risk factor scores must be finite")
+        if not 0.0 <= score <= 1.0:
+            raise ValueError("risk factor scores must be within [0, 1]")
+    if not isinstance(inp.risk_channel_map, dict):
+        raise TypeError("risk_channel_map must be a dict")
+    for factor, channel in inp.risk_channel_map.items():
+        if not isinstance(factor, str) or not factor:
+            raise ValueError("risk channel factor names must be non-empty strings")
+        if not isinstance(channel, str) or not channel:
+            raise ValueError("risk channel names must be non-empty strings")
+    for name, value in (
+        ("base_spread_bps", inp.base_spread_bps),
+        ("max_spread_delta_bps", inp.max_spread_delta_bps),
+        ("max_haircut_bps", inp.max_haircut_bps),
+    ):
+        if type(value) is not int:
+            raise TypeError(f"{name} must be integer basis points")
+        if value < 0:
+            raise ValueError(f"{name} must be non-negative bps")
 
 
 def _compute_channel_adjustments(
@@ -112,22 +152,34 @@ def apply_policy(inp: PolicyInput) -> PolicyResult:
         A :class:`PolicyResult` with the adjusted spread, optional haircut,
         the governing decision code, and per-channel adjustments.
     """
+    _validate_policy_input(inp)
+    supported_risk_factors = {
+        factor: score
+        for factor, score in inp.risk_factors.items()
+        if factor in inp.risk_channel_map
+    }
+    unsupported_risk_factors = tuple(
+        sorted(set(inp.risk_factors) - set(supported_risk_factors))
+    )
+
     # ---- Gate 1: block if evidence is missing or extraction failed ----------
     if (
         inp.decision_code == DecisionCode.INSUFFICIENT_EVIDENCE
         or not inp.extraction_valid
+        or not inp.evidence_ids
     ):
         return PolicyResult(
             adjusted_spread_bps=inp.base_spread_bps,
             recommended_haircut_bps=None,
             decision_code=DecisionCode.INSUFFICIENT_EVIDENCE,
             adjustments={},
+            unsupported_risk_factors=(),
         )
 
     # ---- Gate 2: human review -- partial adjustments, no haircut ------------
     if inp.decision_code == DecisionCode.HUMAN_REVIEW_REQUIRED:
         half_cap = inp.max_spread_delta_bps // 2
-        adjustments = _compute_channel_adjustments(inp.risk_factors, half_cap)
+        adjustments = _compute_channel_adjustments(supported_risk_factors, half_cap)
         total_delta = sum(adjustments.values())
         total_delta = _clamp(total_delta, 0, inp.max_spread_delta_bps)
         return PolicyResult(
@@ -135,18 +187,20 @@ def apply_policy(inp: PolicyInput) -> PolicyResult:
             recommended_haircut_bps=None,
             decision_code=DecisionCode.HUMAN_REVIEW_REQUIRED,
             adjustments=adjustments,
+            unsupported_risk_factors=unsupported_risk_factors,
         )
 
     # ---- Gate 3: auto-report -- full adjustments + haircut ------------------
     adjustments = _compute_channel_adjustments(
-        inp.risk_factors, inp.max_spread_delta_bps,
+        supported_risk_factors, inp.max_spread_delta_bps,
     )
     total_delta = sum(adjustments.values())
     total_delta = _clamp(total_delta, 0, inp.max_spread_delta_bps)
-    haircut = _compute_haircut(inp.risk_factors, inp.max_haircut_bps)
+    haircut = _compute_haircut(supported_risk_factors, inp.max_haircut_bps)
     return PolicyResult(
         adjusted_spread_bps=inp.base_spread_bps + total_delta,
         recommended_haircut_bps=haircut,
         decision_code=DecisionCode.AUTO_REPORT,
         adjustments=adjustments,
+        unsupported_risk_factors=unsupported_risk_factors,
     )

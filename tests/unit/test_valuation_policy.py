@@ -58,6 +58,11 @@ def auto_report_input(base_spread: int) -> PolicyInput:
         decision_code=DecisionCode.AUTO_REPORT,
         evidence_ids=("ev-1", "ev-2", "ev-3"),
         risk_factors={"credit": 0.7, "liquidity": 0.5, "market": 0.3},
+        risk_channel_map={
+            "credit": "credit",
+            "liquidity": "liquidity",
+            "market": "market",
+        },
         extraction_valid=True,
         base_spread_bps=base_spread,
         max_spread_delta_bps=50,
@@ -72,6 +77,7 @@ def human_review_input(base_spread: int) -> PolicyInput:
         decision_code=DecisionCode.HUMAN_REVIEW_REQUIRED,
         evidence_ids=("ev-1",),
         risk_factors={"credit": 0.6},
+        risk_channel_map={"credit": "credit"},
         extraction_valid=True,
         base_spread_bps=base_spread,
         max_spread_delta_bps=50,
@@ -209,6 +215,7 @@ class TestAdjustmentBounding:
             decision_code=DecisionCode.AUTO_REPORT,
             evidence_ids=("ev-1",),
             risk_factors={"a": 1.0, "b": 1.0, "c": 1.0, "d": 1.0},
+            risk_channel_map={"a": "a", "b": "b", "c": "c", "d": "d"},
             extraction_valid=True,
             base_spread_bps=base_spread,
             max_spread_delta_bps=50,
@@ -265,3 +272,81 @@ class TestDecisionCodePreserved:
     ) -> None:
         result = apply_policy(human_review_input)
         assert result.decision_code is DecisionCode.HUMAN_REVIEW_REQUIRED
+
+
+def test_auto_report_without_evidence_cannot_adjust_policy() -> None:
+    result = apply_policy(
+        PolicyInput(
+            decision_code=DecisionCode.AUTO_REPORT,
+            evidence_ids=(),
+            risk_factors={"credit": 0.8},
+            extraction_valid=True,
+            base_spread_bps=145,
+        )
+    )
+    assert result.decision_code is DecisionCode.INSUFFICIENT_EVIDENCE
+    assert result.adjusted_spread_bps == 145
+    assert result.recommended_haircut_bps is None
+
+
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
+def test_nonfinite_risk_score_is_rejected(score: float) -> None:
+    with pytest.raises(ValueError, match="risk factor"):
+        apply_policy(
+            PolicyInput(
+                decision_code=DecisionCode.AUTO_REPORT,
+                evidence_ids=("ev-1",),
+                risk_factors={"credit": score},
+                extraction_valid=True,
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"base_spread_bps": 145.5},
+        {"max_spread_delta_bps": -1},
+        {"max_haircut_bps": -1},
+    ],
+)
+def test_invalid_policy_basis_points_are_rejected(overrides: dict[str, object]) -> None:
+    values: dict[str, object] = {
+        "decision_code": DecisionCode.AUTO_REPORT,
+        "evidence_ids": ("ev-1",),
+        "risk_factors": {"credit": 0.5},
+        "extraction_valid": True,
+    }
+    values.update(overrides)
+    with pytest.raises((TypeError, ValueError), match="bps|basis points"):
+        apply_policy(PolicyInput(**values))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("score", [-0.01, 1.01])
+def test_out_of_range_risk_score_is_rejected(score: float) -> None:
+    with pytest.raises(ValueError, match="risk factor"):
+        apply_policy(
+            PolicyInput(
+                decision_code=DecisionCode.AUTO_REPORT,
+                evidence_ids=("ev-1",),
+                risk_factors={"credit": score},
+                extraction_valid=True,
+            )
+        )
+
+
+def test_unsupported_risk_mapping_cannot_change_spread_or_haircut() -> None:
+    result = apply_policy(
+        PolicyInput(
+            decision_code=DecisionCode.AUTO_REPORT,
+            evidence_ids=("ev-1",),
+            risk_factors={"unknown_factor": 0.9},
+            risk_channel_map={},
+            extraction_valid=True,
+            base_spread_bps=145,
+        )
+    )
+    assert result.adjusted_spread_bps == 145
+    assert result.recommended_haircut_bps == 0
+    assert result.adjustments == {}
+    assert result.unsupported_risk_factors == ("unknown_factor",)
