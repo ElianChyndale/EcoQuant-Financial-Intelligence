@@ -599,7 +599,7 @@ def _compute_bootstrap(
 # Main
 # ---------------------------------------------------------------------------
 
-def main() -> int:
+def _legacy_fixture_main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["fixture", "production"], required=True,
                         help="Run mode: 'fixture' for deterministic testing, 'production' for real backends.")
@@ -676,10 +676,14 @@ def main() -> int:
 
     # 8. Build retrieval summary
     retrieval_summary = {
+        "schema_version": "task8-retrieval-summary.v1",
+        "execution_mode": args.mode,
         "method_metrics": retrieval_metrics,
         "question_count": len(questions),
         "corpus_size": len(corpus),
         "primary_method": primary,
+        "decision_summary": decisions,
+        "bootstrap_intervals": bootstrap,
     }
 
     # 9. Write artifacts
@@ -890,6 +894,13 @@ def main() -> int:
         print(f"  {filename}")
 
     return 0
+
+
+def main() -> int:
+    """Compatibility entry point for the SOL-4B Task 8 command."""
+    from ecoquant.research.run_task8 import main as task8_main
+
+    return task8_main()
 
 
 if __name__ == "__main__":
