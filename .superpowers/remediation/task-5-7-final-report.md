@@ -16,7 +16,7 @@
 - Implementation: Main agent
 - Review: Fresh retrieval methodology reviewer (read-only)
 
-### Status: ARCHITECTURALLY CORRECTED AFTER THIRD FAILED REVIEW — CONTRACT-LIMITED FRESH REVIEW REQUIRED; PRODUCTION EXECUTION EXTERNALLY BLOCKED
+### Status: SOL-4A INTERNALLY CLOSED — INDEPENDENT CONTRACT REVIEW PASS; PRODUCTION EXECUTION EXTERNALLY BLOCKED
 
 ### Files Changed
 - `src/ecoquant/retrieval/bm25.py` — Genuine rank-bm25 implementation
@@ -45,6 +45,8 @@
 - `f17c03f` — fix: close retrieval identity and metadata bypasses (second correction)
 - `a421f71` — fix: bind retrieval corpus identity to normalized evidence (final identity architecture)
 - `42d1f9d` — fix: bind production verification to executed backends (final provenance architecture)
+- `99904d7` — docs: record final SOL-4A architectural repair
+- Root coordination `b829cef` — docs: record SOL-4A final architectural repair
 
 ### Current Focused Tests
 - 188 Task 5/adapter/provenance/temporal-graph/production-backend tests passed
@@ -74,7 +76,12 @@
   lowercase SHA-256 strings, and accepts final results only from factory-created
   backend instances with matching run-scoped execution receipts.
 - Fresh review is limited to the frozen final acceptance contract and commits
-  `a421f71` and `42d1f9d`. No Task 5 GO is declared.
+  `a421f71`, `42d1f9d`, and `99904d7`, with root coordination `b829cef`.
+- The independent contract review returned **PASS**: all internally
+  implementable frozen-contract clauses passed, no clause failed, and no
+  authoritative-design contradiction was found. SOL-4A is internally closed.
+  This does not claim successful final production execution or a Task 5
+  production GO; the external blockers below remain unresolved.
 
 ### Frozen Corpus Identity V2
 - `None` is `{"type":"null"}`.
@@ -125,7 +132,8 @@
 ### Claims Still Unsafe
 - Actual retrieval performance claims (requires real corpus and models)
 - Successful production dense or reranker execution
-- A final SOL-4A GO before fresh independent review
+- A final Task 5 production result while dense/reranker execution and the exact
+  release dependency lock remain externally blocked
 - Final Task 8 release integration before SOL-4B
 
 ---
