@@ -1,2 +1,2 @@
-scenario,status,base_spread_bps,adjusted_spread_bps,clean_price,dirty_price
-baseline,fixture_mode_no_valuation,0,0,0.0,0.0
+scenario,status,evidence_id,issuer,asset_id,risk_factor,risk_channel,rule_id,rule_version,decision_code,base_spread_bps,spread_delta_bps,adjusted_spread_bps,settlement_date,maturity_date,coupon_frequency,day_count_convention,compounding_convention,clean_price,dirty_price,accrued_interest,macaulay_duration,modified_duration,convexity,valid_time,source_time
+sensitivity_credit_spread,adjusted,aib-2024,AIB,IE00B4L5Y983,transition_risk,credit_spread,ecoquant-valuation-policy,1.0.0,2,145,20,165,2024-09-15,2030-06-30,2,Actual/Actual ICMA,nominal annual yield compounded at coupon frequency,94.29834243053182,95.13529895227094,0.8369565217391305,5.1612886312189925,5.031721794997799,29.741516200508748,2024-12-31,2025-03-01

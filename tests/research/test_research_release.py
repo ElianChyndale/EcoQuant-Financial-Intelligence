@@ -76,35 +76,36 @@ class TestManifest:
         self.manifest = _load_json("manifest.json")
 
     def test_has_seed(self) -> None:
-        assert isinstance(self.manifest["seed"], int)
+        assert isinstance(self.manifest["run"]["seed"], int)
 
     def test_has_mode(self) -> None:
-        assert self.manifest["mode"] in ("fixture", "production")
+        assert self.manifest["run"]["execution_mode"] in ("fixture", "production")
 
     def test_has_methods(self) -> None:
-        assert set(self.manifest["methods"]) == _EXPECTED_METHODS
+        assert set(self.manifest["retrieval"]["method_ids"]) == _EXPECTED_METHODS
 
     def test_has_git_commit(self) -> None:
-        assert isinstance(self.manifest["git_commit"], str)
-        assert len(self.manifest["git_commit"]) >= 7
+        assert isinstance(self.manifest["repository"]["commit"], str)
+        assert len(self.manifest["repository"]["commit"]) >= 7
 
     def test_has_artifact_hashes(self) -> None:
-        hashes = self.manifest["artifact_hashes"]
+        hashes = self.manifest["artifacts"]
         assert isinstance(hashes, dict)
-        assert len(hashes) >= 7
+        assert len(hashes) == 6
+        assert "manifest.json" not in hashes
 
     def test_has_conformal_config(self) -> None:
-        assert "conformal_alpha" in self.manifest
-        assert "frozen_threshold" in self.manifest
+        assert "conformal_alpha" in self.manifest["calibration"]
+        assert self.manifest["calibration"]["conformal_thresholds"]
 
     def test_has_dependency_versions(self) -> None:
-        assert isinstance(self.manifest["dependency_versions"], dict)
+        assert isinstance(self.manifest["retrieval"].get("package_versions", {}), dict)
 
     def test_has_valuation_convention(self) -> None:
-        assert "valuation_convention" in self.manifest
+        assert self.manifest["valuation"]["day_count_convention"] == "Actual/Actual ICMA"
 
     def test_has_attestation_schema(self) -> None:
-        assert self.manifest["attestation_schema"] == "RiskAttestationV1"
+        assert self.manifest["attestation"]["schema_version"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +150,9 @@ class TestRetrievalSummary:
 
     def test_has_question_count(self) -> None:
         assert self.summary["question_count"] > 0
+
+    def test_has_decision_summary(self) -> None:
+        assert self.summary["decision_summary"]["total_questions"] == self.summary["question_count"]
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +211,16 @@ class TestValuationSensitivity:
         assert len(self.rows) > 0
 
     def test_has_required_columns(self) -> None:
-        required = {"scenario", "status"}
+        required = {
+            "scenario",
+            "status",
+            "settlement_date",
+            "maturity_date",
+            "clean_price",
+            "dirty_price",
+            "modified_duration",
+            "convexity",
+        }
         assert required.issubset(set(self.rows[0].keys()))
 
 
@@ -245,5 +258,10 @@ class TestRiskAttestationFixture:
         assert "recoveredProvider" in self.fixture
         assert self.fixture["recoveredProvider"].startswith("0x")
 
-    def test_compiled_solidity_pending(self) -> None:
-        assert self.fixture["compiledSolidityVerification"] == "PENDING_GBL_TASK_12_14"
+    def test_compiled_solidity_fixture_is_recorded(self) -> None:
+        assert self.fixture["compiledSolidityVerification"] == "VERIFIED_CANONICAL_BRIDGE_FIXTURE"
+
+    def test_fixture_is_not_production(self) -> None:
+        assert self.fixture["mode"] == "fixture"
+        assert self.fixture["productionVerified"] is False
+        assert self.fixture["fixtureSigning"] is True
