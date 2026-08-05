@@ -7,7 +7,8 @@ so no gold label can leak into retrieval, prompts, or threshold selection.
 
 from __future__ import annotations
 
-from .ecoquant_corpus import DATASET_ID, ADAPTER_VERSION, load_ecoquant_corpus
+from .ecoquant_corpus import ADAPTER_VERSION, DATASET_ID, load_ecoquant_corpus
+from .financebench import load_financebench
 from .schema import DatasetBundle, GoldEvaluationRecord, PublicQueryCase
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "GoldEvaluationRecord",
     "PublicQueryCase",
     "load_ecoquant_corpus",
+    "load_financebench",
 ]
