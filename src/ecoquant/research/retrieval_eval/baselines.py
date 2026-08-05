@@ -80,16 +80,18 @@ def _run_lsa(corpus: Sequence[CorpusRecord], questions: Sequence[object]) -> dic
     from sklearn.preprocessing import Normalizer
 
     texts = [record.text for record in corpus]
-    svd = TruncatedSVD(n_components=min(128, len(texts) - 1), random_state=20260806)
-    lsa = make_pipeline(
-        TfidfVectorizer(tokenizer=_tokenize, lowercase=True, sublinear_tf=True),
-        svd,
-        Normalizer(copy=False),
-    )
-    doc_matrix = lsa.fit_transform(texts)
+    vectorizer = TfidfVectorizer(tokenizer=_tokenize, lowercase=True, sublinear_tf=True)
+    doc_matrix = vectorizer.fit_transform(texts)
+    n_features = doc_matrix.shape[1]
+    n_components = min(128, len(texts) - 1, n_features - 1)
+    if n_components < 1:
+        n_components = 1
+    svd = TruncatedSVD(n_components=n_components, random_state=20260806)
+    lsa = make_pipeline(svd, Normalizer(copy=False))
+    doc_matrix = lsa.fit_transform(doc_matrix)
     by_question: dict[str, tuple[RetrievalResult, ...]] = {}
     for question in questions:
-        query_vec = lsa.transform([question.query])
+        query_vec = lsa.transform(vectorizer.transform([question.query]))
         scores = cosine_similarity(query_vec, doc_matrix).ravel()
         by_question[question.question_id] = _rank(corpus, scores, "lsa", question.question_id)
     return by_question
