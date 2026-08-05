@@ -114,9 +114,10 @@ def b3_beam_search(
                 covered |= coverage.coverage.get(eid, frozenset())
             return (len(covered & requirements), -len(subset))
 
-        beams = sorted(set(next_beams), key=_score, reverse=True)[:beam]
-        if not beams:
+        pruned = sorted(set(next_beams), key=_score, reverse=True)[:beam]
+        if not pruned:
             break
+        beams = pruned
     best = max(beams, key=_score)
     covered = set()
     for eid in best:
