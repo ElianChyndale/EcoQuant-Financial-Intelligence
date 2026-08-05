@@ -1,0 +1,1 @@
+"""FinVEST release validation."""

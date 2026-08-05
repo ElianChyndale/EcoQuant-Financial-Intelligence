@@ -1,0 +1,1 @@
+"""FinVEST paper auto-generation."""
