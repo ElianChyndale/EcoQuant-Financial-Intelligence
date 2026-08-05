@@ -1,0 +1,57 @@
+{
+  "all_ok": true,
+  "cases": [
+    [
+      "What is AAPL total revenue for fiscal 2024?",
+      "AAPL",
+      2024
+    ],
+    [
+      "What is MSFT net income for fiscal 2025?",
+      "MSFT",
+      2025
+    ],
+    [
+      "What is KO operating income for fiscal 2024?",
+      "KO",
+      2024
+    ],
+    [
+      "What is UPS total debt for fiscal 2024?",
+      "UPS",
+      2024
+    ],
+    [
+      "What is EQIX revenue for fiscal 2024?",
+      "EQIX",
+      2024
+    ],
+    [
+      "What is JNJ net income for fiscal 2024?",
+      "JNJ",
+      2024
+    ]
+  ],
+  "comparison": {
+    "all_ok": true,
+    "case_count": 6,
+    "decision_distribution": {
+      "AUTO_REPORT": 2,
+      "HUMAN_REVIEW_REQUIRED": 4
+    },
+    "legacy": {
+      "citation_validity": 0.0,
+      "refusal_quality": 0.0,
+      "repeatability": 1.0,
+      "unsupported_risk_flag_rate": 1.0
+    },
+    "proposed": {
+      "citation_validity": 1.0,
+      "refusal_quality": 0.6666666666666666,
+      "repeatability": 1.0,
+      "unsupported_risk_flag_rate": 1.0
+    }
+  },
+  "experiment": "e8-ecoquant-integration",
+  "note": "Legacy prompt-only honesty score -> (60-score)*2 bps spread vs the proposed evidence pipeline (retrieval -> verification -> calibrated confidence -> decision gate -> signed attestation). Boundary enforced: AI never sets a spread; it produces attestation + evidence + confidence + review status."
+}
