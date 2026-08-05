@@ -28,6 +28,25 @@ FUNCTIONS = {
 
 _NUMBER_RE = re.compile(r"(-?\d+(?:[.,]\d+)?)")
 _NEGATIVE_PAREN_RE = re.compile(r"\((-?\d+(?:[.,]\d+)?)\)")
+_YEAR_RE = re.compile(r"^(?:19|20)\d{2}$")
+
+
+def header_years_for(table: Sequence[Sequence[str]]) -> list[int | None]:
+    """Parse year columns from a table's header row(s).
+
+    Returns one entry per column: the 4-digit year if the header cell (in the
+    first two rows) is a year, otherwise None. Handles stacked headers like
+    ``('', '', '2023', '2023', '2022', '2022')`` (year repeated across merged
+    sub-columns).
+    """
+    n_cols = max((len(row) for row in table), default=0)
+    years: list[int | None] = [None] * n_cols
+    for row in table[:2]:
+        for col_idx, cell in enumerate(row):
+            text = cell.strip()
+            if _YEAR_RE.fullmatch(text):
+                years[col_idx] = int(text)
+    return years
 
 
 def parse_cell(cell: str) -> float | None:
@@ -58,6 +77,8 @@ def extract_cells(
     table: Sequence[Sequence[str]],
     row_indices: Sequence[int],
     col_indices: Sequence[int],
+    *,
+    header_years: Sequence[int | None] | None = None,
 ) -> list[float]:
     """Extract numeric cells from a table given row/col indices.
 
@@ -67,6 +88,12 @@ def extract_cells(
     - Column span (rows vary, col constant): one column across many rows.
     - Row span (col varies, row constant): one row across many columns.
     - Grid region (both vary, unequal length): cross product (all row x col).
+
+    If ``header_years`` is provided (one entry per table column, None for
+    non-year columns), the extracted cells are returned in ascending year
+    order. This makes time-ordered functions (``increase_difference``,
+    ``increase_percentage``) unambiguous regardless of the table's column
+    direction (some GRI-QA tables list 2023 first, some 2019 first).
     """
     rows = list(row_indices)
     cols = list(col_indices)
@@ -82,6 +109,7 @@ def extract_cells(
         pairs = [(r, c) for r in rows for c in cols]
 
     cells: list[float] = []
+    year_by_pair: list[int | None] = []
     for row_idx, col_idx in pairs:
         if row_idx < 0 or col_idx < 0:
             continue
@@ -90,6 +118,17 @@ def extract_cells(
         value = parse_cell(table[row_idx][col_idx])
         if value is not None:
             cells.append(value)
+            year = header_years[col_idx] if header_years is not None and col_idx < len(header_years) else None
+            year_by_pair.append(year)
+    # Reorder by ascending year when years are known, so time-ordered functions
+    # see cells in chronological order (stable for unknown years).
+    if header_years is not None and any(year is not None for year in year_by_pair):
+        paired = sorted(
+            ((year if year is not None else float("inf"), value)
+             for value, year in zip(cells, year_by_pair)),
+            key=lambda item: item[0],
+        )
+        cells = [value for _, value in paired]
     return cells
 
 

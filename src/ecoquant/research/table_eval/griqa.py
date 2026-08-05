@@ -89,13 +89,18 @@ def _load_questions(quant_path: Path) -> list[TableQuestion]:
                 fn_name = fn_meta["name"]
             except (json.JSONDecodeError, KeyError):
                 fn_name = row[7].strip()  # fallback to question_type_ext
+            # GRI-QA row/col indices are 1-indexed (verified: subtracting 1 makes
+            # the gold calculation exact on real tables). Convert to 0-indexed
+            # here so every downstream consumer uses Python indexing directly.
+            row_indices = tuple(int(item) - 1 for item in _parse_py_list(row[9]))
+            col_indices = tuple(int(item) - 1 for item in _parse_py_list(row[10]))
             questions.append(TableQuestion(
                 question_id=f"griqa-quant-{index:04d}",
                 question=row[5].strip(),
                 value=float(row[8]),
                 fn_name=fn_name,
-                row_indices=tuple(int(item) for item in _parse_py_list(row[9])),
-                col_indices=tuple(int(item) for item in _parse_py_list(row[10])),
+                row_indices=row_indices,
+                col_indices=col_indices,
                 company=company_pdf,
                 page=_parse_py_list(row[3])[0],
                 table_nbr=_parse_py_list(row[4])[0],

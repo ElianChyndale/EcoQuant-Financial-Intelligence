@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 
 from rank_bm25 import BM25Okapi
 
-from .calculate import calculate, extract_cells
+from .calculate import calculate, extract_cells, header_years_for
 from .griqa import GriqaBundle, GriqaTable, TableQuestion
 
 
@@ -38,8 +38,11 @@ def _best_table(question: TableQuestion, index: BM25Okapi, tables: list[GriqaTab
 
 
 def _answer_from_table(question: TableQuestion, table: GriqaTable) -> float | None:
-    """Extract cells at gold coordinates and apply the deterministic function."""
-    cells = extract_cells(table.rows, question.row_indices, question.col_indices)
+    """Extract cells at gold coordinates (year-ordered) and apply the function."""
+    years = header_years_for(table.rows)
+    cells = extract_cells(
+        table.rows, question.row_indices, question.col_indices, header_years=years,
+    )
     if not cells:
         return None
     try:
