@@ -81,10 +81,11 @@ def resolve_concept(
     for fact in bundle.facts:
         if fact.ticker != ticker or fact.form != "10-K":
             continue
-        # Match by fiscal year, not calendar month==12: fiscal years may end
-        # Dec 30/29 (e.g. JNJ) or on a near-year-end date. The 10-K for a given
-        # fiscal year has period end within ~4 weeks of Dec 31 of that year.
-        if fact.end.year != year or fact.end < _fiscal_year_start(year):
+        # Match by calendar year of the period end. Fiscal years vary by
+        # company (Apple ends Sep, MSFT ends Jun, JNJ/UPS/KO end Dec); the
+        # annual 10-K is the fact with the LATEST period end in that year, so
+        # we keep all 10-K facts for the year and pick the latest end below.
+        if fact.end.year != year:
             continue
         if fact.concept in aliases:
             candidates.append(ResolvedValue(
@@ -97,14 +98,9 @@ def resolve_concept(
     if not candidates:
         return None
     # Prefer the first alias in the ordered list that has evidence; among ties,
-    # the latest-filed wins (amended values supersede).
+    # the latest period end wins (the annual report), then latest filed.
     for alias in aliases:
         matches = [c for c in candidates if c.concept == alias]
         if matches:
             return max(matches, key=lambda c: (c.period_end, c.fact_id))
     return max(candidates, key=lambda c: (c.period_end, c.fact_id))
-
-
-def _fiscal_year_start(year: int) -> date:
-    """Lower bound for a fiscal-year-end: Nov 15 of the same year."""
-    return date(year, 11, 15)
