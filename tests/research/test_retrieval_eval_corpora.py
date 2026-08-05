@@ -53,8 +53,11 @@ def test_financebench_gold_page_accuracy_fields(financebench_bundle) -> None:
         assert pages  # non-empty
 
 
-def test_ecoquant_corpus_has_records(ecoquant_bundle) -> None:
+def test_ecoquant_corpus_has_unique_records(ecoquant_bundle) -> None:
     corpus, catalog, gold = build_ecoquant_corpus(ecoquant_bundle)
-    assert len(corpus) >= 64
+    assert len(corpus) > 0
+    # evidence_ids must be unique (retrieval contract + nDCG well-definedness).
+    ids = [record.evidence_id for record in corpus]
+    assert len(ids) == len(set(ids))
     assert len(gold.relevant_evidence) == 64
     assert all(record.evidence_id in catalog for record in corpus)

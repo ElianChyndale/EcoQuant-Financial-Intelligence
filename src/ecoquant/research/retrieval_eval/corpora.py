@@ -105,6 +105,10 @@ def build_ecoquant_corpus(
     """
     from ..datasets.ecoquant_corpus import load_ecoquant_corpus  # noqa: F401  (module import for manifest hashes)
 
+    # Deduplicate by evidence_id: the same (source, page, block) may be cited by
+    # many questions; it is ONE corpus record. This keeps evidence_id unique, which
+    # the retrieval contracts require and which keeps nDCG well-defined.
+    seen: set[str] = set()
     records: list[CorpusRecord] = []
     catalog: dict[str, EvidenceLocation] = {}
     for gold in bundle.gold_records:
@@ -112,6 +116,9 @@ def build_ecoquant_corpus(
             gold.gold_source_ids, gold.gold_page_ids, gold.gold_block_ids
         ):
             evidence_id = f"{source_id}::{page_id}::{block_id}"
+            if evidence_id in seen:
+                continue
+            seen.add(evidence_id)
             records.append(CorpusRecord(
                 evidence_id=evidence_id,
                 issuer=gold.issuer,

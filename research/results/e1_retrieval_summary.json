@@ -1,0 +1,199 @@
+{
+  "all_ok": true,
+  "datasets": {
+    "ecoquant_corpus": {
+      "corpus_size": 24,
+      "methods": {
+        "bm25": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.78125,
+            "point_estimate": 0.890625,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.9921875
+          },
+          "hit_at_5": 1.0,
+          "mrr": 0.9671875,
+          "ndcg_at_5": 0.8693096042172379,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.890625
+        },
+        "dense": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.671875,
+            "point_estimate": 0.734375,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.796875
+          },
+          "hit_at_5": 1.0,
+          "mrr": 0.7057291666666666,
+          "ndcg_at_5": 0.6229306471795305,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.734375
+        },
+        "hybrid_rrf": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.671875,
+            "point_estimate": 0.78515625,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.8984375
+          },
+          "hit_at_5": 0.984375,
+          "mrr": 0.8958333333333334,
+          "ndcg_at_5": 0.7528919113930707,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.78515625
+        },
+        "long_context": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.5625,
+            "point_estimate": 0.7265625,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.90625
+          },
+          "hit_at_5": 1.0,
+          "mrr": 0.9661458333333334,
+          "ndcg_at_5": 0.7490500358347699,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.7265625
+        },
+        "lsa": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.859375,
+            "point_estimate": 0.9140625,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.96875
+          },
+          "hit_at_5": 1.0,
+          "mrr": 0.9765625,
+          "ndcg_at_5": 0.8764947723388696,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.9140625
+        },
+        "tfidf": {
+          "bootstrap_ci_95": {
+            "cluster_count": 4,
+            "lower": 0.859375,
+            "point_estimate": 0.9140625,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.96875
+          },
+          "hit_at_5": 1.0,
+          "mrr": 0.9765625,
+          "ndcg_at_5": 0.8760749221856932,
+          "page_accuracy_at_5": 1.0,
+          "recall_at_5": 0.9140625
+        }
+      },
+      "question_count": 64
+    },
+    "financebench": {
+      "corpus_size": 168,
+      "methods": {
+        "bm25": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.20501570574526295,
+            "point_estimate": 0.2866666666666667,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.3692955949503089
+          },
+          "hit_at_5": 0.3,
+          "mrr": 0.20755555555555555,
+          "ndcg_at_5": 0.22482345207877566,
+          "page_accuracy_at_5": 0.34,
+          "recall_at_5": 0.2866666666666667
+        },
+        "dense": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.48170507532281204,
+            "point_estimate": 0.5633333333333334,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.649705427446569
+          },
+          "hit_at_5": 0.6,
+          "mrr": 0.38699999999999996,
+          "ndcg_at_5": 0.42185796076337595,
+          "page_accuracy_at_5": 0.6333333333333333,
+          "recall_at_5": 0.5633333333333334
+        },
+        "hybrid_rrf": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.4343060479666319,
+            "point_estimate": 0.5111111111111112,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.5924874661917012
+          },
+          "hit_at_5": 0.56,
+          "mrr": 0.3448888888888889,
+          "ndcg_at_5": 0.37507780926884576,
+          "page_accuracy_at_5": 0.5933333333333334,
+          "recall_at_5": 0.5111111111111112
+        },
+        "long_context": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.18962807881773397,
+            "point_estimate": 0.27666666666666667,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.3709910690482538
+          },
+          "hit_at_5": 0.29333333333333333,
+          "mrr": 0.16599999999999998,
+          "ndcg_at_5": 0.19214351792884435,
+          "page_accuracy_at_5": 0.3466666666666667,
+          "recall_at_5": 0.27666666666666667
+        },
+        "lsa": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.27850775035414627,
+            "point_estimate": 0.3688888888888889,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.4607249059934003
+          },
+          "hit_at_5": 0.3933333333333333,
+          "mrr": 0.2531111111111111,
+          "ndcg_at_5": 0.2743634890751417,
+          "page_accuracy_at_5": 0.44,
+          "recall_at_5": 0.3688888888888889
+        },
+        "tfidf": {
+          "bootstrap_ci_95": {
+            "cluster_count": 32,
+            "lower": 0.28518325864276567,
+            "point_estimate": 0.3811111111111111,
+            "samples": 1000,
+            "seed": 20260710,
+            "upper": 0.47665108173732745
+          },
+          "hit_at_5": 0.4,
+          "mrr": 0.26266666666666666,
+          "ndcg_at_5": 0.28578232811478,
+          "page_accuracy_at_5": 0.44666666666666666,
+          "recall_at_5": 0.3811111111111111
+        }
+      },
+      "question_count": 150
+    }
+  },
+  "experiment": "e1-retrieval-baselines",
+  "note": "B6 (cross-encoder reranker) remains blocked by external model assets; dense uses locally cached all-MiniLM-L6-v2. FinanceBench evidence is cache-only; EcoQuant corpus is the frozen 64-question corpus."
+}
