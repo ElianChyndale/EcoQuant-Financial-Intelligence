@@ -1,0 +1,39 @@
+{
+  "all_ok": true,
+  "dataset": {
+    "license": "MIT",
+    "question_count": 266,
+    "table_count": 27
+  },
+  "experiment": "e2-table-numerical-reasoning",
+  "methods": {
+    "b3_table_only": {
+      "answered": 222,
+      "exact_among_answered": 0.5990990990990991,
+      "numeric_exact_match": 0.5,
+      "question_count": 266,
+      "tolerance_1pct_accuracy": 0.6390977443609023,
+      "unsupported": 44,
+      "unsupported_rate": 0.16541353383458646
+    },
+    "b7_long_context": {
+      "answered": 266,
+      "exact_among_answered": 0.7030075187969925,
+      "numeric_exact_match": 0.7030075187969925,
+      "question_count": 266,
+      "tolerance_1pct_accuracy": 0.9360902255639098,
+      "unsupported": 0,
+      "unsupported_rate": 0.0
+    },
+    "proposed": {
+      "answered": 255,
+      "exact_among_answered": 0.5607843137254902,
+      "numeric_exact_match": 0.5375939849624061,
+      "question_count": 266,
+      "tolerance_1pct_accuracy": 0.7142857142857143,
+      "unsupported": 11,
+      "unsupported_rate": 0.041353383458646614
+    }
+  },
+  "note": "GRI-QA quant (266 real environmental-table questions, 6 calc types, 27 tables). B1 (LLM direct) blocked: no LLM API. B7 uses gold table (no retrieval); B3 and proposed use BM25 retrieval."
+}
