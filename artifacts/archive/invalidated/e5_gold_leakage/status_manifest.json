@@ -1,0 +1,18 @@
+{
+  "artifact": "e5_calibration_summary.json",
+  "audit_doc": "docs/audits/E5_GOLD_LEAKAGE_AUDIT.md",
+  "evidence": [
+    "src/ecoquant/research/calibration_eval/features.py (coverage = len(retrieved & relevant)/len(relevant))",
+    "scripts/run_e5_calibration.py (gold.relevant_evidence passed to feature builder)"
+  ],
+  "invalidated_date": "2026-08-06",
+  "original_headline": {
+    "auroc": 0.923,
+    "brier": 0.085,
+    "coverage_at_90pct": 0.0056,
+    "ece": 0.054
+  },
+  "preserved_for_auditability": true,
+  "reason": "evidence_coverage feature computed from gold relevant-evidence set (not inference-time available)",
+  "status": "INVALIDATED_GOLD_FEATURE_LEAKAGE"
+}

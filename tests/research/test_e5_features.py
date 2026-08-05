@@ -5,7 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from ecoquant.research.calibration_eval.features import build_features_from_retrieval
+from ecoquant.research.calibration_eval.features import (
+    build_features_from_retrieval,
+    labels_from_gold,
+)
 from ecoquant.uncertainty.features import UncertaintyFeatures
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,7 +44,8 @@ def _synthetic_retrieval():
 
 def test_features_shape_and_labels() -> None:
     results, gold = _synthetic_retrieval()
-    features, labels = build_features_from_retrieval(results, gold)
+    features = build_features_from_retrieval(results)
+    labels = labels_from_gold(results, gold)
     # 4 questions x 2 methods = 8 feature vectors
     assert len(features) == 8
     assert len(labels) == 8
@@ -51,7 +55,7 @@ def test_features_shape_and_labels() -> None:
 
 def test_correctness_labels_match_hits() -> None:
     results, gold = _synthetic_retrieval()
-    features, labels = build_features_from_retrieval(results, gold)
+    labels = labels_from_gold(results, gold)
     # q1/q2 top-1 hits -> True; q3/q4 top-1 misses -> False
     # 2 methods x (2 correct + 2 wrong)
     assert labels.count(True) == 4
@@ -60,8 +64,20 @@ def test_correctness_labels_match_hits() -> None:
 
 def test_features_are_finite() -> None:
     results, gold = _synthetic_retrieval()
-    features, labels = build_features_from_retrieval(results, gold)
+    features = build_features_from_retrieval(results)
     for f in features:
         for value in (f.retrieval_margin, f.cross_retriever_agreement,
                       f.extraction_confidence, f.temporal_validity, f.evidence_coverage):
             assert math.isfinite(value)
+
+
+def test_feature_builder_ignores_gold() -> None:
+    """The feature builder takes no gold input and never changes with gold."""
+    results, gold = _synthetic_retrieval()
+    features_a = build_features_from_retrieval(results)
+    # Mutating gold must not change features (they are gold-independent).
+    mutated_gold = {qid: frozenset({"ev-other"}) for qid in gold}
+    labels_a = labels_from_gold(results, gold)
+    labels_b = labels_from_gold(results, mutated_gold)
+    assert features_a == build_features_from_retrieval(results)
+    assert labels_a != labels_b  # labels DO change with gold (evaluation-only)

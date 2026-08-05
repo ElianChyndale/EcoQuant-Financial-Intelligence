@@ -22,7 +22,10 @@ def main() -> int:
     sys.path.insert(0, str(ROOT / "src"))
 
     from ecoquant.research.calibration_eval.evaluate import evaluate_selective_folds
-    from ecoquant.research.calibration_eval.features import build_features_from_retrieval
+    from ecoquant.research.calibration_eval.features import (
+        build_features_from_retrieval,
+        labels_from_gold,
+    )
     from ecoquant.research.datasets.financebench import load_financebench
     from ecoquant.research.retrieval_eval.baselines import run_baselines
     from ecoquant.research.retrieval_eval.corpora import build_financebench_corpus
@@ -46,7 +49,10 @@ def main() -> int:
             method: {qid: ranked for qid, ranked in by_question.items() if qid in company_questions}
             for method, by_question in method_results.items()
         }
-        features, labels = build_features_from_retrieval(company_results, company_questions)
+        # LEAK-FREE: features from retrieval results only; labels via the
+        # explicit EVALUATION-ONLY function (gold never enters features).
+        features = build_features_from_retrieval(company_results)
+        labels = labels_from_gold(company_results, company_questions)
         if features:
             fold_data[company] = (features, labels)
 
