@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Sequence
+from functools import lru_cache
+from pathlib import Path
 
 from rank_bm25 import BM25Okapi
 
@@ -65,8 +67,22 @@ def run_b1_bm25(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dic
     }
 
 
+@lru_cache(maxsize=1)
+def _dense_model():
+    """Cached all-MiniLM-L6-v2 bi-encoder (reused from E1; local cache)."""
+    from sentence_transformers import SentenceTransformer
+
+    model_dir = Path(__file__).resolve().parents[4] / "research" / "cache" / "models" / "all-MiniLM-L6-v2"
+    if model_dir.exists():
+        return SentenceTransformer(str(model_dir))
+    return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+
 def run_b2_hybrid(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
-    """Hybrid: BM25 score + query-term overlap bonus (cheap dense proxy)."""
+    """Hybrid: BM25 + dense bi-encoder cosine (real semantic signal)."""
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    model = _dense_model()
     output: dict[str, tuple[SecFact, ...]] = {}
     for question in questions:
         facts = _facts_for_ticker(bundle, question.ticker)
@@ -75,18 +91,29 @@ def run_b2_hybrid(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> d
             output[question.question_id] = ()
             continue
         bm25 = BM25Okapi([_tokenize(text) for text in corpus])
-        query_terms = set(_tokenize(question.question))
         scores = bm25.get_scores(_tokenize(question.question))
-        hybrid = [
-            scores[i] + 0.25 * len(query_terms & set(_tokenize(corpus[i]))) / max(1, len(query_terms))
+        doc_embeddings = model.encode(corpus, normalize_embeddings=True)
+        query_embedding = model.encode([question.question], normalize_embeddings=True)
+        dense_scores = cosine_similarity(query_embedding, doc_embeddings).ravel()
+        # RRF-style fusion of BM25 and dense ranks.
+        bm25_rank = _rank_indices(scores)
+        dense_rank = _rank_indices(dense_scores)
+        fused = {
+            i: 1.0 / (60 + bm25_rank[i]) + 1.0 / (60 + dense_rank[i])
             for i in range(len(facts))
-        ]
+        }
         ranked = sorted(
-            ((hybrid[i], facts[i]) for i in range(len(facts))),
+            ((fused[i], facts[i]) for i in range(len(facts))),
             key=lambda item: (-item[0], item[1].fact_id),
         )[:TOP_K]
         output[question.question_id] = tuple(fact for _, fact in ranked)
     return output
+
+
+def _rank_indices(scores: Sequence[float]) -> dict[int, int]:
+    """Rank indices by descending score (1-based), ties broken by index."""
+    order = sorted(range(len(scores)), key=lambda i: (-scores[i], i))
+    return {index: rank for rank, index in enumerate(order, start=1)}
 
 
 def run_b3_source_time_filter(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
