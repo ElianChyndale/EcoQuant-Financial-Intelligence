@@ -1,0 +1,15 @@
+{
+  "adapter_version": "0.1.0",
+  "all_gates_pass": true,
+  "dataset_id": "ecoquant-corpus-v1",
+  "gates": {
+    "gold_sources_exist": true,
+    "public_case_has_no_gold": true,
+    "repeat_load_identical": true,
+    "traceable_manifest": true
+  },
+  "manifest_sha256": "40a16497399c36212c7f1587946478dd1149b88c97b38b91b9867cde2c91f7a7",
+  "question_count": 64,
+  "questions_sha256": "74f646be96f110718d59d709142827b5410a6bba2fc35204255edd61bfe3c15c",
+  "source_count": 12
+}
