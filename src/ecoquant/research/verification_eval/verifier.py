@@ -30,6 +30,15 @@ import re
 from dataclasses import dataclass, field
 
 NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+# Scale words with their multipliers (case-insensitive).
+SCALE_WORDS = {
+    "thousand": 1e3, "k": 1e3,
+    "million": 1e6, "m": 1e6,
+    "billion": 1e9, "b": 1e9,
+    "trillion": 1e12, "t": 1e12,
+}
+# Scales like "1,200,000,000" and "1200.0 million" normalize to the same value.
+SCALE_RE = re.compile(r"(-?\d+(?:\.\d+)?)\s*([a-z]+)", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -50,16 +59,32 @@ class VerificationResult:
     reason: str | None = None
 
 
+def _normalized_numbers(text: str) -> list[float]:
+    """Extract numbers from text, normalizing scale words (billion/million/raw).
+
+    ``1.2 billion`` → 1.2e9; ``1200000000`` → 1.2e9. Comma separators are
+    stripped so ``1,200,000,000`` matches ``1200000000``. This lets verification
+    match a paraphrased answer against raw evidence regardless of notation.
+    """
+    normalized: list[float] = []
+    cleaned = text.replace(",", "")
+    # Scale-word forms: "1.2 billion" / "391B".
+    for match in SCALE_RE.finditer(cleaned):
+        number = float(match.group(1))
+        word = match.group(2).lower()
+        if word in SCALE_WORDS:
+            normalized.append(number * SCALE_WORDS[word])
+    # Raw numbers (also caught above without a scale word via NUMBER_RE).
+    normalized.extend(float(t) for t in NUMBER_RE.findall(cleaned))
+    return normalized
+
+
 def _approx_in_text(value: float, text: str, tolerance: float = 1e-3) -> bool:
-    """True if a number approximately appears in a text (handles units)."""
-    for token in NUMBER_RE.findall(text):
-        try:
-            parsed = float(token)
-        except ValueError:
-            continue
-        if math.isclose(parsed, value, rel_tol=tolerance, abs_tol=tolerance):
-            return True
-    return False
+    """True if a number approximately appears in a text, scale-normalized."""
+    return any(
+        math.isclose(parsed, value, rel_tol=tolerance, abs_tol=tolerance)
+        for parsed in _normalized_numbers(text)
+    )
 
 
 def verify_claim(claim: ClaimInput) -> VerificationResult:

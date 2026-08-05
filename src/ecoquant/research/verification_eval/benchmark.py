@@ -51,7 +51,13 @@ def _financebench_cases(root: Path) -> list[VerificationCase]:
                 continue
             row = json.loads(line)
             answer = row.get("answer", "")
-            evidence = [e.get("evidence_text", "") for e in row.get("evidence", [])]
+            # Cite the FULL page text (what a grounded system cites), falling
+            # back to the abbreviated excerpt. Full pages contain the numbers;
+            # abbreviated excerpts often truncate them.
+            evidence = [
+                e.get("evidence_text_full_page") or e.get("evidence_text", "")
+                for e in row.get("evidence", [])
+            ]
             numbers = _extract_numbers(answer)
             if not numbers or not evidence:
                 continue

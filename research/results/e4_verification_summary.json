@@ -1,0 +1,862 @@
+{
+  "all_ok": true,
+  "dataset": {
+    "supported_cases": 30,
+    "total_cases": 60,
+    "unsupported_cases": 30
+  },
+  "experiment": "e4-evidence-verification",
+  "metrics": {
+    "false_pass_count": 0,
+    "false_pass_rate": 0.0,
+    "supported_answer_accuracy": 0.3333333333333333,
+    "unsupported_rejected_rate": 1.0
+  },
+  "note": "Multi-layer verifier (citation, number grounding, year/unit/scale, calculation, conflict) over FinanceBench + GRI-QA cases with injected unsupported examples. False-pass rate is the critical metric.",
+  "results": [
+    {
+      "case_id": "fb-supported-0",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-0",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-1",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-1",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-2",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-2",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-3",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-3",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-4",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-4",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-5",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-5",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-6",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-6",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-7",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-7",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-8",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-8",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-9",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-9",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-10",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-10",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-11",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-11",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-12",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-12",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-13",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-13",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-14",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-14",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-15",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-15",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-16",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-16",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-17",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-17",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-18",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-18",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-19",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-19",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-20",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-20",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-21",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-21",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-22",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-22",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-23",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-23",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-24",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-24",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-26",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-26",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-27",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-27",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-28",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-28",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-29",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": true,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": null,
+      "verified_state": "SUPPORTED"
+    },
+    {
+      "case_id": "fb-unsupported-29",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": true,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-supported-30",
+      "gold_state": "SUPPORTED",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "case_id": "fb-unsupported-30",
+      "gold_state": "INSUFFICIENT_EVIDENCE",
+      "layer_results": {
+        "calculation_reproducible": true,
+        "citation_present": true,
+        "no_conflict": false,
+        "number_in_evidence": false,
+        "unit_scale_consistent": true,
+        "year_consistent": true
+      },
+      "reason": "claim number not grounded",
+      "verified_state": "INSUFFICIENT_EVIDENCE"
+    }
+  ],
+  "state_distribution": {
+    "INSUFFICIENT_EVIDENCE": 50,
+    "SUPPORTED": 10
+  }
+}
