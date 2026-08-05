@@ -1,15 +1,33 @@
 {
-  "adapter_version": "0.1.0",
   "all_gates_pass": true,
-  "dataset_id": "ecoquant-corpus-v1",
-  "gates": {
-    "gold_sources_exist": true,
-    "public_case_has_no_gold": true,
-    "repeat_load_identical": true,
-    "traceable_manifest": true
+  "datasets": {
+    "ecoquant_corpus": {
+      "adapter_version": "0.1.0",
+      "dataset_id": "ecoquant-corpus-v1",
+      "manifest_sha256": "40a16497399c36212c7f1587946478dd1149b88c97b38b91b9867cde2c91f7a7",
+      "question_count": 64,
+      "questions_sha256": "74f646be96f110718d59d709142827b5410a6bba2fc35204255edd61bfe3c15c",
+      "source_count": 12
+    },
+    "financebench_sample": {
+      "company_count": 32,
+      "docs_sha256": "1c69127783879de8cdadb159d2181f39bc3123b8e0ebf74031c3969d69189575",
+      "document_count": 360,
+      "gate_pass": true,
+      "license_status": "unconfirmed",
+      "loaded": true,
+      "question_count": 150,
+      "questions_sha256": "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877",
+      "redistribution_status": "cache_only"
+    }
   },
-  "manifest_sha256": "40a16497399c36212c7f1587946478dd1149b88c97b38b91b9867cde2c91f7a7",
-  "question_count": 64,
-  "questions_sha256": "74f646be96f110718d59d709142827b5410a6bba2fc35204255edd61bfe3c15c",
-  "source_count": 12
+  "gates": {
+    "ecoquant_corpus": {
+      "gold_sources_exist": true,
+      "public_case_has_no_gold": true,
+      "repeat_load_identical": true,
+      "traceable_manifest": true
+    },
+    "financebench": true
+  }
 }

@@ -59,3 +59,12 @@ Each `evidence` object carries:
 - Questions file: `financebench_open_source.jsonl` (SHA-256 recorded in bundle manifest).
 - Docs file: `financebench_document_information.jsonl` (SHA-256 recorded in bundle manifest).
 - Label provenance: `human_annotated` (upstream human-verified answers).
+
+## Known data-quality notes
+
+- The upstream metadata file has **361 raw records but 360 unique `doc_name` values**:
+  `FOOTLOCKER_2023_annualreport` appears twice. The adapter deduplicates on
+  `doc_name` (last occurrence wins). This is a data-quality quirk in the source,
+  not an adapter bug; it is recorded here for traceability.
+- `evidence_page_num` is a **zero-indexed integer**. Cross-dataset comparison with
+  the EcoQuant corpus (which uses the `p63` form) requires an explicit conversion.
