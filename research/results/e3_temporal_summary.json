@@ -1,0 +1,43 @@
+{
+  "all_ok": true,
+  "dataset": {
+    "fact_count": 73802,
+    "license": "public-domain",
+    "question_count": 5752,
+    "sampled_question_count": 234
+  },
+  "experiment": "e3-temporal-contradiction",
+  "methods": {
+    "b1_bm25": {
+      "contradiction_f1": 0.10139860139860139,
+      "expired_evidence_rate": 0.08888888888888889,
+      "future_information_rate": 0.33931623931623933,
+      "valid_evidence_recall": 0.5256410256410257
+    },
+    "b2_hybrid": {
+      "contradiction_f1": 0.05473684210526315,
+      "expired_evidence_rate": 0.25726495726495724,
+      "future_information_rate": 0.3974358974358974,
+      "valid_evidence_recall": 0.5042735042735043
+    },
+    "b3_source_time_filter": {
+      "contradiction_f1": 0.12446351931330472,
+      "expired_evidence_rate": 0.1606837606837607,
+      "future_information_rate": 0.0,
+      "valid_evidence_recall": 0.49145299145299143
+    },
+    "b4_valid_time_filter": {
+      "contradiction_f1": 0.10193321616871703,
+      "expired_evidence_rate": 0.0,
+      "future_information_rate": 0.33931623931623933,
+      "valid_evidence_recall": 0.5427350427350427
+    },
+    "b5_temporal_contradiction": {
+      "contradiction_f1": 0.1779359430604982,
+      "expired_evidence_rate": 0.0,
+      "future_information_rate": 0.5854700854700855,
+      "valid_evidence_recall": 0.5384615384615384
+    }
+  },
+  "note": "SEC EDGAR XBRL companyfacts for AAPL/MSFT/KO; 5752 real temporal questions, stratified sample of 300 (100/class). valid_time=end, source_time=filed."
+}

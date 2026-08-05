@@ -78,21 +78,36 @@ def _dense_model():
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
+@lru_cache(maxsize=8)
+def _dense_embeddings(model_name: str, texts: tuple[str, ...]):
+    """Encode a corpus once per unique text set and cache it."""
+    model = _dense_model()
+    return model.encode(list(texts), normalize_embeddings=True)
+
+
 def run_b2_hybrid(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
-    """Hybrid: BM25 + dense bi-encoder cosine (real semantic signal)."""
+    """Hybrid: BM25 + dense bi-encoder cosine (real semantic signal).
+
+    Corpus embeddings are cached per ticker so each company's facts are encoded
+    once, not once per question.
+    """
     from sklearn.metrics.pairwise import cosine_similarity
 
     model = _dense_model()
+    corpus_by_ticker: dict[str, list[SecFact]] = {}
+    for ticker in {q.ticker for q in questions}:
+        corpus_by_ticker[ticker] = _facts_for_ticker(bundle, ticker)
+
     output: dict[str, tuple[SecFact, ...]] = {}
     for question in questions:
-        facts = _facts_for_ticker(bundle, question.ticker)
+        facts = corpus_by_ticker[question.ticker]
         corpus = [_fact_text(fact) for fact in facts]
         if not corpus:
             output[question.question_id] = ()
             continue
         bm25 = BM25Okapi([_tokenize(text) for text in corpus])
         scores = bm25.get_scores(_tokenize(question.question))
-        doc_embeddings = model.encode(corpus, normalize_embeddings=True)
+        doc_embeddings = _dense_embeddings("all-MiniLM-L6-v2", tuple(corpus))
         query_embedding = model.encode([question.question], normalize_embeddings=True)
         dense_scores = cosine_similarity(query_embedding, doc_embeddings).ravel()
         # RRF-style fusion of BM25 and dense ranks.
