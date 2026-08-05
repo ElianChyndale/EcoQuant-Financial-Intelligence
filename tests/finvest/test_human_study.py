@@ -42,9 +42,9 @@ def test_assign_cases_stratified() -> None:
 
 def test_summary_shape() -> None:
     labels = [
-        ReviewLabel("r1", "c1", "rev1", True, True, True, False, False, 60.0, 4, signed=True),
-        ReviewLabel("r2", "c1", "rev2", False, False, False, True, True, 120.0, 2, signed=True),
-        ReviewLabel("r3", "c2", "rev1", True, True, True, False, False, 45.0, 5, signed=True),
+        ReviewLabel("r1", "c1", "rev1", "A", True, True, True, False, False, 60.0, 4, signed=True),
+        ReviewLabel("r2", "c1", "rev2", "A", False, False, False, True, True, 120.0, 2, signed=True),
+        ReviewLabel("r3", "c2", "rev1", "C", True, True, True, False, False, 45.0, 5, signed=True),
     ]
     summary = mixed_effects_summary(labels)
     assert summary["n_reviews"] == 3
@@ -55,7 +55,7 @@ def test_summary_shape() -> None:
 
 
 def test_human_signature_required() -> None:
-    unsigned = ReviewLabel("r1", "c1", "rev1", True, True, True, False, False, 60.0, 4, signed=False)
-    signed = ReviewLabel("r2", "c1", "rev2", True, True, True, False, False, 60.0, 4, signed=True)
+    unsigned = ReviewLabel("r1", "c1", "rev1", "A", True, True, True, False, False, 60.0, 4, signed=False)
+    signed = ReviewLabel("r2", "c1", "rev2", "A", True, True, True, False, False, 60.0, 4, signed=True)
     violations = verify_labels_are_human([unsigned, signed])
     assert violations == ["r1"]

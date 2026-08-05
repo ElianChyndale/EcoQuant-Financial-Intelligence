@@ -46,6 +46,7 @@ class ReviewLabel:
     review_id: str
     case_id: str
     reviewer_id: str
+    condition: str  # A | B | C
     answer_correct: bool
     evidence_sufficient: bool
     citation_correct: bool
@@ -72,15 +73,18 @@ def assign_cases(
     cases_per_reviewer: int = 40,
 ) -> list[ReviewCase]:
     """Assign a balanced subset of cases to one reviewer (stratified)."""
-    # Stratify by condition, take every reviewer_index-th slice.
+    # Stratify by condition value, take every reviewer_index-th slice.
     by_condition: dict[str, list[ReviewCase]] = {}
     for case in cases:
         by_condition.setdefault(case.condition.value, []).append(case)
     assigned: list[ReviewCase] = []
-    per_condition = cases_per_reviewer // len(CONDITIONS)
-    for condition in CONDITIONS:
-        pool = by_condition.get(condition, [])
-        start = (reviewer_index * per_condition) % max(1, len(pool))
+    condition_values = [c.value for c in Condition]
+    per_condition = cases_per_reviewer // len(condition_values)
+    for condition_value in condition_values:
+        pool = by_condition.get(condition_value, [])
+        if not pool:
+            continue
+        start = (reviewer_index * per_condition) % len(pool)
         assigned.extend(pool[start:start + per_condition])
     return assigned
 
@@ -101,7 +105,7 @@ def mixed_effects_summary(
         return {"n_reviews": 0}
     by_condition: dict[str, list[ReviewLabel]] = {}
     for label in labels:
-        by_condition.setdefault(label.condition.value, []).append(label)
+        by_condition.setdefault(label.condition, []).append(label)
     return {
         "n_reviews": n,
         "by_condition": {
