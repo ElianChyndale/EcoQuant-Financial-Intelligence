@@ -1,0 +1,138 @@
+"""E3 temporal retrieval baselines + contradiction detection.
+
+- ``run_b1_bm25``: plain BM25 over concept text, no temporal filtering.
+- ``run_b2_hybrid``: BM25 + dense-style overlap hybrid (concept + form + frame).
+- ``run_b3_source_time_filter``: B1 + drop facts filed after ``source_cutoff``
+  (no future information).
+- ``run_b4_valid_time_filter``: B1 + drop facts with ``end`` after ``valid_at``
+  (no future valid periods).
+- ``run_b5_temporal_contradiction``: B4 + contradiction detection — when the
+  same (concept, end) has multiple values across filed dates, prefer the latest
+  filed and mark the earlier one as a contradiction.
+
+Each returns {question_id: tuple[SecFact, ...]} ranked by relevance.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from collections.abc import Sequence
+
+from rank_bm25 import BM25Okapi
+
+from .questions import TemporalQuestion
+from .sec_adapter import SecBundle, SecFact
+
+TOP_K = 5
+
+
+def _tokenize(text: str) -> list[str]:
+    return "".join(c if c.isalnum() else " " for c in text.lower()).split()
+
+
+def _fact_text(fact: SecFact) -> str:
+    """Retrievable text for a fact: concept + form + frame (temporal hints)."""
+    parts = [fact.concept, fact.form, fact.frame or "", str(fact.end.year)]
+    return " ".join(parts)
+
+
+def _facts_for_ticker(bundle: SecBundle, ticker: str) -> list[SecFact]:
+    return [fact for fact in bundle.facts if fact.ticker == ticker]
+
+
+def _ranked(
+    facts: list[SecFact],
+    question: TemporalQuestion,
+    method: str,
+) -> tuple[SecFact, ...]:
+    """BM25-rank the facts for a question; tie-break by fact_id."""
+    corpus = [_fact_text(fact) for fact in facts]
+    if not corpus:
+        return ()
+    bm25 = BM25Okapi([_tokenize(text) for text in corpus])
+    scores = bm25.get_scores(_tokenize(question.question))
+    ranked = sorted(
+        ((scores[i], facts[i]) for i in range(len(facts))),
+        key=lambda item: (-item[0], item[1].fact_id),
+    )[:TOP_K]
+    return tuple(fact for _, fact in ranked)
+
+
+def run_b1_bm25(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
+    return {
+        question.question_id: _ranked(_facts_for_ticker(bundle, question.ticker), question, "b1")
+        for question in questions
+    }
+
+
+def run_b2_hybrid(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
+    """Hybrid: BM25 score + query-term overlap bonus (cheap dense proxy)."""
+    output: dict[str, tuple[SecFact, ...]] = {}
+    for question in questions:
+        facts = _facts_for_ticker(bundle, question.ticker)
+        corpus = [_fact_text(fact) for fact in facts]
+        if not corpus:
+            output[question.question_id] = ()
+            continue
+        bm25 = BM25Okapi([_tokenize(text) for text in corpus])
+        query_terms = set(_tokenize(question.question))
+        scores = bm25.get_scores(_tokenize(question.question))
+        hybrid = [
+            scores[i] + 0.25 * len(query_terms & set(_tokenize(corpus[i]))) / max(1, len(query_terms))
+            for i in range(len(facts))
+        ]
+        ranked = sorted(
+            ((hybrid[i], facts[i]) for i in range(len(facts))),
+            key=lambda item: (-item[0], item[1].fact_id),
+        )[:TOP_K]
+        output[question.question_id] = tuple(fact for _, fact in ranked)
+    return output
+
+
+def run_b3_source_time_filter(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
+    """B1 + no facts filed after source_cutoff (no future information)."""
+    output: dict[str, tuple[SecFact, ...]] = {}
+    for question in questions:
+        facts = [
+            fact for fact in _facts_for_ticker(bundle, question.ticker)
+            if fact.filed <= question.source_cutoff
+        ]
+        output[question.question_id] = _ranked(facts, question, "b3")
+    return output
+
+
+def run_b4_valid_time_filter(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
+    """B1 + no facts with end after valid_at (no future valid periods)."""
+    output: dict[str, tuple[SecFact, ...]] = {}
+    for question in questions:
+        facts = [
+            fact for fact in _facts_for_ticker(bundle, question.ticker)
+            if fact.end <= question.valid_at
+        ]
+        output[question.question_id] = _ranked(facts, question, "b4")
+    return output
+
+
+def run_b5_temporal_contradiction(bundle: SecBundle, questions: Sequence[TemporalQuestion]) -> dict[str, tuple[SecFact, ...]]:
+    """B4 + contradiction detection: latest-filed value wins; older flagged.
+
+    Returns ranked facts with the *latest valid* fact first when a contradiction
+    (same concept+end, multiple filed values) exists. The runner uses this to
+    compute contradiction-detection F1.
+    """
+    output: dict[str, tuple[SecFact, ...]] = {}
+    for question in questions:
+        facts = [
+            fact for fact in _facts_for_ticker(bundle, question.ticker)
+            if fact.end <= question.valid_at
+        ]
+        # Group by (concept, end); keep the latest-filed per group.
+        by_key: dict[tuple[str, str], list[SecFact]] = defaultdict(list)
+        for fact in facts:
+            by_key[(fact.concept, str(fact.end))].append(fact)
+        deduped: list[SecFact] = []
+        for key, group in by_key.items():
+            latest = max(group, key=lambda f: f.filed)
+            deduped.append(latest)
+        output[question.question_id] = _ranked(deduped, question, "b5")
+    return output
