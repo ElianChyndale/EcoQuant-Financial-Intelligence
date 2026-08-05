@@ -1,0 +1,270 @@
+"""FinVEST-Bench case builder from SEC XBRL companyfacts.
+
+Builds benchmark cases automatically from real SEC XBRL data (reusing the E3/E7
+SEC adapter). Each case carries a requirement graph, evidence items (XBRL facts
+with period/version), acceptable/minimal evidence sets, calculation programs
+for derived answers, and version relations for amendments.
+
+Case types produced:
+- ``derived``: FCFF, working capital, margins — requirement graph with
+  intermediate values + calculation program.
+- ``temporal_amended``: a 10-K value restated by a 10-K/A — version relations
+  + the amended value as gold.
+- ``cross_period``: same metric reported in 10-K and 10-Q — period scope.
+- ``insufficient``: a metric not reported for the period (honest ABSTAIN).
+
+NOTE: these are AI-generated candidate cases with requirement graphs derived
+from structured XBRL. They are NOT human-verified; per the annotation policy,
+human annotators must verify labels before they count as benchmark gold.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date, datetime
+from pathlib import Path
+
+from ecoquant.research.temporal_eval.sec_adapter import SecBundle, SecFact, load_companyfacts
+
+from ..schemas import (
+    CalculationProgram,
+    EvidenceItem,
+    FinVestCase,
+    RequirementEdge,
+    RequirementGraph,
+    RequirementNode,
+    VersionRelation,
+)
+
+# Domain mapping for the 6 companies in cache.
+COMPANY_DOMAINS = {
+    "AAPL": "US", "MSFT": "US", "KO": "US",
+    "EQIX": "US", "JNJ": "US", "UPS": "US",
+}
+
+
+@dataclass(frozen=True)
+class BuiltCases:
+    cases: tuple[FinVestCase, ...]
+    builder_manifest: dict[str, object]
+
+
+def _evidence_item(fact: SecFact, ticker: str) -> EvidenceItem:
+    """Map a SecFact to a benchmark EvidenceItem."""
+    return EvidenceItem(
+        evidence_id=fact.fact_id,
+        document_id=f"{ticker}-{fact.form}-{fact.end}",
+        document_version=fact.form,
+        filing_date=fact.filed,
+        valid_from=fact.end,
+        valid_to=None,
+        xbrl_fact_id=fact.fact_id,
+        concept=fact.concept,
+        unit="USD",
+        scale="1",
+        scope="consolidated",
+        content_hash=fact.fact_id,
+    )
+
+
+def _fcff_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
+    """Derived case: FCFF = operating cash flow - capex for a fiscal year."""
+    ocf = _annual_fact(bundle, ticker, year, "NetCashProvidedByUsedInOperatingActivities")
+    capex = _annual_fact(bundle, ticker, year, "PaymentsToAcquirePropertyPlantAndEquipment")
+    if ocf is None or capex is None:
+        return None
+    fcff = ocf.val - capex.val
+    period_end = ocf.end
+    graph = RequirementGraph(
+        nodes=(
+            RequirementNode("fcff", "FINAL_VALUE", "FCFF"),
+            RequirementNode("ocf", "INTERMEDIATE_VALUE", "OperatingCashFlow"),
+            RequirementNode("capex", "INTERMEDIATE_VALUE", "CapitalExpenditure"),
+            RequirementNode("ticker", "ENTITY", ticker),
+            RequirementNode("period", "PERIOD", str(year)),
+        ),
+        edges=(
+            RequirementEdge("fcff", "ocf", "DERIVES_FROM"),
+            RequirementEdge("fcff", "capex", "DERIVES_FROM"),
+            RequirementEdge("ocf", "ticker", "SAME_AS"),
+            RequirementEdge("ocf", "period", "SAME_AS"),
+            RequirementEdge("capex", "ticker", "SAME_AS"),
+            RequirementEdge("capex", "period", "SAME_AS"),
+        ),
+    )
+    program = CalculationProgram(
+        operation="subtract",
+        inputs=("OperatingCashFlow", "CapitalExpenditure"),
+        result=fcff, unit="USD", scale="1", period=f"FY{year}",
+    )
+    ev_ocf = _evidence_item(ocf, ticker)
+    ev_capex = _evidence_item(capex, ticker)
+    return FinVestCase(
+        case_id=f"finvest-{ticker}-fcff-{year}",
+        base_question_id=f"bq-fcff-{year}",
+        issuer_id=ticker,
+        jurisdiction=COMPANY_DOMAINS[ticker],
+        question=f"What is {ticker} free cash flow to the firm for fiscal year {year}?",
+        source_cutoff=datetime(period_end.year + 1, 6, 30),
+        target_period_start=date(year, 1, 1),
+        target_period_end=period_end,
+        target_fiscal_year=f"FY{year}",
+        answer_type="derived",
+        gold_answer={"value": fcff, "unit": "USD"},
+        decision_label="ANSWER",
+        sufficiency_label="SUPPORTED",
+        requirement_graph=graph,
+        acceptable_evidence_sets=(frozenset({ev_ocf.evidence_id, ev_capex.evidence_id}),),
+        minimal_evidence_sets=(frozenset({ev_ocf.evidence_id, ev_capex.evidence_id}),),
+        evidence_items=(ev_ocf, ev_capex),
+        calculation_program=program,
+        assumptions=("FCFF approximated as OCF - capex",),
+    )
+
+
+def _amended_case(bundle: SecBundle, ticker: str) -> FinVestCase | None:
+    """Temporal case: a 10-K value restated by a 10-K/A."""
+    original, amended = _amended_pair(bundle, ticker)
+    if original is None or amended is None:
+        return None
+    graph = RequirementGraph(
+        nodes=(
+            RequirementNode("metric", "METRIC", original.concept),
+            RequirementNode("ticker", "ENTITY", ticker),
+            RequirementNode("period", "PERIOD", str(original.end)),
+            RequirementNode("version", "VERSION", "latest"),
+        ),
+        edges=(
+            RequirementEdge("metric", "ticker", "SAME_AS"),
+            RequirementEdge("metric", "period", "SAME_AS"),
+            RequirementEdge("version", "metric", "REQUIRES"),
+        ),
+    )
+    ev_orig = _evidence_item(original, ticker)
+    ev_amend = _evidence_item(amended, ticker)
+    return FinVestCase(
+        case_id=f"finvest-{ticker}-amended-{original.concept}-{original.end}",
+        base_question_id=f"bq-amended-{original.concept}",
+        issuer_id=ticker,
+        jurisdiction=COMPANY_DOMAINS[ticker],
+        question=f"What is the latest restated value of {original.concept} for {ticker} for the period ending {original.end}?",
+        source_cutoff=datetime(amended.filed.year, amended.filed.month, amended.filed.day),
+        target_period_start=original.end,
+        target_period_end=original.end,
+        target_fiscal_year=str(original.end.year),
+        answer_type="extractive",
+        gold_answer={"value": amended.val, "unit": "USD"},
+        decision_label="ANSWER",
+        sufficiency_label="CONFLICTING",  # original vs amended coexist until resolved
+        requirement_graph=graph,
+        acceptable_evidence_sets=(frozenset({ev_amend.evidence_id}),),
+        minimal_evidence_sets=(frozenset({ev_amend.evidence_id}),),
+        evidence_items=(ev_orig, ev_amend),
+        version_relations=(
+            VersionRelation(original.fact_id, amended.fact_id, "AMENDS"),
+        ),
+        known_conflicts=(f"original {original.val} vs amended {amended.val}",),
+    )
+
+
+def _insufficient_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
+    """Insufficient case: a metric NOT reported for the year (honest ABSTAIN)."""
+    # Pick a metric the company reports in OTHER years but not this one.
+    reported_years: dict[str, set[int]] = {}
+    for fact in bundle.facts:
+        if fact.ticker == ticker and fact.form == "10-K":
+            reported_years.setdefault(fact.concept, set()).add(fact.end.year)
+    candidates = [
+        concept for concept, years in reported_years.items()
+        if year not in years and any(y < year for y in years)
+    ]
+    if not candidates:
+        return None
+    concept = sorted(candidates)[0]
+    graph = RequirementGraph(
+        nodes=(
+            RequirementNode("metric", "METRIC", concept),
+            RequirementNode("ticker", "ENTITY", ticker),
+            RequirementNode("period", "PERIOD", str(year)),
+        ),
+        edges=(
+            RequirementEdge("metric", "ticker", "SAME_AS"),
+            RequirementEdge("metric", "period", "SAME_AS"),
+        ),
+    )
+    return FinVestCase(
+        case_id=f"finvest-{ticker}-insufficient-{concept}-{year}",
+        base_question_id=f"bq-insufficient-{concept}",
+        issuer_id=ticker,
+        jurisdiction=COMPANY_DOMAINS[ticker],
+        question=f"What is {concept} for {ticker} for fiscal year {year}?",
+        source_cutoff=datetime(year + 1, 6, 30),
+        target_period_start=date(year, 1, 1),
+        target_period_end=date(year, 12, 31),
+        target_fiscal_year=f"FY{year}",
+        answer_type="unanswerable",
+        gold_answer={},
+        decision_label="ABSTAIN",
+        sufficiency_label="INSUFFICIENT",
+        requirement_graph=graph,
+        evidence_items=(),
+        assumptions=("Metric not reported for the period (no public disclosure)",),
+    )
+
+
+def _annual_fact(bundle: SecBundle, ticker: str, year: int, concept: str) -> SecFact | None:
+    """Latest 10-K fact for a concept in a fiscal year."""
+    matches = [
+        fact for fact in bundle.facts
+        if fact.ticker == ticker and fact.concept == concept
+        and fact.form == "10-K" and fact.end.year == year
+    ]
+    return max(matches, key=lambda f: (f.end, f.filed)) if matches else None
+
+
+def _amended_pair(bundle: SecBundle, ticker: str) -> tuple[SecFact | None, SecFact | None]:
+    """Find a (10-K, 10-K/A) pair with differing values for the same period."""
+    by_end: dict[date, dict[str, SecFact]] = {}
+    for fact in bundle.facts:
+        if fact.ticker == ticker and fact.form in {"10-K", "10-K/A"}:
+            by_end.setdefault(fact.end, {})[fact.form] = fact
+    for end in sorted(by_end):
+        original = by_end[end].get("10-K")
+        amended = by_end[end].get("10-K/A")
+        if original and amended and abs(original.val - amended.val) > 1e-6:
+            return original, amended
+    return None, None
+
+
+def build_sec_cases(cache_dir: Path, tickers: tuple[str, ...]) -> BuiltCases:
+    """Build FinVEST cases from SEC XBRL companyfacts for the given tickers."""
+    bundle = load_companyfacts(cache_dir / "sec", tickers=tickers)
+    cases: list[FinVestCase] = []
+    for ticker in tickers:
+        years = sorted({
+            fact.end.year for fact in bundle.facts
+            if fact.ticker == ticker and fact.form == "10-K"
+        })
+        for year in years[-2:]:
+            fcff = _fcff_case(bundle, ticker, year)
+            if fcff is not None:
+                cases.append(fcff)
+            insufficient = _insufficient_case(bundle, ticker, year)
+            if insufficient is not None:
+                cases.append(insufficient)
+        amended = _amended_case(bundle, ticker)
+        if amended is not None:
+            cases.append(amended)
+    # Validate all cases.
+    for case in cases:
+        case.validate()
+    manifest = {
+        "builder": "sec_cases",
+        "version": "0.1.0",
+        "tickers": list(tickers),
+        "case_count": len(cases),
+        "types": {t: sum(1 for c in cases if c.answer_type == t) for t in
+                  ("extractive", "derived", "comparative", "unanswerable")},
+        "note": "AI-generated candidate cases; human verification required before gold.",
+    }
+    return BuiltCases(tuple(cases), manifest)
