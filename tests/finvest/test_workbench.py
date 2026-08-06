@@ -30,7 +30,7 @@ from finvest.human_study.web.services.signing_adapter import append_signed, is_s
 from finvest.human_study.day1_pilot import FREEZE_SEED, freeze_day1, verify_frozen
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_DAY1 = ROOT / "human_review" / "day1"
+REAL_DAY1 = ROOT / "human_review" / "day1" / "v0.1"
 CACHE = ROOT / "research" / "cache"
 
 

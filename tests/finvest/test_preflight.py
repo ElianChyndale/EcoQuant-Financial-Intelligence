@@ -16,7 +16,7 @@ from finvest.human_study.web.services.preflight import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_MANIFEST = ROOT / "human_review/day1/QUEUE_MANIFEST.json"
+REAL_MANIFEST = ROOT / "human_review/day1/v0.1/QUEUE_MANIFEST.json"
 CACHE = ROOT / "research/cache"
 
 

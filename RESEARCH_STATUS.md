@@ -26,9 +26,9 @@
 | Robustness perturbations (A7) | **ENGINEERING_COMPLETE** | 14 paired perturbations |
 | Transfer reporting (A8) | **ENGINEERING_COMPLETE** | Per-dataset reporting, no merged average |
 | Human study (A9) | **AWAITING_HUMAN_VALIDATION** | Protocol + interface ready; needs 24-30 human reviewers; day-1 single-reviewer pilot PREPARED (queues frozen, labels pending) — A9 NOT complete |
-| FinVEST day-1 pilot **v0.1** (22 base cases) | **INVALIDATED_BENCHMARK_CONSTRUCTION** | Cross-concept amendment pairing (`SalesRevenueNet` 10-K + `EntityPublicFloat` 10-K/A); hashes preserved; NOT human-validated. See `docs/human_workbench/V0_1_INVALIDATION.md` |
-| FinVEST day-1 pilot **v0.2** (21 base cases) | **CANDIDATE_QUEUE_REBUILT** | Repaired amendment identity (concept-period-unit-version); 1 valid version relation; audit passed. See `docs/human_workbench/V0_2_CASE_AUDIT.md`; human labels PENDING — `HUMAN_VERIFIED_PILOT` only after all 21 signed |
-| Paired conditions (day-1 pilot) | **12_CASE_QUEUE_FROZEN** | 2×6 stratified conditions frozen; `12_CASE_HUMAN_VALIDATED_PILOT` only after all 12 signed |
+| FinVEST day-1 pilot **v0.1** (22 base cases) | **INVALIDATED_BENCHMARK_CONSTRUCTION** | Cross-concept amendment pairing; immutable artifact preserved read-only at `human_review/day1/v0.1/`; NOT human-validated. See `docs/human_workbench/V0_1_INVALIDATION.md` |
+| FinVEST day-1 pilot **v0.2-draft** | **PARTIAL_REPAIR — SCIENTIFIC_AUDIT_INCOMPLETE** | Amendment identity repaired; canonical resolution + preflight in progress; **not** `READY_FOR_ANNOTATION`, `AUDIT COMPLETE`, or `PILOT VALIDATED`. Draft only at `human_review/day1/v0.2-draft/` |
+| Paired / blind / interface (v0.1) | **INVALIDATED_ARTIFACTS** | v0.1 queue variants are invalidated alongside v0.1; future variants are v0.2-draft artifacts pending freeze |
 | VISTA-Fin learned selector (day-1 pilot) | **INSUFFICIENT_DATA_FOR_TRAINING** | Gated runner ready (leave-one-issuer-out × 3 seeds, low-capacity logistic, inference-time features); 0 human labels → training skipped honestly; `PILOT_TRAINED_EXPLORATORY` after labels |
 | 2,000-case benchmark | **PLANNED** | 22 base cases now; scale-up needs more companies + annotation |
 | EcoQuant integration (A10) | **ENGINEERING_COMPLETE** | Evidence package + boundary enforced; architecture demo |

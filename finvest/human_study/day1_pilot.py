@@ -50,7 +50,8 @@ from finvest.set_selection.selectors import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-DAY1_DIR = ROOT / "human_review/day1"
+# v0.1 is an immutable, invalidated artifact under its own subdir (read-only).
+DAY1_DIR = ROOT / "human_review/day1/v0.1"
 CACHE_DIR = ROOT / "research/cache"
 
 # Frozen design constants (preregistered before any human label exists).
@@ -379,15 +380,30 @@ def _reviewer_base_view(cases: tuple[FinVestCase, ...]) -> list[dict[str, Any]]:
 
 def freeze_day1(
     seed: int = FREEZE_SEED,
-    day1_dir: Path = DAY1_DIR,
+    day1_dir: Path | None = None,
     *,
-    min_cases: int = 22,
+    min_cases: int | None = None,
+    protocol: object | None = None,
 ) -> dict[str, Any]:
     """Build and freeze all queues; write manifest, hashes, empty records.
 
-    ``min_cases`` defaults to 22 (v0.1 contract). A v0.2 freeze passes the
-    actual valid-case count.
+    Protocol-config-driven: the target directory, manifest id/version, queue
+    names, and record filenames come from ``ProtocolConfig``. Nothing hardcodes
+    ``22`` / ``base_22_queue`` / ``0.1.0``.
+
+    - v0.1 freeze: pass ``protocol=protocol_config.V0_1`` (immutable,
+      invalidated artifact; do not regenerate).
+    - v0.2 draft freeze: pass ``protocol=protocol_config.V0_2_DRAFT``, which
+      writes under ``human_review/day1/v0.2-draft/`` and derives the base-case
+      count from valid data.
     """
+    from .protocol_config import V0_1, ProtocolConfig
+
+    proto: ProtocolConfig = protocol or V0_1
+    if day1_dir is None:
+        day1_dir = proto.dir
+    if min_cases is None:
+        min_cases = proto.min_base_cases
     cases = build_base_queue(min_cases=min_cases)
     paired = build_paired_queue(cases, seed=seed)
     blind = select_blind_repeat(cases, seed=seed)
@@ -397,25 +413,25 @@ def freeze_day1(
 
     paired_rows, paired_token_map = _paired_reviewer_view(paired)
     sealed: dict[str, Any] = {
-        "base_22_queue": [asdict(c) for c in cases],
-        "paired_12_queue": [asdict(i) for i in paired],
-        "paired_12_token_map": paired_token_map,
-        "blind_repeat_5_selection": list(blind),
-        "interface_9_cases": interface,
+        f"{proto.base_queue_name}_queue": [asdict(c) for c in cases],
+        f"{proto.paired_queue_name}_queue": [asdict(i) for i in paired],
+        f"{proto.paired_queue_name}_token_map": paired_token_map,
+        f"{proto.blind_queue_name}_selection": list(blind),
+        f"{proto.interface_queue_name}_cases": interface,
         "split_manifest": split,
         "experiment_config": config,
     }
     reviewer_view: dict[str, Any] = {
-        "base_22": _reviewer_base_view(cases),
-        "paired_12": paired_rows,
-        "blind_repeat_5": [
+        proto.base_queue_name: _reviewer_base_view(cases),
+        proto.paired_queue_name: paired_rows,
+        proto.blind_queue_name: [
             {"temp_id": r["temp_id"],
              "question": next(
                  c.question for c in cases if c.case_id == r["case_id"]
              )}
             for r in blind
         ],
-        "interface_9": [
+        proto.interface_queue_name: [
             {"case_id": i["case_id"], "display_condition": i["display_condition"],
              "question": next(
                  c.question for c in cases if c.case_id == i["case_id"]
@@ -439,8 +455,8 @@ def freeze_day1(
     total = sha256_hex(canonical_json(components))
 
     manifest: dict[str, Any] = {
-        "manifest_id": "day1-human-validation-pilot",
-        "manifest_version": "0.1.0",
+        "manifest_id": proto.protocol_id,
+        "manifest_version": proto.manifest_version,
         "frozen_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "freeze_seed": seed,
         "policy_rules": list(POLICY_RULES),
@@ -467,7 +483,7 @@ def freeze_day1(
         encoding="utf-8",
     )
     _write_reviewer_sheet(reviewer_view, day1_dir)
-    _write_empty_human_records(day1_dir)
+    _write_empty_human_records(day1_dir, protocol=proto)
     return manifest
 
 
@@ -557,13 +573,19 @@ def _paired_reviewer_view(
     return rows_out, token_map
 
 
-def _write_empty_human_records(day1_dir: Path) -> None:
-    """Empty JSONL files: zero human records exist until the researcher signs."""
+def _write_empty_human_records(day1_dir: Path, protocol: object | None = None) -> None:
+    """Empty JSONL files: zero human records exist until the researcher signs.
+
+    Record filenames come from the protocol config, never hardcoded.
+    """
+    from .protocol_config import V0_1, ProtocolConfig
+
+    proto: ProtocolConfig = protocol or V0_1
     for name in (
-        "BASE_22_HUMAN_SIGNED.jsonl",
-        "PAIRED_12_HUMAN_SIGNED.jsonl",
-        "BLIND_REPEAT_5.jsonl",
-        "INTERFACE_PILOT_9.jsonl",
+        proto.base_record_file,
+        proto.paired_record_file,
+        proto.blind_record_file,
+        proto.interface_record_file,
     ):
         path = day1_dir / name
         path.touch(exist_ok=True)

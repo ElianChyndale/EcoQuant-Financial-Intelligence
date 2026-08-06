@@ -21,7 +21,7 @@ import pytest
 playwright = pytest.importorskip("playwright.sync_api")
 
 ROOT = Path(__file__).resolve().parents[2]
-REAL_DAY1 = ROOT / "human_review" / "day1"
+REAL_DAY1 = ROOT / "human_review" / "day1" / "v0.1"
 
 
 def _free_port() -> int:
