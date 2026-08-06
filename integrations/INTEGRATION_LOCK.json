@@ -1,0 +1,25 @@
+{
+  "schema_version": "finvest-integration-lock.v1",
+  "note": "Pinned tool-repo commits the FinVEST adapters are validated against. CI and releases should install these exact commits, not a moving default branch.",
+  "tools": {
+    "financial-ai-contracts": {
+      "version": "0.1.0",
+      "commit": "4b232218ad7a250ce03124d51dfa036082aee284",
+      "status": "clean",
+      "adapter": "integrations/contracts_adapter.py"
+    },
+    "financial-systems-verification-kit": {
+      "version": "0.1.0",
+      "commit": "b0b1024",
+      "status": "clean",
+      "note": "Extension (cashflow-proxy formula + mutants) committed at b0b1024.",
+      "adapter": "integrations/verification_kit_adapter.py"
+    },
+    "paper-reproduction-lab": {
+      "version": "0.1.0",
+      "commit": "9ca75082751c28ca46902f33fb8e269e4b79e05a",
+      "status": "clean",
+      "adapter": "integrations/reproduction_lab_adapter.py"
+    }
+  }
+}
