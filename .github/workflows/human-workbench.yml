@@ -1,0 +1,61 @@
+name: human-workbench
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,human-workbench]"
+          python -m playwright install chromium --with-deps
+
+      - name: Frozen v0.1 hash verification (no local cache required)
+        run: python -m experiments.a9_human.run_day1 verify
+
+      - name: Annotation CLI tests
+        run: python -m pytest tests/finvest/test_annotate_cli.py tests/finvest/test_day1_pilot.py -q
+
+      - name: Amendment-integrity + preflight tests (fixture-built)
+        run: python -m pytest tests/finvest/test_v02_amendment_integrity.py tests/finvest/test_preflight.py -q
+
+      - name: Workbench unit/integration tests
+        run: python -m pytest tests/finvest/test_workbench.py tests/finvest/test_workbench_smoke.py -q
+
+      - name: Real-browser Playwright E2E (isolated temp protocol)
+        run: python -m pytest tests/finvest/test_workbench_e2e.py -q
+
+      - name: A0 integrity gate
+        run: python -m experiments.a0_integrity.run
+
+      - name: Release validator
+        run: python -m finvest.release.validate
+
+      - name: Confirm zero human labels
+        run: |
+          python -c "
+          from pathlib import Path
+          day1 = Path('human_review/day1')
+          for name in ('BASE_22_HUMAN_SIGNED.jsonl','PAIRED_12_HUMAN_SIGNED.jsonl','BLIND_REPEAT_5.jsonl','INTERFACE_PILOT_9.jsonl'):
+              p = day1 / name
+              size = p.stat().st_size if p.exists() else 0
+              assert size == 0, f'{name} is not empty ({size} bytes)'
+          print('zero human labels confirmed')
+          "
