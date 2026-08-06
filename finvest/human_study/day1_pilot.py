@@ -116,12 +116,20 @@ def sha256_hex(text: str) -> str:
 # Queue construction (deterministic; no human labels involved)
 # ---------------------------------------------------------------------------
 
-def build_base_queue(cache_dir: Path = CACHE_DIR) -> tuple[FinVestCase, ...]:
-    """The 22 candidate SEC base cases (AI-generated; verification pending)."""
+def build_base_queue(
+    cache_dir: Path = CACHE_DIR, *, min_cases: int = 22
+) -> tuple[FinVestCase, ...]:
+    """The candidate SEC base cases (AI-generated; verification pending).
+
+    ``min_cases`` defaults to 22 (the frozen v0.1 expectation). The v0.2
+    repair legitimately changes the valid-case count, so callers that freeze a
+    fresh v0.2 queue pass the actual minimum rather than mutating the v0.1
+    contract.
+    """
     built = build_sec_cases(cache_dir, tickers=BASE_TICKERS)
-    if len(built.cases) < 22:
+    if len(built.cases) < min_cases:
         raise RuntimeError(
-            f"expected >= 22 candidate base cases, got {len(built.cases)}; "
+            f"expected >= {min_cases} candidate base cases, got {len(built.cases)}; "
             "cache may be incomplete"
         )
     for case in built.cases:
@@ -372,9 +380,15 @@ def _reviewer_base_view(cases: tuple[FinVestCase, ...]) -> list[dict[str, Any]]:
 def freeze_day1(
     seed: int = FREEZE_SEED,
     day1_dir: Path = DAY1_DIR,
+    *,
+    min_cases: int = 22,
 ) -> dict[str, Any]:
-    """Build and freeze all queues; write manifest, hashes, empty records."""
-    cases = build_base_queue()
+    """Build and freeze all queues; write manifest, hashes, empty records.
+
+    ``min_cases`` defaults to 22 (v0.1 contract). A v0.2 freeze passes the
+    actual valid-case count.
+    """
+    cases = build_base_queue(min_cases=min_cases)
     paired = build_paired_queue(cases, seed=seed)
     blind = select_blind_repeat(cases, seed=seed)
     interface = build_interface_cases(cases, seed=seed)

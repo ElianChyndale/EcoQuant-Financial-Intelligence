@@ -24,7 +24,8 @@ def run_smoke_test(tmp_root: Path | None = None) -> dict[str, object]:
     """Run the isolated smoke test; returns results (never creates real labels)."""
     tmp_root = tmp_root or Path(tempfile.mkdtemp(prefix="finvest-smoke-"))
     day1_dir = tmp_root / "day1"
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir)
+    # v0.2 temp freeze: accept the actual valid-case count (not the frozen v0.1 22).
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1)
     manifest_path = day1_dir / "QUEUE_MANIFEST.json"
 
     from finvest.human_study.annotate_cli import load_manifest

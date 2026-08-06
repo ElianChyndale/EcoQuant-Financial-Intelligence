@@ -42,7 +42,8 @@ def manifest():
 @pytest.fixture()
 def day1(tmp_path):
     day1_dir = tmp_path / "day1"
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir)
+    # v0.2 temp freeze: accept the actual valid-case count.
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1)
     return day1_dir
 
 

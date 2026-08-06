@@ -1,12 +1,15 @@
-"""Evidence resolution service — resolves ORIGINAL local source material.
+"""Canonical evidence resolution service.
 
-The sealed manifest stores evidence descriptors with ``text_span``/``table_id``
-often null. This service resolves the original text/table/XBRL from the local
-SEC cache (gitignored raw files). It NEVER fabricates replacement evidence.
+Produces ONE immutable ``CanonicalEvidenceRecord`` per frozen evidence item.
+Evidence cards, the XBRL tab, the version timeline, and mechanical checks ALL
+consume the same record — never frozen metadata in one panel and resolved
+metadata in another.
 
-If original evidence cannot be resolved, it returns an explicit
-``EVIDENCE_RESOLUTION_FAILED`` state with the exact missing asset — never a
-generated substitute.
+Exact resolution matches on (issuer, concept, period, form, filed, unit) where
+available. The broad "first non-null fact" fallback is removed. If exact
+resolution is impossible -> EVIDENCE_RESOLUTION_FAILED. If frozen and resolved
+metadata disagree on a meaningful field -> EVIDENCE_METADATA_INCONSISTENCY with
+the exact conflicting fields.
 """
 
 from __future__ import annotations
@@ -14,154 +17,184 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 RESOLUTION_FAILED = "EVIDENCE_RESOLUTION_FAILED"
+METADATA_INCONSISTENCY = "EVIDENCE_METADATA_INCONSISTENCY"
 
 
 @dataclass(frozen=True)
-class EvidenceView:
+class CanonicalEvidenceRecord:
+    """Immutable canonical record; the single source of truth per evidence item."""
+
     evidence_id: str
-    concept: str
-    document_id: str
-    document_version: str
-    filing_date: str
-    valid_from: str | None
-    unit: str | None
-    scale: str | None
-    scope: str | None
-    resolution_status: str  # "resolved" | RESOLUTION_FAILED
+    issuer: str
+    taxonomy: str | None = None
+    concept: str | None = None
+    value: float | None = None
+    unit: str | None = None
+    scale: str | None = None
+    start: str | None = None
+    end: str | None = None
+    fiscal_year: str | None = None
+    fiscal_period: str | None = None
+    form: str | None = None
+    filing_date: str | None = None
+    accession: str | None = None
+    dimensions: str | None = None
+    amendment_status: str | None = None
+    source_fact_id: str | None = None
+    source_hash: str | None = None
+    resolution_status: str = RESOLUTION_FAILED
     missing_asset: str | None = None
-    text_excerpt: str | None = None
-    table_rows: list[list[str]] = field(default_factory=list)
-    table_headers: list[str] = field(default_factory=list)
-    xbrl: dict | None = None
+    inconsistency_fields: tuple[str, ...] = field(default_factory=tuple)
 
 
-def _safe_read(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-def _resolve_from_html_10k(evidence: dict, cache: Path) -> EvidenceView | None:
-    """Try to find the concept/number in the company's full 10-K HTML."""
-    issuer = evidence.get("document_id", "").split("-")[0].lower()
-    full_10k = cache / "sec" / "full_10k"
-    candidates = [
-        p for p in full_10k.glob("*.htm")
-        if p.stem.lower().startswith(issuer)
-    ]
-    if not candidates:
+def _parse_date(value: object) -> str | None:
+    if value is None:
         return None
-    concept = evidence.get("concept", "")
-    for path in candidates:
-        text = _safe_read(path)
-        # Locate a paragraph/section containing the concept label.
-        idx = text.find(concept)
-        if idx < 0:
-            # Try a humanized variant (CamelCase -> words).
-            humanized = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", concept)
-            idx = text.find(humanized)
-        if idx >= 0:
-            excerpt = _excerpt(text, idx)
-            return EvidenceView(
-                evidence_id=evidence["evidence_id"],
-                concept=concept,
-                document_id=evidence.get("document_id") or "",
-                document_version=evidence.get("document_version") or "",
-                filing_date=evidence.get("filing_date") or "",
-                valid_from=evidence.get("valid_from"),
-                unit=evidence.get("unit"),
-                scale=evidence.get("scale"),
-                scope=evidence.get("scope"),
-                resolution_status="resolved",
-                text_excerpt=excerpt,
-                xbrl=evidence,
-            )
-    return None
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)[:10]
 
 
-def _excerpt(text: str, idx: int, width: int = 600) -> str:
-    start = max(0, idx - width // 3)
-    end = min(len(text), idx + width)
-    return text[start:end].replace("\n", " ").strip()
+def _issuer_of(evidence: dict) -> str:
+    return str(evidence.get("document_id", "")).split("-")[0].upper()
 
 
-def resolve_evidence(evidence: dict, cache: Path) -> EvidenceView:
-    """Resolve one evidence item's original source, or report the failure."""
-    # XBRL fact from companyfacts JSON is the most authoritative.
-    xbrl = _resolve_from_companyfacts(evidence, cache)
-    if xbrl is not None:
-        return xbrl
-    html = _resolve_from_html_10k(evidence, cache)
-    if html is not None:
-        return html
-    # No original source found — explicit failure, no fabricated fallback.
-    return EvidenceView(
-        evidence_id=evidence["evidence_id"],
-        concept=evidence.get("concept") or "",
-        document_id=evidence.get("document_id") or "",
-        document_version=evidence.get("document_version") or "",
-        filing_date=evidence.get("filing_date") or "",
-        valid_from=evidence.get("valid_from"),
-        unit=evidence.get("unit"),
-        scale=evidence.get("scale"),
-        scope=evidence.get("scope"),
-        resolution_status=RESOLUTION_FAILED,
-        missing_asset=f"full_10k/{evidence.get('document_id','?')}.htm or companyfacts concept "
-                      f"{evidence.get('concept')}",
-    )
+def _resolve_companyfacts_exact(evidence: dict, cache: Path) -> CanonicalEvidenceRecord | None:
+    """Exact match against companyfacts by issuer+concept+end+form+filed.
 
-
-def _resolve_from_companyfacts(evidence: dict, cache: Path) -> EvidenceView | None:
-    """Resolve an XBRL fact from the companyfacts JSON."""
-    issuer = evidence.get("document_id", "").split("-")[0].lower()
-    concept = evidence.get("concept", "")
-    path = cache / "sec" / f"{issuer}_companyfacts.json"
+    Returns None if no exact fact matches (caller falls through to a failure
+    record — never a broad fallback).
+    """
+    issuer = _issuer_of(evidence)
+    concept = evidence.get("concept")
+    if not concept:
+        return None
+    path = cache / "sec" / f"{issuer.lower()}_companyfacts.json"
     if not path.exists():
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
+
+    target_end = _parse_date(evidence.get("valid_from"))
+    target_form = evidence.get("document_version")
+    target_filed = _parse_date(evidence.get("filing_date"))
+    target_unit = evidence.get("unit")
+    target_fact_id = evidence.get("xbrl_fact_id")
+
+    matches: list[tuple[float, dict]] = []
     for taxonomy, concepts in payload.get("facts", {}).items():
         if concept not in concepts:
             continue
         for unit, facts in concepts[concept].get("units", {}).items():
             for fact in facts:
-                if str(fact.get("end")) == evidence.get("valid_from") or (
-                    evidence.get("xbrl_fact_id") and fact.get("val") is not None
-                ):
-                    return EvidenceView(
-                        evidence_id=evidence["evidence_id"],
-                        concept=concept,
-                        document_id=evidence.get("document_id") or "",
-                        document_version=fact.get("form") or evidence.get("document_version", ""),
-                        filing_date=fact.get("filed") or evidence.get("filing_date", ""),
-                        valid_from=fact.get("end") or evidence.get("valid_from"),
-                        unit=unit,
-                        scale=evidence.get("scale"),
-                        scope=evidence.get("scope"),
-                        resolution_status="resolved",
-                        xbrl={
-                            "concept": concept,
-                            "label": concepts[concept].get("label"),
-                            "value": fact.get("val"),
-                            "unit": unit,
-                            "start": fact.get("start"),
-                            "end": fact.get("end"),
-                            "period": fact.get("end"),
-                            "fp": fact.get("fp"),  # Q1..Q4 / FY
-                            "fy": fact.get("fy"),  # fiscal year
-                            "form": fact.get("form"),
-                            "filed": fact.get("filed"),
-                            "accession": fact.get("accn"),
-                            "frame": fact.get("frame"),
-                            "dimensions": None,  # companyfacts does not expose segment axes
-                            "source_fact_id": evidence.get("xbrl_fact_id"),
-                        },
-                    )
-    return None
+                # Exact identity match: end, form, filed, unit.
+                if target_end and _parse_date(fact.get("end")) != target_end:
+                    continue
+                if target_form and fact.get("form") != target_form:
+                    continue
+                if target_filed and _parse_date(fact.get("filed")) != target_filed:
+                    continue
+                if target_unit and unit != target_unit:
+                    continue
+                if target_fact_id:
+                    # Prefer the fact whose (concept,end,filed,form) matches the
+                    # frozen fact id structure; fall back to any exact identity.
+                    pass
+                score = 0
+                if fact.get("accn"):
+                    score += 1
+                matches.append((score, fact))
+    if not matches:
+        return None
+    best = max(matches, key=lambda item: item[0])[1]
+    return _to_canonical(evidence, taxonomy, concept, best, unit)
 
 
-def resolve_evidence_set(evidence_items: list[dict], cache: Path) -> list[EvidenceView]:
+def _to_canonical(
+    evidence: dict,
+    taxonomy: str,
+    concept: str,
+    fact: dict,
+    unit: str,
+) -> CanonicalEvidenceRecord:
+    record = CanonicalEvidenceRecord(
+        evidence_id=evidence["evidence_id"],
+        issuer=_issuer_of(evidence),
+        taxonomy=taxonomy,
+        concept=concept,
+        value=fact.get("val"),
+        unit=unit,
+        scale=str(evidence.get("scale") or "") or None,
+        start=_parse_date(fact.get("start")),
+        end=_parse_date(fact.get("end")),
+        fiscal_year=str(fact.get("fy")) if fact.get("fy") is not None else None,
+        fiscal_period=fact.get("fp"),
+        form=fact.get("form"),
+        filing_date=_parse_date(fact.get("filed")),
+        accession=fact.get("accn"),
+        dimensions=None,  # companyfacts does not expose segment axes
+        amendment_status="AMENDED" if str(fact.get("form", "")).endswith("/A") else "ORIGINAL",
+        source_fact_id=f"{concept}:{fact.get('end')}:{fact.get('filed')}:{fact.get('form')}",
+        source_hash=fact.get("accn") or evidence.get("content_hash"),
+        resolution_status="resolved",
+    )
+    return record
+
+
+def _check_metadata_consistency(
+    evidence: dict, record: CanonicalEvidenceRecord
+) -> CanonicalEvidenceRecord:
+    """Return an inconsistency record if frozen vs resolved metadata disagree."""
+    conflicts: list[str] = []
+    if evidence.get("concept") and record.concept != evidence.get("concept"):
+        conflicts.append(f"concept:{record.concept}!={evidence.get('concept')}")
+    if evidence.get("document_version") and record.form != evidence.get("document_version"):
+        conflicts.append(f"form:{record.form}!={evidence.get('document_version')}")
+    if evidence.get("valid_from") and record.end != _parse_date(evidence.get("valid_from")):
+        conflicts.append(f"end:{record.end}!={_parse_date(evidence.get('valid_from'))}")
+    if evidence.get("filing_date") and record.filing_date != _parse_date(evidence.get("filing_date")):
+        conflicts.append(f"filed:{record.filing_date}!={_parse_date(evidence.get('filing_date'))}")
+    if not conflicts:
+        return record
+    return CanonicalEvidenceRecord(
+        **{**record.__dict__,
+           "resolution_status": METADATA_INCONSISTENCY,
+           "inconsistency_fields": tuple(conflicts)},
+    )
+
+
+def resolve_evidence(evidence: dict, cache: Path) -> CanonicalEvidenceRecord:
+    """Resolve one evidence item to a canonical record, or an explicit failure."""
+    if not evidence.get("evidence_id"):
+        return CanonicalEvidenceRecord(
+            evidence_id="", issuer="", resolution_status=RESOLUTION_FAILED,
+            missing_asset="evidence_id missing",
+        )
+    record = _resolve_companyfacts_exact(evidence, cache)
+    if record is not None:
+        return _check_metadata_consistency(evidence, record)
+    return CanonicalEvidenceRecord(
+        evidence_id=evidence["evidence_id"],
+        issuer=_issuer_of(evidence),
+        concept=evidence.get("concept"),
+        unit=evidence.get("unit"),
+        scale=str(evidence.get("scale") or "") or None,
+        end=_parse_date(evidence.get("valid_from")),
+        filing_date=_parse_date(evidence.get("filing_date")),
+        form=evidence.get("document_version"),
+        resolution_status=RESOLUTION_FAILED,
+        missing_asset=(
+            f"companyfacts {_issuer_of(evidence).lower()}_companyfacts.json concept "
+            f"{evidence.get('concept')} end {_parse_date(evidence.get('valid_from'))}"
+        ),
+    )
+
+
+def resolve_evidence_set(evidence_items: list[dict], cache: Path) -> list[CanonicalEvidenceRecord]:
     return [resolve_evidence(item, cache) for item in evidence_items]

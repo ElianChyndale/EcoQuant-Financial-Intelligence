@@ -30,61 +30,61 @@
           <div class="resolution-failed">
             <strong>EVIDENCE_RESOLUTION_FAILED</strong> — missing: {{ ev.missing_asset }}
           </div>
+        {% elif ev.resolution_status == "EVIDENCE_METADATA_INCONSISTENCY" %}
+          <div class="resolution-failed">
+            <strong>EVIDENCE_METADATA_INCONSISTENCY</strong> — {{ ev.inconsistency_fields }}
+          </div>
         {% else %}
           <label class="evidence-select">
             <input type="checkbox" class="ev-support" data-eid="{{ ev.evidence_id }}"> SUPPORT
             <input type="checkbox" class="ev-minimal" data-eid="{{ ev.evidence_id }}"> MINIMAL
           </label>
           <code class="eid">{{ ev.evidence_id }}</code>
-          <p class="excerpt">{{ ev.text_excerpt or "Original text unavailable — see TAB/XBRL." }}</p>
+          <p class="value">{{ ev.value }} <span class="unit">{{ ev.unit }}</span></p>
           <span class="concept">{{ ev.concept }}</span> ·
-          <span class="docmeta">{{ ev.document_version }} · {{ ev.filing_date }}</span>
+          <span class="docmeta">{{ ev.form }} · {{ ev.filing_date }} · accn {{ ev.accession }}</span>
         {% endif %}
       </div>
       {% endfor %}
     </div>
 
     <div class="tab-panel" data-panel="table">
+      <p class="muted">Original table structure is resolved from the source filing; see TEXT/XBRL for the canonical fact.</p>
       {% for ev in resolved_evidence %}
-        {% if ev.table_headers %}
-        <table class="evidence-table">
-          <thead><tr>{% for h in ev.table_headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
-          <tbody>{% for row in ev.table_rows %}<tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
-        </table>
-        {% else %}
-        <p class="muted">No original table structure available for this evidence item.</p>
+        {% if ev.resolution_status == "resolved" %}
+        <div class="version-row">{{ ev.concept }} · {{ ev.value }} {{ ev.unit }} · {{ ev.form }} {{ ev.filing_date }}</div>
         {% endif %}
       {% endfor %}
     </div>
 
     <div class="tab-panel" data-panel="xbrl">
       {% for ev in resolved_evidence %}
-        {% if ev.xbrl %}
+        {% if ev.resolution_status in ("resolved", "EVIDENCE_METADATA_INCONSISTENCY") %}
         <div class="evidence-item">
           <code class="eid">{{ ev.evidence_id }}</code>
           <table class="xbrl-table">
             <tbody>
-              <tr><th>Concept</th><td>{{ ev.xbrl.concept }}</td></tr>
-              <tr><th>Value</th><td>{{ ev.xbrl.value }} <span class="unit">{{ ev.xbrl.unit }}</span></td></tr>
-              <tr><th>Unit</th><td>{{ ev.xbrl.unit }}</td></tr>
-              <tr><th>Period</th><td>{{ ev.xbrl.start or "—" }} → {{ ev.xbrl.end or "—" }}</td></tr>
-              <tr><th>Fiscal period</th><td>FY{{ ev.xbrl.fy }} {{ ev.xbrl.fp }}</td></tr>
+              <tr><th>Concept</th><td>{{ ev.concept }}</td></tr>
+              <tr><th>Value</th><td>{{ ev.value }} <span class="unit">{{ ev.unit }}</span></td></tr>
+              <tr><th>Unit</th><td>{{ ev.unit }}</td></tr>
+              <tr><th>Period</th><td>{{ ev.start or "—" }} → {{ ev.end or "—" }}</td></tr>
+              <tr><th>Fiscal period</th><td>FY{{ ev.fiscal_year }} {{ ev.fiscal_period }}</td></tr>
               <tr><th>Dimensions</th>
                 <td>
-                  {% if ev.xbrl.dimensions %}{{ ev.xbrl.dimensions }}{% else %}
+                  {% if ev.dimensions %}{{ ev.dimensions }}{% else %}
                   <span class="muted">Not exposed by companyfacts — see original XBRL filing for segment axes</span>
                   {% endif %}
                 </td>
               </tr>
-              <tr><th>Filing date</th><td>{{ ev.xbrl.filed }}</td></tr>
-              <tr><th>Accession</th><td><code>{{ ev.xbrl.accession or "—" }}</code></td></tr>
-              <tr><th>Form type</th><td>{{ ev.xbrl.form }}</td></tr>
-              <tr><th>Frame</th><td>{{ ev.xbrl.frame or "—" }}</td></tr>
+              <tr><th>Filing date</th><td>{{ ev.filing_date }}</td></tr>
+              <tr><th>Accession</th><td><code>{{ ev.accession or "—" }}</code></td></tr>
+              <tr><th>Form type</th><td>{{ ev.form }}</td></tr>
+              <tr><th>Amendment</th><td>{{ ev.amendment_status }}</td></tr>
             </tbody>
           </table>
         </div>
-        {% else %}
-        <p class="muted">No XBRL fact descriptor available.</p>
+        {% elif ev.resolution_status == "EVIDENCE_RESOLUTION_FAILED" %}
+        <div class="resolution-failed"><strong>EVIDENCE_RESOLUTION_FAILED</strong> — {{ ev.missing_asset }}</div>
         {% endif %}
       {% endfor %}
     </div>
@@ -92,7 +92,7 @@
     <div class="tab-panel" data-panel="version">
       <p class="muted">Version timeline and amendment relationships.</p>
       {% for ev in resolved_evidence %}
-        <div class="version-row">{{ ev.document_version }} · {{ ev.filing_date }}</div>
+        <div class="version-row">{{ ev.form }} · {{ ev.filing_date }} · {{ ev.amendment_status }}</div>
       {% endfor %}
     </div>
 
