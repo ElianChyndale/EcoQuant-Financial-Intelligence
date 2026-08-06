@@ -21,7 +21,9 @@ dev = ["pytest>=8.0", "playwright>=1.40"]
 human-workbench = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
-    "jinja2>=3.1",
+    # jinja2 3.1.6+ has a regression with FastAPI's Jinja2Templates
+    # (TypeError: unhashable type 'dict' in _load_template).
+    "jinja2>=3.1,<3.1.6",
     "python-multipart>=0.0.9",
     "itsdangerous>=2.1",
     "httpx>=0.27",  # test client / outbound-block probe
