@@ -4,19 +4,29 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.local_real_data
-
 from finvest.benchmark.builders.sec_cases import build_sec_cases
 from finvest.benchmark.conditions import generate_conditions
 from finvest.benchmark.schemas import EVIDENCE_CONDITIONS
+from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "research/cache"
 
 
 @pytest.fixture(scope="module")
-def built():
-    return build_sec_cases(CACHE, tickers=("AAPL", "MSFT", "KO"))
+def built(tmp_path_factory: pytest.TempPathFactory):
+    """Cases built from the committed SEC fixture (runs in CI, no cache)."""
+    tmp = tmp_path_factory.mktemp("sec-cache")
+    sec = tmp / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in ("AAPL", "MSFT", "KO"):
+        (sec / f"{ticker.lower()}_companyfacts.json").write_text(
+            fixture_json, encoding="utf-8"
+        )
+    return build_sec_cases(tmp, tickers=("AAPL", "MSFT", "KO"), fixture=True)
 
 
 def test_builder_produces_cases(built) -> None:
@@ -65,7 +75,8 @@ def test_conditions_generate_paired_instances(built) -> None:
 
 
 def test_conditions_cover_financial_specifics(built) -> None:
-    case = built.cases[0]
+    # Use a case WITH >= 2 evidence items (insufficient cases have none).
+    case = next(c for c in built.cases if len(c.evidence_items) >= 2)
     instances = generate_conditions(case)
     condition_set = {i.condition for i in instances}
     # At least the financially-relevant conditions are generated for a case

@@ -20,7 +20,6 @@ CACHE = ROOT / "research/cache"
 
 # v0.2 amendment-integrity checks run against the COMMITTED fixture (never the
 # gitignored SEC cache), so CI exercises the amendment/version constraints.
-pytestmark = pytest.mark.local_real_data
 
 
 def _amended_cases(built) -> list:

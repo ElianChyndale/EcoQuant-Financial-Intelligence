@@ -4,8 +4,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.local_real_data
-
+from finvest.fixtures.full_10k_fixture import FIXTURE_DIR as FULL_10K_FIXTURE_DIR
 from finvest.retrieval.full_corpus import build_full_corpus, bm25_retrieve, dense_retrieve
 from finvest.retrieval.metrics import (
     all_required_evidence_recall,
@@ -22,28 +21,36 @@ CACHE = ROOT / "research/cache"
 
 @pytest.fixture(scope="module")
 def corpus():
-    return build_full_corpus(CACHE)
+    # Committed full 10-K HTML fixture (2 documents) — runs in CI, no cache.
+    return build_full_corpus(CACHE, corpus_dir=FULL_10K_FIXTURE_DIR)
 
 
 def test_full_corpus_builds(corpus) -> None:
-    assert len(corpus.units) > 1000  # 6 full 10-Ks → many evidence units
-    assert len(corpus.documents) >= 6
+    assert len(corpus.units) > 5  # the synthetic fixture has paragraphs+tables
+    assert len(corpus.documents) >= 2
     for doc in corpus.documents:
         assert doc in corpus.by_document
 
 
 def test_bm25_retrieves_relevant_units(corpus) -> None:
-    results = bm25_retrieve(corpus, "Apple total revenue fiscal 2025", top_k=20)
-    assert len(results) == 20
-    assert [r.rank for r in results] == list(range(1, 21))
+    results = bm25_retrieve(corpus, "total assets fiscal 2024", top_k=20)
+    assert len(results) == min(20, len(corpus.units))
+    assert [r.rank for r in results] == list(range(1, len(results) + 1))
     # Sorted by descending score.
     scores = [r.score for r in results]
     assert scores == sorted(scores, reverse=True)
 
 
+DENSE_MODEL_DIR = ROOT / "research/cache/models/all-MiniLM-L6-v2"
+
+
+@pytest.mark.skipif(
+    not DENSE_MODEL_DIR.exists(),
+    reason="dense embedding model cache absent (gitignored)",
+)
 def test_dense_retrieves(corpus) -> None:
-    results = dense_retrieve(corpus, "Microsoft net income fiscal 2025", top_k=10)
-    assert len(results) == 10
+    results = dense_retrieve(corpus, "net income fiscal 2025", top_k=10)
+    assert len(results) == min(10, len(corpus.units))
 
 
 def test_metrics_basic() -> None:

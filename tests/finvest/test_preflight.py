@@ -27,8 +27,6 @@ ROOT = Path(__file__).resolve().parents[2]
 REAL_MANIFEST = ROOT / "human_review/day1/v0.1/QUEUE_MANIFEST.json"
 CACHE = ROOT / "research/cache"
 
-pytestmark = pytest.mark.local_real_data
-
 
 @pytest.fixture(scope="module")
 def fixture_env(tmp_path_factory: pytest.TempPathFactory) -> tuple[dict, Path]:

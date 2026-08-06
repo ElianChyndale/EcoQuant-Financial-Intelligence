@@ -92,10 +92,11 @@ def test_manifest_structure_intact(manifest) -> None:
 # C. EVIDENCE
 # ---------------------------------------------------------------------------
 
-def test_all_22_base_cases_resolve_or_report_failure(manifest) -> None:
+def test_all_22_base_cases_resolve_or_report_failure(manifest, day1: Path) -> None:
+    cache = day1.parent / "cache"  # fixture-built cache (CI-safe)
     failures = []
     for case in _base_cases(manifest):
-        views = resolve_evidence_set(case["evidence_items"], CACHE)
+        views = resolve_evidence_set(case["evidence_items"], cache)
         for v in views:
             if v.resolution_status == RESOLUTION_FAILED:
                 failures.append((case["case_id"], v.missing_asset))
@@ -103,7 +104,7 @@ def test_all_22_base_cases_resolve_or_report_failure(manifest) -> None:
     # may legitimately fail if the local cache lacks the source, but each must
     # produce an explicit failure state (never a fabricated fallback).
     for case in _base_cases(manifest):
-        views = resolve_evidence_set(case["evidence_items"], CACHE)
+        views = resolve_evidence_set(case["evidence_items"], cache)
         assert len(views) == len(case["evidence_items"])  # one view per item
         for v in views:
             assert v.resolution_status in ("resolved", RESOLUTION_FAILED)
@@ -119,13 +120,13 @@ def test_evidence_ids_traceable(manifest) -> None:
         assert ev["concept"]
 
 
-def test_missing_source_is_explicit_failure(manifest) -> None:
+def test_missing_source_is_explicit_failure(manifest, day1: Path) -> None:
     fake_evidence = {
         "evidence_id": "X", "concept": "NoSuchConceptXYZ",
         "document_id": "ZZZ-10-K-2000", "document_version": "10-K",
         "filing_date": "2000-01-01", "unit": "USD", "scale": "1", "scope": "x",
     }
-    view = resolve_evidence_set([fake_evidence], CACHE)[0]
+    view = resolve_evidence_set([fake_evidence], day1.parent / "cache")[0]
     assert view.resolution_status == RESOLUTION_FAILED
     assert view.missing_asset  # names what is missing
 
