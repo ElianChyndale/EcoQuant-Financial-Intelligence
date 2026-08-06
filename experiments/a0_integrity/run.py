@@ -29,9 +29,25 @@ def run_a0() -> dict[str, object]:
     from finvest.benchmark.leakage_audit import audit_source_for_gold
 
     # 3. Data hashes: cache manifests exist for each dataset adapter.
+    #    Uses the committed SEC fixture (CI-safe; never the gitignored cache).
     from finvest.benchmark.builders.sec_cases import build_sec_cases
+    from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 
-    built = build_sec_cases(ROOT / "research/cache", tickers=("AAPL", "MSFT", "KO"))
+    tmp_cache = ROOT / "research/cache"  # real cache if present
+    if not (tmp_cache / "sec/aapl_companyfacts.json").exists():
+        import tempfile
+
+        tmp_cache = Path(tempfile.mkdtemp(prefix="a0-sec-"))
+        sec = tmp_cache / "sec"
+        sec.mkdir(parents=True, exist_ok=True)
+        fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+            encoding="utf-8"
+        )
+        for ticker in ("AAPL", "MSFT", "KO"):
+            (sec / f"{ticker.lower()}_companyfacts.json").write_text(
+                fixture_json, encoding="utf-8"
+            )
+    built = build_sec_cases(tmp_cache, tickers=("AAPL", "MSFT", "KO"))
     gates["sec_case_builder_valid"] = len(built.cases) > 10
     gates["cases_validated"] = all(
         (lambda c: (c.validate(), True)[1])(c) for c in built.cases
