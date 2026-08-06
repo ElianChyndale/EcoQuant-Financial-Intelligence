@@ -73,13 +73,18 @@ def _definition_statement(
 
 
 def _period_key(record: Any) -> str:
-    """Fiscal-year key for table columns from a resolved record."""
-    fy = getattr(record, "fiscal_year", None)
-    if fy:
-        return f"FY{fy}"
+    """Fiscal-year key for table columns from a resolved record.
+
+    Uses the PERIOD's own year (end/start) — never the filing-context
+    fiscal_year label, which can point at a LATER filing that merely shows
+    this period as comparative figures.
+    """
     end = getattr(record, "end", None)
     if end:
-        return str(end)[:4]
+        return f"FY{str(end)[:4]}"
+    start = getattr(record, "start", None)
+    if start:
+        return f"FY{str(start)[:4]}"
     return "—"
 
 

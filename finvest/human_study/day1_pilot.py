@@ -499,18 +499,27 @@ def freeze_day1(
         + f"{total}  TOTAL\n",
         encoding="utf-8",
     )
-    _write_reviewer_sheet(reviewer_view, day1_dir)
+    _write_reviewer_sheet(reviewer_view, day1_dir, protocol=proto)
     _write_empty_human_records(day1_dir, protocol=proto)
     return manifest
 
 
-def _write_reviewer_sheet(reviewer_view: dict[str, Any], day1_dir: Path) -> None:
+def _write_reviewer_sheet(
+    reviewer_view: dict[str, Any],
+    day1_dir: Path,
+    protocol: object | None = None,
+) -> None:
     """Display-safe reviewer sheet (no candidate labels, no conditions).
 
     This is the ONLY sanctioned display surface for annotation. The sealed
     sections of QUEUE_MANIFEST.json must stay closed until the researcher's
     first-pass labels are frozen (policy rule 2).
+
+    Queue names come from the protocol config (never hardcoded v0.1 names).
     """
+    from .protocol_config import V0_1, ProtocolConfig
+
+    proto: ProtocolConfig = protocol or V0_1
     lines = [
         "# Day-1 Reviewer Sheet (display-safe)",
         "",
@@ -518,37 +527,37 @@ def _write_reviewer_sheet(reviewer_view: dict[str, Any], day1_dir: Path) -> None
         "scores, gold labels, and condition identities are NOT shown here.",
         "See ANNOTATION_GUIDELINE.md before starting.",
         "",
-        "## 22 base cases (first pass)",
+        f"## {proto.base_queue_name} (first pass)",
         "",
         "| Case ID | Question | Evidence (id · document · concept · period) |",
         "|---|---|---|",
     ]
-    for row in reviewer_view["base_22"]:
+    for row in reviewer_view[proto.base_queue_name]:
         evidence = "; ".join(
             f"{e['evidence_id']} · {e['document_id']} · {e.get('concept')} · "
             f"{e.get('valid_from')}"
             for e in row["evidence"]
         ) or "(no evidence descriptor provided — verify against SEC source)"
         lines.append(f"| {row['case_id']} | {row['question']} | {evidence} |")
-    lines += ["", "## 12 paired cases (condition identity hidden)", ""]
+    lines += ["", f"## {proto.paired_queue_name} (condition identity hidden)", ""]
     lines.append("| Token | Question | Evidence (id · document · concept · period) |")
     lines.append("|---|---|---|")
-    for row in reviewer_view["paired_12"]:
+    for row in reviewer_view[proto.paired_queue_name]:
         evidence = "; ".join(
             f"{e['evidence_id']} · {e['document_id']} · {e.get('concept')} · "
             f"{e.get('valid_from')}"
             for e in row["evidence"]
         )
         lines.append(f"| {row['review_token']} | {row['question']} | {evidence} |")
-    lines += ["", "## 5 blind repeats (second pass, temp IDs)", ""]
+    lines += ["", f"## {proto.blind_queue_name} (second pass, temp IDs)", ""]
     lines.append("| Temp ID | Question |")
     lines.append("|---|---|")
-    for row in reviewer_view["blind_repeat_5"]:
+    for row in reviewer_view[proto.blind_queue_name]:
         lines.append(f"| {row['temp_id']} | {row['question']} |")
-    lines += ["", "## 9 interface-pilot cases (display condition IS shown)", ""]
+    lines += ["", f"## {proto.interface_queue_name} (display condition IS shown)", ""]
     lines.append("| Case ID | Display condition | Question |")
     lines.append("|---|---|---|")
-    for row in reviewer_view["interface_9"]:
+    for row in reviewer_view[proto.interface_queue_name]:
         lines.append(
             f"| {row['case_id']} | {row['display_condition']} | {row['question']} |"
         )

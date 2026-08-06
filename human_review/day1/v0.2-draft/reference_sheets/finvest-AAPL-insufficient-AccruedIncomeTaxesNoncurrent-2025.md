@@ -5,18 +5,32 @@
 ## Question
 What is AccruedIncomeTaxesNoncurrent for AAPL for fiscal year 2025?
 
-**Term definition:** Definition of metric to be confirmed by the researcher.
+## Metric definition (explicit)
+本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。
 
-**Answer type:** unanswerable
-**Source cutoff:** 2026-06-30 00:00:00
-**Target period:** 2025-01-01 -> 2025-12-31
+**Assumptions:**
+- Metric not reported for the period (no public disclosure)
 
-## Evidence
+## Original evidence table
 
-## Calculation
-—
+_无已解析证据（无法从单页判断）。_
 
-**Decision:** ABSTAIN · **Sufficiency:** INSUFFICIENT
+数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。
+
+## Independent calculation (inputs only — recompute yourself)
+
+_本 case 无计算程序（直接提取/事实性问题）。_
+
+## Time & version card
+
+- Target period: FY2025
+- Source cutoff: 2026-06-30 00:00:00
+*若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。*
+
+## Machine candidate (NOT the researcher's answer)
+- Decision: **ABSTAIN** · Sufficiency: **INSUFFICIENT**
+- 机器候选判定。研究者必须独立重算并与本候选对照后才能接受。
+
 
 ## Researcher review (candidate)
 - [ ] I understand the question
@@ -24,7 +38,7 @@ What is AccruedIncomeTaxesNoncurrent for AAPL for fiscal year 2025?
 - [ ] I agree the metric definition
 - [ ] I agree the period
 - [ ] I agree the unit
-- [ ] I can recompute the answer
+- [ ] I recomputed the answer independently and it matches
 - [ ] The minimal evidence is sufficient
 - [ ] No ambiguity found
 

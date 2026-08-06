@@ -235,13 +235,23 @@ def _insufficient_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase
 
 
 def _annual_fact(bundle: SecBundle, ticker: str, year: int, concept: str) -> SecFact | None:
-    """Latest 10-K fact for a concept in a fiscal year."""
+    """10-K fact for a concept in a fiscal year.
+
+    Prefers the ORIGINAL filing for that period: companyfacts stores the same
+    period in multiple filings (the original 10-K and later 10-Ks that show
+    comparative figures). The fact whose fiscal-year label matches the target
+    year is the original; later filings are only a fallback.
+    """
     matches = [
         fact for fact in bundle.facts
         if fact.ticker == ticker and fact.concept == concept
         and fact.form == "10-K" and fact.end.year == year
     ]
-    return max(matches, key=lambda f: (f.end, f.filed)) if matches else None
+    if not matches:
+        return None
+    original = [f for f in matches if f.fiscal_year == year]
+    pool = original or matches
+    return max(pool, key=lambda f: (f.end, f.filed))
 
 
 def _amended_pair(bundle: SecBundle, ticker: str) -> tuple[SecFact | None, SecFact | None]:
