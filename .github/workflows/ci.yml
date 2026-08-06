@@ -36,8 +36,9 @@ jobs:
           python -m pytest tests/integration/ -v
 
       - name: Run FinVEST tests (committed fixtures, no cache)
+        # E2E needs the Playwright browser, installed only in human-workbench.
         run: |
-          python -m pytest tests/finvest/ -q
+          python -m pytest tests/finvest/ -q --ignore=tests/finvest/test_workbench_e2e.py
 
   lint:
     runs-on: ubuntu-latest
