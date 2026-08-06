@@ -60,7 +60,29 @@
     <div class="tab-panel" data-panel="xbrl">
       {% for ev in resolved_evidence %}
         {% if ev.xbrl %}
-        <pre class="xbrl">{{ ev.xbrl | tojson(indent=2) }}</pre>
+        <div class="evidence-item">
+          <code class="eid">{{ ev.evidence_id }}</code>
+          <table class="xbrl-table">
+            <tbody>
+              <tr><th>Concept</th><td>{{ ev.xbrl.concept }}</td></tr>
+              <tr><th>Value</th><td>{{ ev.xbrl.value }} <span class="unit">{{ ev.xbrl.unit }}</span></td></tr>
+              <tr><th>Unit</th><td>{{ ev.xbrl.unit }}</td></tr>
+              <tr><th>Period</th><td>{{ ev.xbrl.start or "—" }} → {{ ev.xbrl.end or "—" }}</td></tr>
+              <tr><th>Fiscal period</th><td>FY{{ ev.xbrl.fy }} {{ ev.xbrl.fp }}</td></tr>
+              <tr><th>Dimensions</th>
+                <td>
+                  {% if ev.xbrl.dimensions %}{{ ev.xbrl.dimensions }}{% else %}
+                  <span class="muted">Not exposed by companyfacts — see original XBRL filing for segment axes</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr><th>Filing date</th><td>{{ ev.xbrl.filed }}</td></tr>
+              <tr><th>Accession</th><td><code>{{ ev.xbrl.accession or "—" }}</code></td></tr>
+              <tr><th>Form type</th><td>{{ ev.xbrl.form }}</td></tr>
+              <tr><th>Frame</th><td>{{ ev.xbrl.frame or "—" }}</td></tr>
+            </tbody>
+          </table>
+        </div>
         {% else %}
         <p class="muted">No XBRL fact descriptor available.</p>
         {% endif %}

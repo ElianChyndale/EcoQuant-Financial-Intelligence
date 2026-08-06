@@ -149,9 +149,14 @@ def _resolve_from_companyfacts(evidence: dict, cache: Path) -> EvidenceView | No
                             "unit": unit,
                             "start": fact.get("start"),
                             "end": fact.get("end"),
+                            "period": fact.get("end"),
+                            "fp": fact.get("fp"),  # Q1..Q4 / FY
+                            "fy": fact.get("fy"),  # fiscal year
                             "form": fact.get("form"),
                             "filed": fact.get("filed"),
+                            "accession": fact.get("accn"),
                             "frame": fact.get("frame"),
+                            "dimensions": None,  # companyfacts does not expose segment axes
                             "source_fact_id": evidence.get("xbrl_fact_id"),
                         },
                     )
