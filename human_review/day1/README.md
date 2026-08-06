@@ -77,6 +77,55 @@ The blind repeat refuses to start until all 22 base cases are signed AND the
 frozen 4-hour waiting period has elapsed. During pass 2 it hides all pass-1
 labels, notes, evidence selections, and confidence.
 
+## Evidence Review Workbench (optional web UI)
+
+The workbench is a local-only web interface for the same annotation flow. It
+uses the same authoritative signing/schema/queue logic and never writes signed
+JSONL directly. It binds to 127.0.0.1, performs no outbound network calls, and
+keeps drafts/sessions in a gitignored SQLite database.
+
+```bash
+# Install (optional dependency group).
+python -m pip install -e ".[human-workbench]"
+
+# Start the workbench (opens the default browser; resume first unfinished case).
+python -m experiments.a9_human.run_day1 serve --reviewer-id ELIAN_PRIMARY
+
+# Isolated smoke test (never touches real JSONL).
+python -m experiments.a9_human.run_day1 serve --reviewer-id TEST_REVIEWER \
+    --smoke-test --no-browser
+```
+
+URL: `http://127.0.0.1:8765`. Optional flags: `--host 127.0.0.1 --port 8765
+--no-browser --mode base|paired|interface|blind --case-id <ID> --resume`.
+
+### Researcher workflow (both CLI and workbench are equivalent)
+
+1. annotate and sign 22 base cases;
+2. annotate and sign 12 paired cases;
+3. complete 9 interface cases;
+4. wait at least four hours;
+5. complete 5 blind repeats;
+6. run `reliability`;
+7. run `vista`;
+8. personally complete `RESEARCHER_REFLECTION.md`;
+9. run the final integrity gates below.
+
+### Final commands
+
+```bash
+python -m experiments.a9_human.run_day1 status
+python -m experiments.a9_human.run_day1 verify
+python -m experiments.a9_human.run_day1 reliability
+python -m experiments.a9_human.run_day1 vista
+python -m experiments.a0_integrity.run
+python -m finvest.release.validate
+pytest tests/finvest/
+```
+
+See `docs/human_workbench/` for architecture, scientific boundaries, security
+model, evidence resolution, human-factors design, test report, and smoke test.
+
 ## Rules (summary)
 
 AI never fills, infers, or signs human labels. No inter-rater claims. No
