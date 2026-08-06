@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Evidence Review Workbench — Dashboard</h1>
+<p class="markers">EXPLORATORY_PILOT · SMALL_SAMPLE · NOT_PAPER_HEADLINE</p>
+<table class="queues">
+  <thead>
+    <tr><th>Queue</th><th>Signed</th><th>Total</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.queue }}</td>
+      <td>{{ row.signed }}</td>
+      <td>{{ row.total }}</td>
+      <td>{{ "complete" if row.complete else "in progress" }}</td>
+      <td><a href="/dashboard/{{ row.queue }}">open</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

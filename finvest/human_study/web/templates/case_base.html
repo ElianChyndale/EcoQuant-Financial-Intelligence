@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="case-layout">
+  <!-- Left: question + frozen metadata + requirements -->
+  <section class="panel question-panel">
+    <h2>Case {{ key }} <span class="queue-tag">{{ queue }}</span></h2>
+    {% if signed %}<div class="signed-badge">SIGNED</div>{% endif %}
+    <p class="question">{{ view.question }}</p>
+    <dl class="meta">
+      <dt>Issuer</dt><dd>{{ view.issuer or "—" }}</dd>
+      <dt>Source cutoff</dt><dd>{{ view.source_cutoff or "—" }}</dd>
+      <dt>Target period</dt><dd>{{ view.target_period or "—" }}</dd>
+    </dl>
+  </section>
+
+  <!-- Center: original evidence with tabs -->
+  <section class="panel evidence-panel">
+    <ul class="tabs" role="tablist">
+      <li><button class="tab active" data-tab="text">TEXT</button></li>
+      <li><button class="tab" data-tab="table">TABLE</button></li>
+      <li><button class="tab" data-tab="xbrl">XBRL</button></li>
+      <li><button class="tab" data-tab="version">VERSION</button></li>
+      <li><button class="tab" data-tab="context">CONTEXT</button></li>
+    </ul>
+
+    <div class="tab-panel active" data-panel="text">
+      {% for ev in resolved_evidence %}
+      <div class="evidence-item" data-eid="{{ ev.evidence_id }}">
+        {% if ev.resolution_status == "EVIDENCE_RESOLUTION_FAILED" %}
+          <div class="resolution-failed">
+            <strong>EVIDENCE_RESOLUTION_FAILED</strong> — missing: {{ ev.missing_asset }}
+          </div>
+        {% else %}
+          <label class="evidence-select">
+            <input type="checkbox" class="ev-support" data-eid="{{ ev.evidence_id }}"> SUPPORT
+            <input type="checkbox" class="ev-minimal" data-eid="{{ ev.evidence_id }}"> MINIMAL
+          </label>
+          <code class="eid">{{ ev.evidence_id }}</code>
+          <p class="excerpt">{{ ev.text_excerpt or "Original text unavailable — see TAB/XBRL." }}</p>
+          <span class="concept">{{ ev.concept }}</span> ·
+          <span class="docmeta">{{ ev.document_version }} · {{ ev.filing_date }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" data-panel="table">
+      {% for ev in resolved_evidence %}
+        {% if ev.table_headers %}
+        <table class="evidence-table">
+          <thead><tr>{% for h in ev.table_headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+          <tbody>{% for row in ev.table_rows %}<tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+        </table>
+        {% else %}
+        <p class="muted">No original table structure available for this evidence item.</p>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" data-panel="xbrl">
+      {% for ev in resolved_evidence %}
+        {% if ev.xbrl %}
+        <pre class="xbrl">{{ ev.xbrl | tojson(indent=2) }}</pre>
+        {% else %}
+        <p class="muted">No XBRL fact descriptor available.</p>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" data-panel="version">
+      <p class="muted">Version timeline and amendment relationships.</p>
+      {% for ev in resolved_evidence %}
+        <div class="version-row">{{ ev.document_version }} · {{ ev.filing_date }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="tab-panel" data-panel="context">
+      <p class="muted">Local permitted-document context expansion (no internet, no LLM).</p>
+    </div>
+  </section>
+
+  <!-- Right: human judgement form -->
+  <section class="panel judgement-panel">
+    <h3>Human Judgement</h3>
+    <p class="hint">Judgement values are entered by the researcher. AI never recommends a label.</p>
+    <form id="judgement-form" data-queue="{{ queue }}" data-key="{{ key }}" data-reviewer="{{ reviewer }}">
+      <label>Question valid
+        <select name="question_valid">
+          <option value="">—</option>
+          <option>VALID</option><option>AMBIGUOUS</option><option>INVALID</option>
+          <option>REVIEW_UNRESOLVED</option>
+        </select>
+      </label>
+      <label>Answerability
+        <select name="answerability">
+          <option value="">—</option>
+          <option>ANSWERABLE</option><option>UNANSWERABLE</option>
+          <option>REVIEW_UNRESOLVED</option>
+        </select>
+      </label>
+      <label>Sufficiency
+        <select name="sufficiency">
+          <option value="">—</option>
+          <option>SUPPORTED</option><option>PARTIAL</option><option>INSUFFICIENT</option>
+          <option>CONFLICTING</option><option>REFUTED</option><option>REVIEW_UNRESOLVED</option>
+        </select>
+      </label>
+      <label>Route
+        <select name="route">
+          <option value="">—</option>
+          <option>ANSWER</option><option>REVIEW</option><option>ABSTAIN</option>
+          <option>REVIEW_UNRESOLVED</option>
+        </select>
+      </label>
+      <label>Confidence
+        <select name="reviewer_confidence">
+          <option value="">—</option>
+          {% for i in range(1, 6) %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Rationale
+        <textarea name="reviewer_notes" rows="3" placeholder="Explain why the selected evidence is or is not sufficient."></textarea>
+      </label>
+      <input type="hidden" name="supporting_evidence_ids" id="supporting-ids">
+      <input type="hidden" name="minimal_evidence_ids" id="minimal-ids">
+      <div class="form-actions">
+        <button type="button" id="save-draft">Save draft (Ctrl+S)</button>
+        <button type="button" id="open-final-review">Review & sign (Ctrl+Enter)</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- Neutral mechanical checks -->
+<section class="panel checks-panel">
+  <h3>Neutral mechanical checks</h3>
+  <ul class="checks">
+    {% for check in checks %}
+    <li class="check {{ 'ok' if check.ok else ('warn' if check.ok is false else 'na') }}">
+      <span class="check-name">{{ check.name }}</span>: {{ check.statement }}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<!-- Final review + signing (requires typed SIGN) -->
+<div id="final-review-modal" hidden>
+  <h3>Final record review</h3>
+  <pre id="final-record-json"></pre>
+  <label>Type to sign: <input id="sign-confirm" placeholder="SIGN <case-key>"></label>
+  <button id="do-sign">Sign</button>
+</div>
+{% endblock %}

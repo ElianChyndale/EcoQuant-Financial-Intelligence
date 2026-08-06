@@ -133,6 +133,43 @@ def cmd_correct(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    """Start the local-only evidence review workbench (localhost binding)."""
+    import uvicorn
+
+    # Loopback-only by default; refuse non-loopback without the explicit flag.
+    if args.host not in ("127.0.0.1", "localhost", "::1") and not args.allow_unsafe_host:
+        raise CliError(
+            f"--host {args.host!r} is not loopback; bind only to 127.0.0.1 "
+            "(pass --allow-unsafe-host only for explicit local development)"
+        )
+    # Smoke test uses an isolated workbench DB path (never the real one).
+    if args.smoke_test:
+        from finvest.human_study.web.app import DB_PATH
+
+        DB_PATH_override = ROOT / "research/cache/workbench/smoke_test.sqlite"
+        # Patch the DB path for the smoke run by importing the app with override.
+        import finvest.human_study.web.app as app_mod
+
+        app_mod.DB_PATH = DB_PATH_override
+    if not args.no_browser and not args.smoke_test:
+        import threading
+        import time
+        import webbrowser
+
+        def _open() -> None:
+            time.sleep(1.0)
+            webbrowser.open(f"http://{args.host}:{args.port}")
+
+        threading.Thread(target=_open, daemon=True).start()
+    print(f"workbench on http://{args.host}:{args.port} (reviewer {args.reviewer_id})")
+    print("markers: EXPLORATORY_PILOT · SMALL_SAMPLE · NOT_PAPER_HEADLINE")
+    from finvest.human_study.web.app import app
+
+    uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m experiments.a9_human.run_day1",
@@ -173,6 +210,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_correct.add_argument("--reason", required=True)
 
     p_vista = sub.add_parser("vista", help="gated VISTA pilot run")
+
+    p_serve = sub.add_parser("serve", help="local-only evidence review workbench")
+    p_serve.add_argument("--reviewer-id", default="ELIAN_PRIMARY",
+                         help="pseudonymous signing identifier")
+    p_serve.add_argument("--host", default="127.0.0.1", help="bind address")
+    p_serve.add_argument("--port", type=int, default=8765, help="bind port")
+    p_serve.add_argument("--no-browser", action="store_true", help="do not open a browser")
+    p_serve.add_argument("--mode", choices=["base", "paired", "interface", "blind"],
+                         default="base")
+    p_serve.add_argument("--case-id", help="open one case")
+    p_serve.add_argument("--resume", action="store_true", help="resume first unfinished case")
+    p_serve.add_argument("--smoke-test", action="store_true",
+                         help="isolated smoke test; never touches real JSONL")
+    p_serve.add_argument("--allow-unsafe-host", action="store_true",
+                         help="allow non-loopback binding (development only)")
     return parser
 
 
@@ -186,6 +238,7 @@ COMMANDS = {
     "review-draft": cmd_review_draft,
     "sign": cmd_sign,
     "correct": cmd_correct,
+    "serve": cmd_serve,
 }
 
 
