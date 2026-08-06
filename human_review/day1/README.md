@@ -24,14 +24,62 @@ PENDING**. Nothing in this directory is a human label yet.
 
 1. `python -m experiments.a9_human.run_day1 verify` — confirm hashes match
    before you start.
-2. Annotate using `REVIEWER_SHEET.md`; never open the `sealed` section of
-   the manifest before first-pass labels are frozen.
+2. Annotate using the neutral CLI (below), or `REVIEWER_SHEET.md`; never open
+   the `sealed` section of the manifest before first-pass labels are frozen.
 3. After signing, re-run `verify` (hashes unchanged — human records are NOT
    hashed components; the queues must not change).
 4. `python -m experiments.a9_human.run_day1 reliability`
 5. `python -m experiments.a9_human.run_day1 vista`
 
+## Annotation CLI (strictly neutral, human-controlled)
+
+The CLI never infers, recommends, or displays candidate labels / model
+predictions / scores / prior answers; it never auto-signs; it never changes the
+frozen queues or hashes. It only displays frozen questions + permitted
+evidence, collects literal human input, validates types/enums/evidence IDs,
+saves unsigned drafts (Ctrl+C-safe), shows the completed draft, and requests an
+explicit typed signature.
+
+```bash
+# Verify frozen hashes before starting.
+python -m experiments.a9_human.run_day1 verify
+
+# Status: signed counts, unsigned drafts, blind gate, violations.
+python -m experiments.a9_human.run_day1 status
+
+# Annotate (resume skips already-signed cases).
+python -m experiments.a9_human.run_day1 annotate base --reviewer-id ELIAN_PRIMARY --resume
+python -m experiments.a9_human.run_day1 annotate paired --reviewer-id ELIAN_PRIMARY --resume
+python -m experiments.a9_human.run_day1 annotate interface --reviewer-id ELIAN_PRIMARY --resume
+python -m experiments.a9_human.run_day1 annotate blind --reviewer-id ELIAN_PRIMARY  # pass 2, gated
+
+# Optional scoping flags.
+python -m experiments.a9_human.run_day1 annotate base --reviewer-id ELIAN_PRIMARY --limit 5
+python -m experiments.a9_human.run_day1 annotate base --reviewer-id ELIAN_PRIMARY --case-id <case_id>
+python -m experiments.a9_human.run_day1 annotate base --reviewer-id ELIAN_PRIMARY --start-at <case_id>
+
+# Review an unsigned draft exactly as stored (no suggestions).
+python -m experiments.a9_human.run_day1 review-draft <case_id>
+
+# Sign a saved draft (requires typing SIGN <case_id>).
+python -m experiments.a9_human.run_day1 sign <case_id> --reviewer-id ELIAN_PRIMARY
+
+# Amend a signed record (appends a NEW record + audit entry; never overwrites).
+python -m experiments.a9_human.run_day1 correct <case_id> --queue base \
+    --reviewer-id ELIAN_PRIMARY --reason "correction reason"
+
+# Analysis (after both blind passes).
+python -m experiments.a9_human.run_day1 reliability
+python -m experiments.a9_human.run_day1 vista
+```
+
+The blind repeat refuses to start until all 22 base cases are signed AND the
+frozen 4-hour waiting period has elapsed. During pass 2 it hides all pass-1
+labels, notes, evidence selections, and confidence.
+
 ## Rules (summary)
 
 AI never fills, infers, or signs human labels. No inter-rater claims. No
 significance claims. No A9 COMPLETE status. Unresolved cases are preserved.
+Human records are NOT hashed components; the queues and hashes must never
+change.

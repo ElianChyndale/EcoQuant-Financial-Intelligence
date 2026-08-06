@@ -666,42 +666,54 @@ def numeric_agreement(a: Any, b: Any, tolerance: float = 1e-6) -> bool:
     return abs(a_num - b_num) / max(abs(a_num), abs(b_num), 1e-12) <= tolerance
 
 
-def compute_intra_rater(records: list[dict[str, Any]]) -> dict[str, Any]:
-    """Descriptive within-reviewer reliability for the 5 blind repeats.
+def compute_intra_rater(
+    base_records: list[dict[str, Any]],
+    blind_records: list[dict[str, Any]],
+    selection: list[dict[str, str]],
+) -> dict[str, Any]:
+    """Descriptive within-reviewer reliability: base pass-1 vs blind pass-2.
 
-    Records carry ``temp_id`` and ``pass`` (1 or 2); records without a pass
-    field default to pass 1. Pairs are joined by temp_id where BOTH passes
-    exist. Report: categorical agreement, Cohen's kappa with small-sample
+    Pass 1 = the researcher's signed base annotation of the case
+    (BASE_22_HUMAN_SIGNED.jsonl). Pass 2 = the blind re-annotation under the
+    temporary ID (BLIND_REPEAT_5.jsonl, ``pass: 2``). Pairs join via the
+    frozen selection map (``temp_id -> case_id``); a pair exists only when
+    both records are signed.
+
+    Reports: categorical agreement, Cohen's kappa with a small-sample
     warning, evidence-set Jaccard, entity/period/unit agreement, numeric
     agreement. Never revise labels to increase agreement.
     """
-    by_temp: dict[str, dict[int, dict[str, Any]]] = {}
-    for rec in records:
-        temp_id = rec.get("temp_id")
-        if temp_id is None:
-            continue
-        pass_no = int(rec.get("pass", 1))
-        by_temp.setdefault(temp_id, {})[pass_no] = rec
-
-    paired = [v for v in by_temp.values() if 1 in v and 2 in v]
+    base_by_case: dict[str, dict[str, Any]] = {}
+    for rec in base_records:
+        if rec.get("signed_by") and rec.get("timestamp") and rec.get("case_id"):
+            base_by_case[rec["case_id"]] = rec  # last record wins
+    blind_by_temp: dict[str, dict[str, Any]] = {}
+    for rec in blind_records:
+        if rec.get("signed_by") and rec.get("timestamp") and rec.get("temp_id"):
+            blind_by_temp[rec["temp_id"]] = rec
+    paired: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for row in selection:
+        p0 = base_by_case.get(row.get("case_id", ""))
+        p1 = blind_by_temp.get(row.get("temp_id", ""))
+        if p0 is not None and p1 is not None:
+            paired.append((p0, p1))
     if not paired:
         return {
             "n_paired": 0,
             "status": "NO_DATA",
-            "note": "both blind-repeat passes must be frozen and signed before "
-                    "reliability can be computed",
+            "note": "the signed base record and the signed blind pass-2 record "
+                    "must both exist for at least one of the 5 selected cases "
+                    "before reliability can be computed",
         }
 
     final_answer_pairs = [
-        (str(v[1].get("final_answer_or_null")), str(v[2].get("final_answer_or_null")))
-        for v in paired
+        (str(p0.get("final_answer_or_null")), str(p1.get("final_answer_or_null")))
+        for p0, p1 in paired
     ]
     kappa = cohen_kappa(final_answer_pairs)
 
     def _field_agreement(field: str) -> float:
-        agree = sum(
-            1 for v in paired if v[1].get(field) == v[2].get(field)
-        )
+        agree = sum(1 for p0, p1 in paired if p0.get(field) == p1.get(field))
         return agree / len(paired)
 
     return {
@@ -711,16 +723,16 @@ def compute_intra_rater(records: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "cohens_kappa": kappa,
         "evidence_set_jaccard": evidence_jaccard(
-            [set(v[1].get("supporting_evidence_ids") or []) for v in paired],
-            [set(v[2].get("supporting_evidence_ids") or []) for v in paired],
+            [set(p0.get("supporting_evidence_ids") or []) for p0, _ in paired],
+            [set(p1.get("supporting_evidence_ids") or []) for _, p1 in paired],
         ),
         "entity_agreement": round(_field_agreement("entity"), 4),
         "period_agreement": round(_field_agreement("target_period"), 4),
         "unit_agreement": round(_field_agreement("unit_and_scale"), 4),
         "numeric_agreement": round(
-            sum(1 for v in paired
-                if numeric_agreement(v[1].get("final_answer_or_null"),
-                                     v[2].get("final_answer_or_null")))
+            sum(1 for p0, p1 in paired
+                if numeric_agreement(p0.get("final_answer_or_null"),
+                                     p1.get("final_answer_or_null")))
             / len(paired), 4,
         ),
         "markers": list(PILOT_MARKERS),

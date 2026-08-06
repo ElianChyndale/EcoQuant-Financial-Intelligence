@@ -229,27 +229,67 @@ def test_numeric_agreement() -> None:
 
 
 def test_compute_intra_rater_no_data() -> None:
-    result = compute_intra_rater([])
+    result = compute_intra_rater([], [], [])
     assert result["status"] == "NO_DATA"
 
 
 def test_compute_intra_rater_fixture_pair() -> None:
-    records = []
-    for temp_id in ("br-01", "br-02", "br-03", "br-04", "br-05"):
-        for pass_no, answer in ((1, 129.8), (2, 129.8)):
-            records.append({
-                "temp_id": temp_id, "pass": pass_no,
-                "final_answer_or_null": answer,
-                "entity": "AAPL", "target_period": "FY2024",
-                "unit_and_scale": "USD", "supporting_evidence_ids": ["e1", "e2"],
-            })
-    result = compute_intra_rater(records)
+    selection = [
+        {"temp_id": f"br-{i + 1:02d}", "case_id": f"case-{i + 1}"}
+        for i in range(5)
+    ]
+    base = [
+        {
+            "case_id": f"case-{i + 1}", "signed_by": "r",
+            "timestamp": "2026-08-06T00:00:00+00:00",
+            "final_answer_or_null": 129.8, "entity": "AAPL",
+            "target_period": "FY2024", "unit_and_scale": "USD",
+            "supporting_evidence_ids": ["e1", "e2"],
+        }
+        for i in range(5)
+    ]
+    blind = [
+        {
+            "temp_id": f"br-{i + 1:02d}", "pass": 2, "signed_by": "r",
+            "timestamp": "2026-08-06T04:00:00+00:00",
+            "final_answer_or_null": 129.8, "entity": "AAPL",
+            "target_period": "FY2024", "unit_and_scale": "USD",
+            "supporting_evidence_ids": ["e1", "e2"],
+        }
+        for i in range(5)
+    ]
+    result = compute_intra_rater(base, blind, selection)
     assert result["n_paired"] == 5
     assert result["categorical_agreement"] == 1.0
     assert result["cohens_kappa"]["kappa"] == 1.0
     assert result["evidence_set_jaccard"]["mean_jaccard"] == 1.0
+    assert result["entity_agreement"] == 1.0
     assert result["numeric_agreement"] == 1.0
     assert "EXPLORATORY_PILOT" in result["markers"]
+
+
+def test_compute_intra_rater_pairs_via_selection_map() -> None:
+    selection = [{"temp_id": "br-01", "case_id": "case-a"}]
+    base = [{
+        "case_id": "case-a", "signed_by": "r", "timestamp": "2026-08-06T00:00:00+00:00",
+        "final_answer_or_null": 129.8, "entity": "AAPL", "target_period": "FY2024",
+        "unit_and_scale": "USD", "supporting_evidence_ids": ["e1"],
+    }]
+    blind = [{
+        "temp_id": "br-01", "pass": 2, "signed_by": "r",
+        "timestamp": "2026-08-06T04:00:00+00:00",
+        "final_answer_or_null": 130.0, "entity": "AAPL", "target_period": "FY2024",
+        "unit_and_scale": "USD", "supporting_evidence_ids": ["e1", "e2"],
+    }]
+    result = compute_intra_rater(base, blind, selection)
+    assert result["n_paired"] == 1
+    # 129.8 vs 130.0: numeric disagreement at tolerance 1e-6, categorical too.
+    assert result["numeric_agreement"] == 0.0
+    assert result["categorical_agreement"] == 0.0
+    assert result["evidence_set_jaccard"]["mean_jaccard"] == 0.5
+    # Unpaired temp_ids are ignored.
+    result2 = compute_intra_rater(base, blind, [{"temp_id": "br-99", "case_id": "case-a"}])
+    assert result2["status"] == "NO_DATA"
 
 
 # ---------------------------------------------------------------------------
