@@ -179,6 +179,36 @@ def _time_version_card(
     }
 
 
+def _raw_rows(records: list[Any]) -> list[dict[str, Any]]:
+    """RAW source rows for verification: the exact companyfacts JSON row the
+    resolver matched, so a researcher can verify the numbers independently.
+
+    Each row is the verbatim source record (val/start/end/accn/filed/fy/fp/form)
+    plus the file it came from and the file's sha256 — no transcription.
+    """
+    rows: list[dict[str, Any]] = []
+    for rec in records:
+        if getattr(rec, "resolution_status", "") != "resolved":
+            continue
+        rows.append({
+            "concept": getattr(rec, "concept", None),
+            "taxonomy": getattr(rec, "taxonomy", None),
+            "val": getattr(rec, "value", None),
+            "unit": getattr(rec, "unit", None),
+            "start": str(getattr(rec, "start", "") or ""),
+            "end": str(getattr(rec, "end", "") or ""),
+            "fy": getattr(rec, "fiscal_year", None),
+            "fp": getattr(rec, "fiscal_period", None),
+            "form": getattr(rec, "form", None),
+            "filed": str(getattr(rec, "filing_date", "") or ""),
+            "accn": getattr(rec, "accession", None),
+            "source_file": "research/cache/sec/{issuer}_companyfacts.json".format(
+                issuer=(getattr(rec, "issuer", "") or "").lower()),
+            "source_hash": getattr(rec, "source_hash", None),
+        })
+    return rows
+
+
 def _machine_fields(records: list[Any]) -> list[dict[str, Any]]:
     """Technical details: full machine identity (collapsed section only)."""
     fields: list[dict[str, Any]] = []
@@ -227,6 +257,7 @@ def build_evidence_package(
             "assumptions": assumptions,
         },
         "evidence_table": _evidence_table(resolved),
+        "raw_rows": _raw_rows(resolved),  # VERIFICATION GATE: raw source rows
         "calculation": _calculation_inputs(sealed_case, resolved),
         "time_version": _time_version_card(view, resolved),
         "machine": _machine_fields(resolved),
