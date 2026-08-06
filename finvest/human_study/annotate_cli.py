@@ -696,12 +696,18 @@ def _confirm_and_append(
 def blind_earliest(
     manifest: dict[str, Any], day1_dir: Path, now: datetime | None = None
 ) -> tuple[bool, str]:
-    """(ready, human-readable reason) for the blind repeat (pass 2)."""
+    """(ready, human-readable reason) for the blind repeat (pass 2).
+
+    The required base count is the ACTUAL queue size from the manifest's
+    reviewer_view (22 for the frozen v0.1 protocol, 21 for the repaired
+    v0.2), not a hardcoded constant.
+    """
     now = now or _utcnow()
+    required = len(manifest["reviewer_view"].get("base_22", []))
     base_index = signed_index(record_file(day1_dir, "base"), "base")
-    if len(base_index) < 22:
+    if len(base_index) < required:
         return False, (
-            f"pending: {len(base_index)}/22 base labels signed (all 22 "
+            f"pending: {len(base_index)}/{required} base labels signed (all {required} "
             f"required, then +{BLIND_MIN_WAIT_HOURS}h)"
         )
     timestamps = [_parse_ts(record["timestamp"]) for record in base_index.values()]
@@ -715,7 +721,7 @@ def blind_earliest(
     return False, (
         f"not before {earliest.isoformat()} (wait remaining: "
         f"{hours}h {minutes}m; protocol requires +{BLIND_MIN_WAIT_HOURS}h "
-        f"after all 22 base labels are signed)"
+        f"after all {required} base labels are signed)"
     )
 
 

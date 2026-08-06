@@ -75,7 +75,7 @@ class FakeIO:
 @pytest.fixture()
 def env(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
     day1 = tmp_path / "day1"
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1)
     manifest = json.loads((day1 / "QUEUE_MANIFEST.json").read_text(encoding="utf-8"))
     return day1, manifest
 
@@ -117,7 +117,7 @@ def case_ids(manifest: dict[str, Any]) -> list[str]:
 def seed_base_signed(
     day1: Path, manifest: dict[str, Any], *, hours_ago: float, notes: str | None = None
 ) -> None:
-    """Fixture: mark all 22 base cases signed (timestamps only — not labels)."""
+    """Fixture: mark all base cases signed (timestamps only — not labels)."""
     ts = (datetime.now(timezone.utc) - timedelta(hours=hours_ago)).isoformat(
         timespec="seconds"
     )
@@ -390,7 +390,7 @@ def test_blind_requires_all_22_base_signed(env: tuple[Path, dict[str, Any]]) -> 
         for case_id in case_ids(manifest)[:3]
     ]
     record_file(day1, "base").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    with pytest.raises(CliError, match="3/22"):
+    with pytest.raises(CliError, match="3/"):
         run_annotate(
             manifest, "blind",
             AnnotateOptions(reviewer_id="ELIAN_PRIMARY"),
