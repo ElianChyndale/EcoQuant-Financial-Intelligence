@@ -1,0 +1,118 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0001193125-09-214859",
+        "concept": "AccruedLiabilitiesCurrent",
+        "filing_date": "2009-10-27",
+        "form": "10-K",
+        "label": "Accrued liabilities, current",
+        "period": "FY2008",
+        "unit": "USD",
+        "value": "3,719,000,000"
+      },
+      {
+        "accession": "0001193125-10-012091",
+        "concept": "AccruedLiabilitiesCurrent",
+        "filing_date": "2010-01-25",
+        "form": "10-K/A",
+        "label": "Accrued liabilities, current",
+        "period": "FY2008",
+        "unit": "USD",
+        "value": "4,224,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "AAPL",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+      "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+    ],
+    "source_cutoff": "2010-01-25 00:00:00",
+    "target_fiscal_year": "2008",
+    "target_period_end": "2008-09-27"
+  },
+  "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+  "raw_rows": [
+    {
+      "accn": "0001193125-09-214859",
+      "concept": "AccruedLiabilitiesCurrent",
+      "end": "2008-09-27",
+      "filed": "2009-10-27",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2009",
+      "source_file": "research/cache/sec/aapl_companyfacts.json",
+      "source_hash": "52343026847b8d2648e36237a90dc25186cf5e6f1f277f327e1ff5bdeffa87e4",
+      "start": "",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 3719000000.0
+    },
+    {
+      "accn": "0001193125-10-012091",
+      "concept": "AccruedLiabilitiesCurrent",
+      "end": "2008-09-27",
+      "filed": "2010-01-25",
+      "form": "10-K/A",
+      "fp": "FY",
+      "fy": "2009",
+      "source_file": "research/cache/sec/aapl_companyfacts.json",
+      "source_hash": "c7cafae0113a904642dc2f02a3fd2742c9abc5c39600c4810c9c712c126350df",
+      "start": "",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 4224000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0001193125-09-214859",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2009-10-27",
+        "fiscal_year": "2009",
+        "form": "10-K",
+        "label": "Accrued liabilities, current",
+        "period": "— → 2008-09-27"
+      },
+      {
+        "accession": "0001193125-10-012091",
+        "after_target": true,
+        "amendment": "AMENDED",
+        "filing_date": "2010-01-25",
+        "fiscal_year": "2009",
+        "form": "10-K/A",
+        "label": "Accrued liabilities, current",
+        "period": "— → 2008-09-27"
+      }
+    ],
+    "source_cutoff": "2010-01-25 00:00:00",
+    "target_period": "2008"
+  }
+}

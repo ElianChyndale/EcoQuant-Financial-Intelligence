@@ -1,0 +1,146 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": true,
+    "inputs": [
+      {
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "label": "Net cash provided by operating activities",
+        "raw_value": 110543000000.0,
+        "unit": "USD",
+        "value": "110,543,000,000"
+      },
+      {
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "raw_value": 10959000000.0,
+        "unit": "USD",
+        "value": "10,959,000,000"
+      }
+    ],
+    "note": "请根据上方两个输入独立计算并填写结果；机器候选答案在提交前不会显示。",
+    "operation": "first input − second input (absolute value where the source reports a negative outflow)"
+  },
+  "case_id": "finvest-AAPL-cashflow-proxy-2023",
+  "definition": {
+    "assumptions": [
+      "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+    ],
+    "contested": false,
+    "statement": "本题按以下显式定义计算：first input − second input (absolute value where the source reports a negative outflow)。输入项分别为 OperatingCashFlow 和 CapitalExpenditure。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000320193-23-000106",
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "filing_date": "2023-11-03",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "FY2023",
+        "unit": "USD",
+        "value": "110,543,000,000"
+      },
+      {
+        "accession": "0000320193-23-000106",
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "filing_date": "2023-11-03",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "FY2023",
+        "unit": "USD",
+        "value": "10,959,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "AAPL",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "derived",
+    "calculation_program": {
+      "inputs": [
+        "OperatingCashFlow",
+        "CapitalExpenditure"
+      ],
+      "operation": "subtract",
+      "period": "FY2023",
+      "result": 99584000000.0,
+      "scale": "1",
+      "unit": "USD"
+    },
+    "evidence_ids": [
+      "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+      "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106"
+    ],
+    "source_cutoff": "2023-11-03 00:00:00",
+    "target_fiscal_year": "FY2023",
+    "target_period_end": "2023-09-30"
+  },
+  "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2023-09-30?",
+  "raw_rows": [
+    {
+      "accn": "0000320193-23-000106",
+      "concept": "NetCashProvidedByUsedInOperatingActivities",
+      "end": "2023-09-30",
+      "filed": "2023-11-03",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2023",
+      "source_file": "research/cache/sec/aapl_companyfacts.json",
+      "source_hash": "8c1168a39f3f23a8f43a7c216c2e8ada09fca3e2ac16962259bd4bc3aebd6f17",
+      "start": "2022-09-25",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 110543000000.0
+    },
+    {
+      "accn": "0000320193-23-000106",
+      "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "end": "2023-09-30",
+      "filed": "2023-11-03",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2023",
+      "source_file": "research/cache/sec/aapl_companyfacts.json",
+      "source_hash": "103ca7b4a48d8c6133ab6d0f41bda89ac06f31cae38372628460911d3818c5f6",
+      "start": "2022-09-25",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 10959000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000320193-23-000106",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2023-11-03",
+        "fiscal_year": "2023",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "2022-09-25 → 2023-09-30"
+      },
+      {
+        "accession": "0000320193-23-000106",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2023-11-03",
+        "fiscal_year": "2023",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "2022-09-25 → 2023-09-30"
+      }
+    ],
+    "source_cutoff": "2023-11-03 00:00:00",
+    "target_period": "FY2023"
+  }
+}

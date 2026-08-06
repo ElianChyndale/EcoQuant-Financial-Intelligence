@@ -1,0 +1,44 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2026",
+  "definition": {
+    "assumptions": [
+      "Metric not reported for the period (no public disclosure)"
+    ],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "JNJ",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "unanswerable",
+    "calculation_program": null,
+    "evidence_ids": [],
+    "source_cutoff": "2027-06-30 00:00:00",
+    "target_fiscal_year": "FY2026",
+    "target_period_end": "2026-12-31"
+  },
+  "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2026?",
+  "raw_rows": [],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [],
+    "source_cutoff": "2027-06-30 00:00:00",
+    "target_period": "FY2026"
+  }
+}

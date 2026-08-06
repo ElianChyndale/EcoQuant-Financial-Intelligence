@@ -1,0 +1,146 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": true,
+    "inputs": [
+      {
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "label": "Net cash provided by operating activities",
+        "raw_value": 24530000000.0,
+        "unit": "USD",
+        "value": "24,530,000,000"
+      },
+      {
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "raw_value": 4832000000.0,
+        "unit": "USD",
+        "value": "4,832,000,000"
+      }
+    ],
+    "note": "请根据上方两个输入独立计算并填写结果；机器候选答案在提交前不会显示。",
+    "operation": "first input − second input (absolute value where the source reports a negative outflow)"
+  },
+  "case_id": "finvest-JNJ-cashflow-proxy-2025",
+  "definition": {
+    "assumptions": [
+      "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+    ],
+    "contested": false,
+    "statement": "本题按以下显式定义计算：first input − second input (absolute value where the source reports a negative outflow)。输入项分别为 OperatingCashFlow 和 CapitalExpenditure。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000200406-26-000016",
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "filing_date": "2026-02-11",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "FY2025",
+        "unit": "USD",
+        "value": "24,530,000,000"
+      },
+      {
+        "accession": "0000200406-26-000016",
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "filing_date": "2026-02-11",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "FY2025",
+        "unit": "USD",
+        "value": "4,832,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "JNJ",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "derived",
+    "calculation_program": {
+      "inputs": [
+        "OperatingCashFlow",
+        "CapitalExpenditure"
+      ],
+      "operation": "subtract",
+      "period": "FY2025",
+      "result": 19698000000.0,
+      "scale": "1",
+      "unit": "USD"
+    },
+    "evidence_ids": [
+      "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+      "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016"
+    ],
+    "source_cutoff": "2026-02-11 00:00:00",
+    "target_fiscal_year": "FY2025",
+    "target_period_end": "2025-12-28"
+  },
+  "question": "What is JNJ operating cash flow minus capital expenditure for the fiscal period ending 2025-12-28?",
+  "raw_rows": [
+    {
+      "accn": "0000200406-26-000016",
+      "concept": "NetCashProvidedByUsedInOperatingActivities",
+      "end": "2025-12-28",
+      "filed": "2026-02-11",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2025",
+      "source_file": "research/cache/sec/jnj_companyfacts.json",
+      "source_hash": "3ff210f18a5278ba6ccba6e57057d3e2caf57d6401127a5af62c2371b6ca5acf",
+      "start": "2024-12-30",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 24530000000.0
+    },
+    {
+      "accn": "0000200406-26-000016",
+      "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "end": "2025-12-28",
+      "filed": "2026-02-11",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2025",
+      "source_file": "research/cache/sec/jnj_companyfacts.json",
+      "source_hash": "3ead0a714330b1729f05c63c92b35624d2970c2aa5ca1a6ae851ba1901fda945",
+      "start": "2024-12-30",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 4832000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000200406-26-000016",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2026-02-11",
+        "fiscal_year": "2025",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "2024-12-30 → 2025-12-28"
+      },
+      {
+        "accession": "0000200406-26-000016",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2026-02-11",
+        "fiscal_year": "2025",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "2024-12-30 → 2025-12-28"
+      }
+    ],
+    "source_cutoff": "2026-02-11 00:00:00",
+    "target_period": "FY2025"
+  }
+}

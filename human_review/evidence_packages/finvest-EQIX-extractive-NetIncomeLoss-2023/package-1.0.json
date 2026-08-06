@@ -1,0 +1,82 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-EQIX-extractive-NetIncomeLoss-2023",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0001628280-24-005350",
+        "concept": "NetIncomeLoss",
+        "filing_date": "2024-02-16",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "FY2023",
+        "unit": "USD",
+        "value": "969,178,000.00"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "EQIX",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350"
+    ],
+    "source_cutoff": "2024-02-16 00:00:00",
+    "target_fiscal_year": "FY2023",
+    "target_period_end": "2023-12-31"
+  },
+  "question": "What is NetIncomeLoss for EQIX for fiscal year 2023?",
+  "raw_rows": [
+    {
+      "accn": "0001628280-24-005350",
+      "concept": "NetIncomeLoss",
+      "end": "2023-12-31",
+      "filed": "2024-02-16",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2023",
+      "source_file": "research/cache/sec/eqix_companyfacts.json",
+      "source_hash": "8365f91bb74e05c8b05e5ce1adf30e20de2b3cca7d23584fcd909c2b38b99968",
+      "start": "2023-01-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 969178000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0001628280-24-005350",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2024-02-16",
+        "fiscal_year": "2023",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "2023-01-01 → 2023-12-31"
+      }
+    ],
+    "source_cutoff": "2024-02-16 00:00:00",
+    "target_period": "FY2023"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-JNJ-extractive-Assets-2023",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000200406-24-000013",
+        "concept": "Assets",
+        "filing_date": "2024-02-16",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "FY2023",
+        "unit": "USD",
+        "value": "167,558,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "JNJ",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013"
+    ],
+    "source_cutoff": "2024-02-16 00:00:00",
+    "target_fiscal_year": "FY2023",
+    "target_period_end": "2023-12-31"
+  },
+  "question": "What is Assets for JNJ for fiscal year 2023?",
+  "raw_rows": [
+    {
+      "accn": "0000200406-24-000013",
+      "concept": "Assets",
+      "end": "2023-12-31",
+      "filed": "2024-02-16",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2023",
+      "source_file": "research/cache/sec/jnj_companyfacts.json",
+      "source_hash": "6af1c8fae81f567a10827d5c7278911b5a8271f5c4385108e09bfda88f1dd475",
+      "start": "",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 167558000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000200406-24-000013",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2024-02-16",
+        "fiscal_year": "2023",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "— → 2023-12-31"
+      }
+    ],
+    "source_cutoff": "2024-02-16 00:00:00",
+    "target_period": "FY2023"
+  }
+}

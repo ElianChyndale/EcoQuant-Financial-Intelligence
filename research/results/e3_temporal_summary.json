@@ -1,42 +1,42 @@
 {
   "all_ok": true,
   "dataset": {
-    "fact_count": 73802,
+    "fact_count": 84894,
     "license": "public-domain",
-    "question_count": 5752,
-    "sampled_question_count": 234
+    "question_count": 5757,
+    "sampled_question_count": 239
   },
   "experiment": "e3-temporal-contradiction",
   "methods": {
     "b1_bm25": {
-      "contradiction_f1": 0.10139860139860139,
-      "expired_evidence_rate": 0.08888888888888889,
-      "future_information_rate": 0.33931623931623933,
-      "valid_evidence_recall": 0.5256410256410257
+      "contradiction_f1": 0.09385113268608414,
+      "expired_evidence_rate": 0.1598326359832636,
+      "future_information_rate": 0.42343096234309624,
+      "valid_evidence_recall": 0.3054393305439331
     },
     "b2_hybrid": {
-      "contradiction_f1": 0.05473684210526315,
-      "expired_evidence_rate": 0.25726495726495724,
-      "future_information_rate": 0.3974358974358974,
-      "valid_evidence_recall": 0.5042735042735043
+      "contradiction_f1": 0.05647840531561462,
+      "expired_evidence_rate": 0.2594142259414226,
+      "future_information_rate": 0.3815899581589958,
+      "valid_evidence_recall": 0.49372384937238495
     },
     "b3_source_time_filter": {
-      "contradiction_f1": 0.12446351931330472,
-      "expired_evidence_rate": 0.1606837606837607,
+      "contradiction_f1": 0.10086956521739131,
+      "expired_evidence_rate": 0.16485355648535566,
       "future_information_rate": 0.0,
-      "valid_evidence_recall": 0.49145299145299143
+      "valid_evidence_recall": 0.3472803347280335
     },
     "b4_valid_time_filter": {
-      "contradiction_f1": 0.10193321616871703,
+      "contradiction_f1": 0.08868501529051988,
       "expired_evidence_rate": 0.0,
-      "future_information_rate": 0.33931623931623933,
-      "valid_evidence_recall": 0.5427350427350427
+      "future_information_rate": 0.4,
+      "valid_evidence_recall": 0.4476987447698745
     },
     "b5_temporal_contradiction": {
-      "contradiction_f1": 0.1779359430604982,
+      "contradiction_f1": 0.13440860215053763,
       "expired_evidence_rate": 0.0,
-      "future_information_rate": 0.5854700854700855,
-      "valid_evidence_recall": 0.5384615384615384
+      "future_information_rate": 0.5899581589958159,
+      "valid_evidence_recall": 0.5271966527196653
     }
   },
   "note": "SEC EDGAR XBRL companyfacts for AAPL/MSFT/KO; 5752 real temporal questions, stratified sample of 300 (100/class). valid_time=end, source_time=filed."

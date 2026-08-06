@@ -1,7 +1,7 @@
 {
   "abstains": 1,
   "aggregated": {
-    "b1_top_k": {
+    "S1_top_k": {
       "all_required_evidence_recall": 1.0,
       "average_set_size": 1.9444,
       "minimal_set_recall": 1.0,
@@ -10,7 +10,7 @@
       "set_exact_match": 1.0,
       "set_precision": 1.0
     },
-    "b2_greedy": {
+    "S2_greedy_set_cover": {
       "all_required_evidence_recall": 1.0,
       "average_set_size": 1.9444,
       "minimal_set_recall": 1.0,
@@ -19,7 +19,7 @@
       "set_exact_match": 1.0,
       "set_precision": 1.0
     },
-    "b3_beam": {
+    "S3_beam_search": {
       "all_required_evidence_recall": 1.0,
       "average_set_size": 1.9444,
       "minimal_set_recall": 1.0,
@@ -28,7 +28,7 @@
       "set_exact_match": 1.0,
       "set_precision": 1.0
     },
-    "b4_oracle": {
+    "S4_ilp_oracle": {
       "all_required_evidence_recall": 1.0,
       "average_set_size": 1.9444,
       "minimal_set_recall": 1.0,
@@ -41,13 +41,28 @@
   "answers": 19,
   "coverage_curve": {
     "abstained": 1,
-    "answered": 18,
-    "coverage_pct": 90.0,
-    "proposed_pass_rate": 100.0
+    "evidence_availability_rate": 90.0,
+    "n_presentable_cases": 18,
+    "target_period_match_rate": 55.6,
+    "verification_pass_rate": 55.6
   },
-  "experiment": "minimal_pilot_solo_provisional",
+  "experiment": "A10_HARNESS_INTEGRITY_PILOT",
   "gold_source": "SOLO_ANNOTATIONS.jsonl (solo-v1, provisional)",
-  "leakage_warning": "GOLD-DERIVED LEAKAGE: in this pilot the retrieval pool for each case is the case's own evidence rows, so B1-B4 trivially achieve 1.0. These numbers are NOT meaningful baseline results \u2014 a real run needs an independent retrieval corpus (full company facts). This pilot validates the HARNESS only.",
+  "layers": {
+    "retrieval": "deferred_to_a11 (leak-free corpus)",
+    "set_selection": [
+      "S1_top_k",
+      "S2_greedy_set_cover",
+      "S3_beam_search",
+      "S4_ilp_oracle"
+    ],
+    "verification": [
+      "V1_temporal",
+      "V2_numerical",
+      "V3_joint"
+    ]
+  },
+  "leakage_warning": "GOLD-DERIVED LEAKAGE: in this pilot the retrieval pool for each case is the case's own evidence rows, so the set-selection selectors trivially achieve 1.0. These numbers are NOT meaningful baseline results \u2014 a real run needs an independent retrieval corpus (full company facts). This pilot validates the HARNESS only.",
   "markers": [
     "EXPLORATORY_PILOT",
     "SMALL_SAMPLE",
@@ -55,732 +70,1328 @@
   ],
   "n_annotated": 20,
   "n_with_evidence": 18,
-  "note": "PILOT: B1-B4 on provisional labels; B4 is an ORACLE upper bound, never a headline. Proposed verifier pass rate shown separately. Not paper results until labels reach HUMAN_VALIDATED_GOLD and a leak-free retrieval corpus is used.",
+  "note": "PILOT: S1-S4 on provisional labels; S4 is an ORACLE upper bound, never a headline. V1-V3 now run the real joint temporal/version and numerical verifiers; verification_pass_rate reflects those, not a year-equality check. Not paper results until labels reach HUMAN_VALIDATED_GOLD and a leak-free retrieval corpus is used.",
   "per_case": [
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-AAPL-cashflow-proxy-2024",
-      "route": "REVIEW"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "REVIEW",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2023-10-01 not in FY2024",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2023-10-01 not in FY2024"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 108807000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-AAPL-cashflow-proxy-2025",
-      "route": "REVIEW"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "REVIEW",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2024-09-29 not in FY2025",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2024-09-29 not in FY2025"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 98767000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-JNJ-cashflow-proxy-2025",
-      "route": "REVIEW"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "REVIEW",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2024-12-30 not in FY2025",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2024-12-30 not in FY2025"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 19698000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-KO-cashflow-proxy-2025",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 5296000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-MSFT-cashflow-proxy-2025",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2024-07-01 not in FY2025",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2024-07-01 not in FY2025"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 71611000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-MSFT-cashflow-proxy-2026",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2025-07-01 not in FY2026",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2025-07-01 not in FY2026"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 66987000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-UPS-cashflow-proxy-2024",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 6213000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-UPS-cashflow-proxy-2025",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 4765000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 1.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.5,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 1.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 1.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 1.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 1.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.5,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 1.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 1.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 1.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": false,
+            "result": null,
+            "verification_state": null
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-MSFT-cashflow-proxy-2023",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2022-07-01 not in FY2023",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2022-07-01 not in FY2023"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 59475000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-KO-cashflow-proxy-2023",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 9747000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-JNJ-cashflow-proxy-2023",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 18248000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-UPS-cashflow-proxy-2022",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 9335000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-AAPL-cashflow-proxy-2023",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2022-09-25 not in FY2023",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2022-09-25 not in FY2023"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 99584000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-MSFT-cashflow-proxy-2024",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": false,
+            "violations": [
+              "NetCashProvidedByUsedInOperatingActivities: period 2023-07-01 not in FY2024",
+              "PaymentsToAcquirePropertyPlantAndEquipment: period 2023-07-01 not in FY2024"
+            ],
+            "wrong_period_rate": 1.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 74071000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": false,
+        "verification_state": "REVIEW_REQUIRED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-KO-cashflow-proxy-2024",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 4741000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-JNJ-cashflow-proxy-2024",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 19842000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     },
     {
-      "b1_top_k": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b2_greedy": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b3_beam": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
-      "b4_oracle": {
-        "all_required_evidence_recall": 1.0,
-        "average_set_size": 2.0,
-        "minimal_set_recall": 1.0,
-        "minimality_violation_rate": 0.0,
-        "redundancy": 0.0,
-        "set_exact_match": 1.0,
-        "set_precision": 1.0
-      },
       "case_id": "finvest-UPS-cashflow-proxy-2023",
-      "route": "ANSWER"
+      "retrieval": {
+        "note": "Real R1-R4 retrieval runs in experiments/a11_retrieval/ against a leak-free corpus.",
+        "pool": "case_own_raw_rows (GOLD-DERIVED, LEAKED)",
+        "retrieval_metrics": "deferred_to_a11"
+      },
+      "route": "ANSWER",
+      "set_selection": {
+        "S1_top_k": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S2_greedy_set_cover": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S3_beam_search": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        },
+        "S4_ilp_oracle": {
+          "all_required_evidence_recall": 1.0,
+          "average_set_size": 2.0,
+          "is_oracle": true,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
+          "redundancy": 0.0,
+          "set_exact_match": 1.0,
+          "set_precision": 1.0
+        }
+      },
+      "verification": {
+        "checks": {
+          "unit_scale_consistent": true,
+          "units": [
+            "USD"
+          ],
+          "v1_temporal": {
+            "expired_evidence_rate": 0.0,
+            "future_information_rate": 0.0,
+            "superseded_rate": 0.0,
+            "valid": true,
+            "violations": [],
+            "wrong_period_rate": 0.0
+          },
+          "v2_numerical": {
+            "present": true,
+            "result": 5080000000.0,
+            "verification_state": "SUPPORTED"
+          }
+        },
+        "valid": true,
+        "verification_state": "SUPPORTED"
+      }
     }
   ],
   "routes": [
     "ABSTAIN",
     "ANSWER",
     "REVIEW"
-  ]
+  ],
+  "schema_version": "minimal_pilot.v2",
+  "verification_rates": {
+    "filing_cutoff_pass_rate": 100.0,
+    "joint_verifier_invoked": true,
+    "joint_verifier_pass": 55.6,
+    "numerical_verifier_pass": 100.0,
+    "temporal_verifier_pass": 55.6,
+    "unit_scale_consistency_rate": 100.0,
+    "version_verifier_pass": 100.0
+  },
+  "verification_state_counts": {
+    "REVIEW_REQUIRED": 8,
+    "SUPPORTED": 10
+  }
 }

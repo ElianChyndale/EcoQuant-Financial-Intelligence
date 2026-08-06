@@ -254,8 +254,16 @@ def test_recheck_case_needs_two_rounds(tmp_path: Path) -> None:
 # --- Minimal experiments harness (runs, honest about leakage) ---
 
 def test_minimal_experiments_harness_runs(tmp_path: Path) -> None:
-    """The pilot harness must run and flag its own leakage honestly."""
+    """The pilot harness must run and flag its own leakage honestly.
+
+    Requires the real SEC cache (research/cache/sec) — skipped on CI where the
+    gitignored cache is absent.
+    """
     import subprocess, sys
+
+    cache = Path(__file__).resolve().parents[2] / "research/cache/sec"
+    if not (cache / "aapl_companyfacts.json").exists():
+        pytest.skip("real SEC cache absent (CI)")
 
     script = Path(__file__).resolve().parents[2] / "experiments/a10_integration/minimal_experiments.py"
     if not script.exists():
@@ -268,4 +276,7 @@ def test_minimal_experiments_harness_runs(tmp_path: Path) -> None:
     out = json.loads(r.stdout)
     assert out["n_annotated"] >= 20
     assert "leakage_warning" in out  # honest about the pilot's leakage
-    assert out["coverage_curve"]["coverage_pct"] > 0
+    assert out["coverage_curve"]["evidence_availability_rate"] > 0
+    assert "verification" in out["layers"]  # V-layer now actually runs the joint verifiers
+    assert out["verification_rates"]["joint_verifier_invoked"] is True
+    assert out["verification_rates"]["joint_verifier_pass"] >= 0

@@ -1,7 +1,13 @@
-# EcoQuant Financial Intelligence
+# EcoQuant Financial Intelligence — FinVEST
 
-Temporal knowledge-graph retrieval, calibrated uncertainty estimation, and
-selective decision gating for financial issuer analysis.
+Evidence-grounded financial question answering (FinVEST) with temporal,
+version, and numerical verification plus calibrated, selective abstention.
+
+**Current status (2026-08-07):** a small solo-provisional annotation pilot
+(20 cases) and a pilot harness that flags its own gold-derived leakage. These
+are **NOT paper-headline results**. See [RESEARCH_STATUS.md](RESEARCH_STATUS.md)
+and [docs/redesign/00_CURRENT_STATE_AUDIT.md](docs/redesign/00_CURRENT_STATE_AUDIT.md)
+for the live, honest status.
 
 ## Quick Start
 
@@ -10,7 +16,7 @@ selective decision gating for financial issuer analysis.
 pip install -e .
 
 # 2. Run the research pipeline (fixture mode for offline environments)
-python scripts/run_research.py --seed 20260710 --fixture
+python scripts/run_research.py --mode fixture --seed 20260710
 
 # 3. Run tests
 python -m pytest tests/ -v
@@ -18,70 +24,117 @@ python -m pytest tests/ -v
 
 ## Research Question
 
-> Does temporal evidence-graph retrieval, combined with calibrated abstention,
-> reduce stale or unsupported green-bond risk conclusions compared with vector
-> and static-graph retrieval?
+> Can an evidence-grounded financial QA system retrieve the correct evidence
+> from an independent, leak-free SEC corpus, select a minimal sufficient
+> evidence set, verify it temporally / version-wise / numerically, and
+> abstain (rather than guess) when evidence is insufficient — such that its
+> answers are verifiable and its abstention behavior is calibrated?
 
-## Key Findings
+## Current Research Programme (E-series)
 
-- **BM25 and dense achieve perfect recall:** 1.000 Recall@5 with 0% stale evidence
-- **Temporal KG methods have lower recall:** 0.250 Recall@5 but also 0% stale evidence
-- **Calibrated abstention:** Conservative policy with 3.6% coverage (threshold 0.913)
-- **Decision gate:** 3% AUTO_REPORT, 84% HUMAN_REVIEW, 13% INSUFFICIENT_EVIDENCE
-
-## Architecture
-
-```text
-PDF Manager → EvidenceSpanV1 → Temporal Graph → Retrieval → Calibration → Decision → Valuation → Attestation
-```
-
-See [docs/architecture.md](docs/architecture.md) for details.
+The active research programme is tracked in
+[_research_program/planning/EXPERIMENT_REGISTRY.yaml](../_research_program/planning/EXPERIMENT_REGISTRY.yaml)
+and the claim-evidence matrix in
+[_research_program/planning/CLAIM_EVIDENCE_MATRIX.md](../_research_program/planning/CLAIM_EVIDENCE_MATRIX.md).
+E0–E8 cover benchmark integrity, retrieval, table/numerical reasoning,
+temporal reasoning, verification, calibration, human review, and system
+integration. See [docs/redesign/00_CURRENT_STATE_AUDIT.md](docs/redesign/00_CURRENT_STATE_AUDIT.md)
+for the per-experiment audit status.
 
 ## Repository Structure
 
 ```
-src/ecoquant/
-  retrieval/       # BM25, dense, KG, reranker, and verification retrievers
-  evidence_graph/  # Temporal evidence graph with issuer/document nodes
-  uncertainty/     # Calibration, conformal prediction, decision gating
-  valuation/       # Bond pricing, policy, and sensitivity analysis
-  attestation/     # EIP-712 attestations and Merkle proofs
-
-research/
-  questions/       # Frozen benchmark questions (JSONL)
-  labels/          # Gold labels
-  sources/         # Source documents
-  results/         # JSON artifacts from run_research.py
-
-scripts/
-  run_research.py  # One-command reproducible research pipeline
-  fetch_public_reports.py
-
-tests/
-  research/        # Research integration and calibration tests
-  unit/            # Unit tests
-  integration/     # Integration tests
+src/ecoquant/       # Core research engine (retrieval, calibration, attestation)
+finvest/            # FinVEST benchmark, retrieval, verification, set-selection
+  benchmark/        #   Schemas, conditions, splitters, leakage audit, builders
+  retrieval/        #   Full-corpus BM25/dense retrieval, metrics
+  verification/     #   Temporal/version, numerical, adversarial verification
+  set_selection/    #   Risk-controlled evidence-set selectors (S1–S4)
+  calibration/      #   Leak-free calibration and selective prediction
+human_review/       # Solo-provisional annotation protocol (day1)
+experiments/        # E-series and pilot experiment harnesses
+research/           # Questions, labels, sources, cache, results
+scripts/            # One-command research pipeline + CLI entry points
+tests/              # Research, unit, integration, and finvest tests
 ```
+
+## Evidence → Label → Verify → Public Claim Pipeline
+
+```text
+SEC companyfacts / full 10-K
+        ↓  (leak-free corpus — no gold rows)
+Retrieval R1 BM25 / R2 dense / R3 RRF / R4 concept
+        ↓  top-K candidates
+Set selection S1 top-k / S2 greedy / S3 beam / S4 oracle
+        ↓  minimal evidence set
+Verification V1 temporal / V2 numerical / V3 joint
+        ↓
+ANSWER / REVIEW / ABSTAIN
+        ↓
+Experiment record → evidence dossier → portfolio / application
+```
+
+The annotation layer is human-driven (solo-provisional; human labels are
+separate from machine-derived fields) and lives under `human_review/day1/`.
+Evidence packages are versioned and hashed.
+
+## Honest Status
+
+Every claim in this README carries one evidence status:
+
+```text
+| Status | Meaning |
+| --- | --- |
+| **implemented** | Code exists and is exercised by tests; no research claim implied |
+| **harness-validated** | A pilot harness runs it end-to-end, but the harness itself is known to be leaky/limited |
+| **solo-provisional** | A single human annotator labeled it; not yet externally reviewed or gold |
+| **experimentally supported** | Measured on a leak-free experiment with a defined protocol |
+| **invalidated** | A previous result was retracted (e.g. gold-feature leakage); do not repeat |
+```
+
+Current state:
+
+- 20 solo-provisional human annotations (16 ANSWER / 3 REVIEW / 1 ABSTAIN);
+  17 `SOLO_PROVISIONAL`, 3 `NEEDS_EXTERNAL_REVIEW` — **solo-provisional**.
+- The A10 harness
+  ([experiments/a10_integration/minimal_experiments.py](experiments/a10_integration/minimal_experiments.py))
+  runs on the annotated cases and **explicitly flags gold-derived leakage**:
+  the pilot's retrieval pool is each case's own evidence rows, so set-selection
+  numbers are not meaningful retrieval results — **harness-validated only**.
+- The A10 V-layer now invokes the real joint temporal/version and numerical
+  verifiers (`joint_verifier_invoked: true`); its pass rates are honest
+  verification rates, not a year-equality check — **harness-validated**.
+- A real two-stage (retrieval → set-selection → verification) experiment on a
+  leak-free corpus is the next milestone (`experiments/a11_retrieval/`).
 
 ## Documentation
 
+- [Research Status](RESEARCH_STATUS.md) — live result classification
+- [Redesign audit](docs/redesign/00_CURRENT_STATE_AUDIT.md) — E0–E8 audit
 - [Architecture](docs/architecture.md)
 - [Dataset Card](docs/dataset_card.md)
 - [Model Card](docs/model_card.md)
 - [Evaluation Protocol](docs/evaluation.md)
 - [Limitations](docs/limitations.md)
 - [Failure Cases](docs/failure_cases.md)
-- [Research Report](paper/report.md)
 
-## Trust Boundary
+## Historical / Invalidated Results
 
-EcoQuant produces recommendations but never executes financial actions:
+The following claims are **NOT** current results. They come from an earlier
+"green-bond temporal RAG" research thread that was invalidated by gold-derived
+leakage and oracle-conditioned evaluation. They are retained only as history.
 
-- **EcoQuant owns:** Document extraction, retrieval, calibration, valuation sensitivity
-- **GBL owns:** Identity, bonds, settlement, lending, liquidation
-- **Interface:** Signed EIP-712 RiskAttestationV1
+- **"BM25 and dense achieve 1.000 Recall@5 with 0% stale evidence"** —
+  `ORACLE_CONDITION` (evaluated against gold-page corpora).
+- **"Temporal KG methods have 0.250 Recall@5"** — `ORACLE_CONDITION`.
+- **"Calibrated abstention at 3.6% coverage (threshold 0.913)"** —
+  `INVALIDATED`; the calibration feature leaked gold relevance
+  ([E5_GOLD_LEAKAGE_AUDIT.md](docs/audits/E5_GOLD_LEAKAGE_AUDIT.md)).
+- **"Green Bond Lending trust boundary / EIP-712 RiskAttestationV1"** —
+  superseded by the FinVEST evidence-verification framing.
 
-AI cannot directly move funds or trigger liquidation.
+See [RESEARCH_STATUS.md](RESEARCH_STATUS.md) for the result-classification
+table and [docs/redesign/01_INVALIDATED_CLAIMS.md](docs/redesign/01_INVALIDATED_CLAIMS.md).
 
 ## License
 

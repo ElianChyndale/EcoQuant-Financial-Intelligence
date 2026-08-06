@@ -1,0 +1,82 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-JNJ-extractive-NetIncomeLoss-2024",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000200406-25-000038",
+        "concept": "NetIncomeLoss",
+        "filing_date": "2025-02-13",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "FY2024",
+        "unit": "USD",
+        "value": "14,066,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "JNJ",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038"
+    ],
+    "source_cutoff": "2025-02-13 00:00:00",
+    "target_fiscal_year": "FY2024",
+    "target_period_end": "2024-12-29"
+  },
+  "question": "What is NetIncomeLoss for JNJ for fiscal year 2024?",
+  "raw_rows": [
+    {
+      "accn": "0000200406-25-000038",
+      "concept": "NetIncomeLoss",
+      "end": "2024-12-29",
+      "filed": "2025-02-13",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2024",
+      "source_file": "research/cache/sec/jnj_companyfacts.json",
+      "source_hash": "2da3d0361643725c01dd15191b354ff107d3a6712fcd9000cf06316624d31f22",
+      "start": "2024-01-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 14066000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000200406-25-000038",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2025-02-13",
+        "fiscal_year": "2024",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "2024-01-01 → 2024-12-29"
+      }
+    ],
+    "source_cutoff": "2025-02-13 00:00:00",
+    "target_period": "FY2024"
+  }
+}

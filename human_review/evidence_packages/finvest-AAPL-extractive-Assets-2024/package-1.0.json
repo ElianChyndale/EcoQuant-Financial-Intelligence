@@ -1,0 +1,82 @@
+{
+  "builder_commit": "77dc2f4",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-AAPL-extractive-Assets-2024",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000320193-24-000123",
+        "concept": "Assets",
+        "filing_date": "2024-11-01",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "FY2024",
+        "unit": "USD",
+        "value": "364,980,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "AAPL",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123"
+    ],
+    "source_cutoff": "2024-11-01 00:00:00",
+    "target_fiscal_year": "FY2024",
+    "target_period_end": "2024-09-28"
+  },
+  "question": "What is Assets for AAPL for fiscal year 2024?",
+  "raw_rows": [
+    {
+      "accn": "0000320193-24-000123",
+      "concept": "Assets",
+      "end": "2024-09-28",
+      "filed": "2024-11-01",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2024",
+      "source_file": "research/cache/sec/aapl_companyfacts.json",
+      "source_hash": "11b75167d817f32dec96c00df9e168c5ab39111327be52315b654cb4816b0871",
+      "start": "",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 364980000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000320193-24-000123",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2024-11-01",
+        "fiscal_year": "2024",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "— → 2024-09-28"
+      }
+    ],
+    "source_cutoff": "2024-11-01 00:00:00",
+    "target_period": "FY2024"
+  }
+}
