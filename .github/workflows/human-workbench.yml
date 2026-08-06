@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -33,10 +33,10 @@ jobs:
       - name: Annotation CLI tests
         run: python -m pytest tests/finvest/test_annotate_cli.py tests/finvest/test_day1_pilot.py -q
 
-      - name: Amendment-integrity + preflight tests (fixture-built)
-        run: python -m pytest tests/finvest/test_v02_amendment_integrity.py tests/finvest/test_preflight.py -q
+      - name: Fixture + identity + practice + negative-evidence tests (committed fixture, no cache)
+        run: python -m pytest tests/finvest/test_sec_fixture.py tests/finvest/test_practice_mode.py -q
 
-      - name: Workbench unit/integration tests
+      - name: Workbench unit/integration tests (cache-dependent tests skip via local_real_data)
         run: python -m pytest tests/finvest/test_workbench.py tests/finvest/test_workbench_smoke.py -q
 
       - name: Real-browser Playwright E2E (isolated temp protocol)
