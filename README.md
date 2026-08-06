@@ -104,8 +104,28 @@ Current state:
 - The A10 V-layer now invokes the real joint temporal/version and numerical
   verifiers (`joint_verifier_invoked: true`); its pass rates are honest
   verification rates, not a year-equality check — **harness-validated**.
-- A real two-stage (retrieval → set-selection → verification) experiment on a
-  leak-free corpus is the next milestone (`experiments/a11_retrieval/`).
+- Evidence packages are **frozen** per case
+  ([human_review/evidence_packages/](human_review/evidence_packages/)) with a
+  full-package SHA-256 + `PACKAGE_MANIFEST.json`, so a second annotator reads
+  byte-for-byte the same page — **implemented**.
+- A **gold-blind (leak-free) SEC corpus** is built and frozen
+  ([research/corpus/](research/corpus/)): 170k+ facts from companyfacts only,
+  `SOURCE_MANIFEST` + `CORPUS_MANIFEST` + `SPLIT_MANIFEST`, zero gold tokens in
+  corpus records. The builder survives all gold/annotation files being removed
+  — **implemented**.
+- The A11 two-stage experiment
+  ([experiments/a11_retrieval/run.py](experiments/a11_retrieval/run.py))
+  retrieves from the leak-free corpus (R1 BM25 / R2 dense / R3 RRF / R4
+  concept-temporal), selects evidence sets (S1–S4), and verifies (V1–V3),
+  reporting the three layers separately — **harness-validated**.
+- Challenge-case generation
+  ([finvest/benchmark/builders/challenge_cases.py](finvest/benchmark/builders/challenge_cases.py))
+  produces wrong-period / future-source / amendment / scale-sign / duplicate /
+  insufficient variants so the verifier's REJECTION (not just acceptance) is
+  tested — **implemented**.
+- Tool adapters under [integrations/](integrations/) wire in
+  `financial-ai-contracts`, `financial-systems-verification-kit`, and
+  `paper-reproduction-lab` (pinned in `INTEGRATION_LOCK.json`) — **implemented**.
 
 ## Documentation
 
