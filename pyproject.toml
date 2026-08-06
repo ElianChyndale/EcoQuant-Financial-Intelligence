@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "playwright>=1.40"]
 # Local-only human review workbench (no external services, no CDN, no LLM).
 human-workbench = [
     "fastapi>=0.110",

@@ -42,11 +42,23 @@ from finvest.human_study.web.services.signing_adapter import (
 )
 from finvest.human_study.web.services.tooling_issue import report_tooling_issue
 
-ROOT = Path(__file__).resolve().parents[3]
-TOOLING_ISSUE_PATH = ROOT / "research" / "cache" / "workbench" / "tooling_issues.jsonl"
-DAY1 = ROOT / "human_review" / "day1"
-CACHE = ROOT / "research" / "cache"
-DB_PATH = ROOT / "research" / "cache" / "workbench" / "workbench.sqlite"
+import os
+
+ROOT = Path(os.environ.get("FINVEST_ROOT", Path(__file__).resolve().parents[3]))
+DAY1 = Path(os.environ.get("FINVEST_DAY1", ROOT / "human_review" / "day1"))
+CACHE = Path(os.environ.get("FINVEST_CACHE", ROOT / "research" / "cache"))
+DB_PATH = Path(
+    os.environ.get(
+        "FINVEST_WORKBENCH_DB",
+        ROOT / "research" / "cache" / "workbench" / "workbench.sqlite",
+    )
+)
+TOOLING_ISSUE_PATH = Path(
+    os.environ.get(
+        "FINVEST_TOOLING_ISSUES",
+        ROOT / "research" / "cache" / "workbench" / "tooling_issues.jsonl",
+    )
+)
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
