@@ -1,0 +1,82 @@
+{
+  "builder_commit": "7c1bf11",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-MSFT-extractive-NetIncomeLoss-2024",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000950170-24-087843",
+        "concept": "NetIncomeLoss",
+        "filing_date": "2024-07-30",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "FY2024",
+        "unit": "USD",
+        "value": "88,136,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "MSFT",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843"
+    ],
+    "source_cutoff": "2024-07-30 00:00:00",
+    "target_fiscal_year": "FY2024",
+    "target_period_end": "2024-06-30"
+  },
+  "question": "What is NetIncomeLoss for MSFT for fiscal year 2024?",
+  "raw_rows": [
+    {
+      "accn": "0000950170-24-087843",
+      "concept": "NetIncomeLoss",
+      "end": "2024-06-30",
+      "filed": "2024-07-30",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2024",
+      "source_file": "research/cache/sec/msft_companyfacts.json",
+      "source_hash": "4fee3b8503b532553578c05d30c73d2bc318a043b14c6dc8e8ecca6446da98fb",
+      "start": "2023-07-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 88136000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000950170-24-087843",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2024-07-30",
+        "fiscal_year": "2024",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "2023-07-01 → 2024-06-30"
+      }
+    ],
+    "source_cutoff": "2024-07-30 00:00:00",
+    "target_period": "FY2024"
+  }
+}

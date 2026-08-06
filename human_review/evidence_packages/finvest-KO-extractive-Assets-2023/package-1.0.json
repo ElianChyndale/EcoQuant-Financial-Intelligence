@@ -1,0 +1,82 @@
+{
+  "builder_commit": "7c1bf11",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-KO-extractive-Assets-2023",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0000021344-24-000009",
+        "concept": "Assets",
+        "filing_date": "2024-02-20",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "FY2023",
+        "unit": "USD",
+        "value": "97,703,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "KO",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009"
+    ],
+    "source_cutoff": "2024-02-20 00:00:00",
+    "target_fiscal_year": "FY2023",
+    "target_period_end": "2023-12-31"
+  },
+  "question": "What is Assets for KO for fiscal year 2023?",
+  "raw_rows": [
+    {
+      "accn": "0000021344-24-000009",
+      "concept": "Assets",
+      "end": "2023-12-31",
+      "filed": "2024-02-20",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2023",
+      "source_file": "research/cache/sec/ko_companyfacts.json",
+      "source_hash": "d3fcea1198761f5f6a7156535fabc498a2b864113006888a3f83781ffde18a90",
+      "start": "",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 97703000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0000021344-24-000009",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2024-02-20",
+        "fiscal_year": "2023",
+        "form": "10-K",
+        "label": "Total assets",
+        "period": "— → 2023-12-31"
+      }
+    ],
+    "source_cutoff": "2024-02-20 00:00:00",
+    "target_period": "FY2023"
+  }
+}

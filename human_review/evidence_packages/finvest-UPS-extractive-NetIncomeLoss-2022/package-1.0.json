@@ -1,0 +1,82 @@
+{
+  "builder_commit": "7c1bf11",
+  "calculation": {
+    "has_calculation": false,
+    "inputs": [],
+    "operation": null
+  },
+  "case_id": "finvest-UPS-extractive-NetIncomeLoss-2022",
+  "definition": {
+    "assumptions": [],
+    "contested": false,
+    "statement": "本题为直接提取/事实性问题；请按页面证据表与时间版本卡判断。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0001090727-23-000006",
+        "concept": "NetIncomeLoss",
+        "filing_date": "2023-02-21",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "FY2022",
+        "unit": "USD",
+        "value": "11,548,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "UPS",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "extractive",
+    "calculation_program": null,
+    "evidence_ids": [
+      "UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006"
+    ],
+    "source_cutoff": "2023-02-21 00:00:00",
+    "target_fiscal_year": "FY2022",
+    "target_period_end": "2022-12-31"
+  },
+  "question": "What is NetIncomeLoss for UPS for fiscal year 2022?",
+  "raw_rows": [
+    {
+      "accn": "0001090727-23-000006",
+      "concept": "NetIncomeLoss",
+      "end": "2022-12-31",
+      "filed": "2023-02-21",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2022",
+      "source_file": "research/cache/sec/ups_companyfacts.json",
+      "source_hash": "f23b91ed2a256e7e9797aa02a6d6efb9fa812033d2cfbafc2d7afcb501d15570",
+      "start": "2022-01-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 11548000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0001090727-23-000006",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2023-02-21",
+        "fiscal_year": "2022",
+        "form": "10-K",
+        "label": "Net income (loss)",
+        "period": "2022-01-01 → 2022-12-31"
+      }
+    ],
+    "source_cutoff": "2023-02-21 00:00:00",
+    "target_period": "FY2022"
+  }
+}

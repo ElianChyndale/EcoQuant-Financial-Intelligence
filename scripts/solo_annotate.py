@@ -49,13 +49,19 @@ def main() -> int:
     from finvest.human_study.web.services.case_presenter import (
         load_manifest, base_cases, present_case_markdown,
     )
+
+    _manifest = load_manifest(DAY1)
+    _cases = {c["case_id"]: c for c in base_cases(_manifest)}
     from finvest.human_study.solo_records import (
         SoloAnnotation, append_annotation, derive_labels, latest_annotation, load_annotations,
     )
     from finvest.human_study.solo_verification import verify_annotation, render_diff_report
 
     if args.cmd == "present":
-        md = present_case_markdown(args.case_id, CACHE)
+        if args.case_id not in _cases:
+            print(f"case {args.case_id} not found in manifest", file=sys.stderr)
+            return 1
+        md = present_case_markdown(_cases[args.case_id], CACHE)
         print(md)
         return 0
 
@@ -99,10 +105,23 @@ def main() -> int:
         derived = derive_labels(args.q1, args.q2, issue_flags=flags, route=args.route,
                                 calc_mismatch=result.calc_match is False)
         status = "SOLO_PROVISIONAL" if derived["route"] != "REVIEW" else "NEEDS_EXTERNAL_REVIEW"
+
+        # evidence_package_hash: the FULL frozen package hash (Phase 1.5), so a
+        # change to any display/evidence field is visible. Fall back to the
+        # legacy source-row hash only when the package cannot be built.
+        from finvest.human_study.web.services.package_freeze import package_hash_for_case
+
+        try:
+            pkg_hash = package_hash_for_case(cases[args.case_id], CACHE)
+        except Exception:
+            pkg_hash = ""
+        if not pkg_hash and presented["raw_rows"]:
+            pkg_hash = presented["raw_rows"][0].get("source_hash", "")[:16] or ""
+
         ann = SoloAnnotation(
             case_id=args.case_id,
             evidence_package_version="1.0",
-            evidence_package_hash=presented["raw_rows"][0].get("source_hash", "")[:16] if presented["raw_rows"] else "",
+            evidence_package_hash=pkg_hash,
             annotation_protocol_version="solo-v1",
             reviewer_id="ELIAN_PRIMARY",
             annotation_round=1,

@@ -125,6 +125,26 @@ class PackageFreeze:
         }
 
 
+def package_hash_for_case(
+    sealed_case: dict[str, Any],
+    cache: Path,
+    *,
+    builder_commit: str = "runtime",
+    package_version: str = DEFAULT_VERSION,
+) -> str:
+    """Full-package sha256 for a case WITHOUT persisting it.
+
+    Used by annotation entry so the recorded evidence_package_hash is the hash
+    of the COMPLETE package (every display + evidence field), matching what the
+    freeze pipeline would persist. Deterministic: same source + same builder
+    commit -> same hash.
+    """
+    package = _full_package(
+        sealed_case, cache, builder_commit=builder_commit, package_version=package_version,
+    )
+    return package_sha256(package)
+
+
 def freeze_package(
     sealed_case: dict[str, Any],
     cache: Path,

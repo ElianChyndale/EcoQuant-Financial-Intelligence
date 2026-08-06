@@ -1,0 +1,594 @@
+{
+  "builder_commit": "7c1bf11",
+  "package_count": 60,
+  "package_version": "1.0",
+  "packages": [
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+      "file_size": 3890,
+      "package_sha256": "d5303bf3e45055468f4d4e2b45389c8bafb9b3b1574c519d331a3a3b3a0f582d",
+      "package_version": "1.0",
+      "source_hashes": [
+        "52343026847b8d2648e36237a90dc25186cf5e6f1f277f327e1ff5bdeffa87e4",
+        "c7cafae0113a904642dc2f02a3fd2742c9abc5c39600c4810c9c712c126350df"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-cashflow-proxy-2023",
+      "file_size": 5265,
+      "package_sha256": "cf3c0fe13c054475b613a6dc00cffe234d1f65071dfac09380263116a50ad245",
+      "package_version": "1.0",
+      "source_hashes": [
+        "8c1168a39f3f23a8f43a7c216c2e8ada09fca3e2ac16962259bd4bc3aebd6f17",
+        "103ca7b4a48d8c6133ab6d0f41bda89ac06f31cae38372628460911d3818c5f6"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-cashflow-proxy-2024",
+      "file_size": 5262,
+      "package_sha256": "c94a0d104fcff3e826313b17ba50d17018e8f4fb4b329a4913b8cf305f782c2a",
+      "package_version": "1.0",
+      "source_hashes": [
+        "d3fad0b12bf4819131a5de4ca4c235491553cc0ffa77e5a7dc45feb223ae3e38",
+        "3270f4ae7706af78ec20c8054862de23220f1ff1e90e4c6b241ed1660b59f6f5"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-cashflow-proxy-2025",
+      "file_size": 5265,
+      "package_sha256": "155e75602b206c858f7eda319149fa9f3dc01388ea5c7b3683d1d44edfa9f78a",
+      "package_version": "1.0",
+      "source_hashes": [
+        "48d5c354cdc8d1a5b98e5ccd22445cccd9068eca910291ecc74b95ebe4f386f7",
+        "5657762138815cad3087b14d529bde6c15c595b50b6dce1a12997a15bed13410"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-extractive-Assets-2022",
+      "file_size": 2522,
+      "package_sha256": "7c8a262c7db4a6ed62b5b5dea9352d911f9a21ac710f1aa0bb90d1c388aba717",
+      "package_version": "1.0",
+      "source_hashes": [
+        "66a9421e462a73a4366b073b8d0932169bf46d460bc5414879dc14e56ace4118"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-extractive-Assets-2023",
+      "file_size": 2522,
+      "package_sha256": "8dd824e922846628dbcf2fd9748aac0151f2661b08c55d713e8c14c791258b32",
+      "package_version": "1.0",
+      "source_hashes": [
+        "69acee84476098145bbb711fa19595fab22709b0116de2bebc93670478d5457c"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-extractive-Assets-2024",
+      "file_size": 2522,
+      "package_sha256": "1def5a1ef420ee7ae5e9fee010ac377278bf983fbd52ff9be9007fd1f4b78eee",
+      "package_version": "1.0",
+      "source_hashes": [
+        "11b75167d817f32dec96c00df9e168c5ab39111327be52315b654cb4816b0871"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-extractive-NetIncomeLoss-2022",
+      "file_size": 2592,
+      "package_sha256": "1d57f1ef6fe3bf3d1c270e90a32c41032890ed189dccd4b859f2275197c452ce",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f2f5cd3d168764e4d248b6ee3af45c1f4dbc804f3e09265767e7c0f395db24fb"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-extractive-NetIncomeLoss-2023",
+      "file_size": 2592,
+      "package_sha256": "4da074c711cb7c9d4bb2e6713740a3eb39b7c82a646c7d35528abccb45c8c369",
+      "package_version": "1.0",
+      "source_hashes": [
+        "57dabc414e73c3477984b9490b60474e6126110ad0afd16260290ca4cdb585bf"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025",
+      "file_size": 1512,
+      "package_sha256": "2ca31da05f0760cc6b8893d7d5befa4e9ec6b40ea661717acdb3fffc134a0d8a",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-insufficient-AccruedLiabilitiesCurrent-2022",
+      "file_size": 1506,
+      "package_sha256": "6cffecbdad5e794b9933446328fbe7eb7d6c28b514c55695c513dd4afe9a53a1",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-AAPL-insufficient-AccruedLiabilitiesCurrent-2024",
+      "file_size": 1506,
+      "package_sha256": "c96a9352a512e9506d36bb8884e54c3f0225830847ec59026d1cbd238a93e353",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-extractive-Assets-2023",
+      "file_size": 2520,
+      "package_sha256": "8c29b1039c78a4c30ccec86fd7ba0bdba845547625baa5d985e8c99c6c970ff7",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f2675c510585753d18835abe904616ccf4b9aa44606dfd2732d4ca5695171549"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-extractive-Assets-2024",
+      "file_size": 2520,
+      "package_sha256": "7602df19d291fdc41d1c73628893a7e81ad50df0b26f749542ab70384934965a",
+      "package_version": "1.0",
+      "source_hashes": [
+        "5fa0f44032f2490d686542121dd3900c3361a02d22e8d89b180ffc71d7fd2e2f"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-extractive-NetIncomeLoss-2023",
+      "file_size": 2590,
+      "package_sha256": "fd5b33abdf294e202a554e9d5a71e367d24e3235781c8856f6f37f78bc725561",
+      "package_version": "1.0",
+      "source_hashes": [
+        "8365f91bb74e05c8b05e5ce1adf30e20de2b3cca7d23584fcd909c2b38b99968"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-extractive-NetIncomeLoss-2024",
+      "file_size": 2590,
+      "package_sha256": "0b862d8f73ceea2810f0077004923b94643fc2f0b9bd70b6bea9519631458ff5",
+      "package_version": "1.0",
+      "source_hashes": [
+        "91a5f2a38ddac03eb69d7f1e9d255d1e66605a4ff1cbe4acb9827be723f470e5"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+      "file_size": 1542,
+      "package_sha256": "365f1d85369bfccb2269f83fd57423385074669203265ab3d8f18fe237b5d336",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent-2025",
+      "file_size": 1554,
+      "package_sha256": "e4d900e22f12290177fa910932ea4176f1c9463678f81ce9f5c9425cef1e64fd",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-EQIX-insufficient-AvailableForSaleSecuritiesDebtMaturitiesAfterOneThroughFiveYearsAmortizedCost-2023",
+      "file_size": 1610,
+      "package_sha256": "ecabbc09b4dd4ae30f4ae7f6db21700d9bed0a5c19315e5d611a41b84692cff9",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-cashflow-proxy-2023",
+      "file_size": 5250,
+      "package_sha256": "5011e8e027a1418b77ee2f9ff2864ce5b91b963b33af7fa7ae4810ea8fd2a2c2",
+      "package_version": "1.0",
+      "source_hashes": [
+        "646029cf33e1dbb650a540636adb175546a34311508c7d15cb62fd45551513b2",
+        "fe72b569380110a2b5ce098a209aff44105743eb0213b650c656aa71f2dcbf9e"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-cashflow-proxy-2024",
+      "file_size": 5250,
+      "package_sha256": "fb41ec250722c1540886ed67e2d62d2ba69369061ae8ddaca9b22ae4639c6333",
+      "package_version": "1.0",
+      "source_hashes": [
+        "c3f35f2a7b36e9b937d90047b2fe5f793a769ab6da11cfee7427737118736f62",
+        "01bc5a976d70fc30de9ce086800467e842616aeb36ecd1cfee37954df02596c5"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-cashflow-proxy-2025",
+      "file_size": 5250,
+      "package_sha256": "feaf6afaf2e3485e40a1c5bfa9a03d32ca8639dd716b2608c2e8cf525942286e",
+      "package_version": "1.0",
+      "source_hashes": [
+        "3ff210f18a5278ba6ccba6e57057d3e2caf57d6401127a5af62c2371b6ca5acf",
+        "3ead0a714330b1729f05c63c92b35624d2970c2aa5ca1a6ae851ba1901fda945"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-extractive-Assets-2023",
+      "file_size": 2517,
+      "package_sha256": "aa7ac3f50193a97beaa4816d231a0edcfd45c5886fdfad8cc733dbbda0c9ef2b",
+      "package_version": "1.0",
+      "source_hashes": [
+        "6af1c8fae81f567a10827d5c7278911b5a8271f5c4385108e09bfda88f1dd475"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-extractive-Assets-2024",
+      "file_size": 2517,
+      "package_sha256": "76652d425b7190653295fc728761eba2401546f50c934d5d8979418516569a84",
+      "package_version": "1.0",
+      "source_hashes": [
+        "b98ddcb63a0229dcff7f670d30afcce7fdd4e8b559e7f5dfaf5d9e91029b35e6"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-extractive-NetIncomeLoss-2023",
+      "file_size": 2587,
+      "package_sha256": "27407f2ad539dfd21f0a7003a1f57aaf63a843db789f63ecd5c3eb531903c6fa",
+      "package_version": "1.0",
+      "source_hashes": [
+        "ed9929b714e89ffe0e791c281a7888495899ed38e7153e13225c840b52c8dc06"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-extractive-NetIncomeLoss-2024",
+      "file_size": 2587,
+      "package_sha256": "0c1f350a583af943104b439a32788c3d6d630cbd9bf2cf60147d092a5de7d1e8",
+      "package_version": "1.0",
+      "source_hashes": [
+        "2da3d0361643725c01dd15191b354ff107d3a6712fcd9000cf06316624d31f22"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+      "file_size": 1559,
+      "package_sha256": "18afc33a1718df70d59c0ff84d5df552d3b898bdcb74dffdd85b1ad40bb55ddf",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2026",
+      "file_size": 1559,
+      "package_sha256": "4a628a5eda01322425b021151881483063f31227c9b2edf49ca88cb78bd1bac1",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-cashflow-proxy-2023",
+      "file_size": 5242,
+      "package_sha256": "54f3dc83a37503048e9dfea79896e2d3261c42be830361972d2026625e110093",
+      "package_version": "1.0",
+      "source_hashes": [
+        "320249819701d46401c0c5c603d344b7a45642bb3dd831df625e072965bc1197",
+        "2402b88e7efb8a04d752413d4e49254178c62642c3981447b580805b2cfcb4bd"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-cashflow-proxy-2024",
+      "file_size": 5238,
+      "package_sha256": "4fca98fa997a4801f24ded81b58b27f7bebbdb840049f4c407150a8723b554b0",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f46f021f8904fccc0be2441ea80210c673406db7a0286635d321479c9272df67",
+        "2d37c900d035b46a0c741ffec76b75dda76665ac6c9383ed113c6c48696e4828"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-cashflow-proxy-2025",
+      "file_size": 5238,
+      "package_sha256": "7cef05fb8b7acfa7e6b6453aa059ef5ed66f729338637a2eb19ab16d7e11c272",
+      "package_version": "1.0",
+      "source_hashes": [
+        "67264f819792f4505eaab2d9b09160a174d86cca47904108c620e707f9569f3a",
+        "5282e6f0ef51e75eed18cf1f9bd8e7989b1c3fe59d086cdadd9c3087ef60c3b7"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-extractive-Assets-2023",
+      "file_size": 2510,
+      "package_sha256": "b62a9083240d743d8db0d4f22ca787e640efd0f88dbfdf8fce1033017a44d063",
+      "package_version": "1.0",
+      "source_hashes": [
+        "d3fcea1198761f5f6a7156535fabc498a2b864113006888a3f83781ffde18a90"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-extractive-Assets-2024",
+      "file_size": 2512,
+      "package_sha256": "c622fa850cb7c19c7a635548e28c1b773e5e204979a6d605ee9a63af3683a094",
+      "package_version": "1.0",
+      "source_hashes": [
+        "5b254887b698c4decc264e26b3a92c2600ed84e054f57900b7dd124267332516"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-extractive-NetIncomeLoss-2023",
+      "file_size": 2582,
+      "package_sha256": "ea713ade28bc545f235cc4c9eb81daccf2589513858abbfb6db114ea7dc1b409",
+      "package_version": "1.0",
+      "source_hashes": [
+        "680b2af13baeb517202de9125e788fe4a9fa296bec0cec3867ada5ef6b7f2acf"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-extractive-Revenues-2023",
+      "file_size": 2539,
+      "package_sha256": "a87ed56b7366c511fc117788585f7b3f8a18f963c4aaa6b0150495e176c6b9de",
+      "package_version": "1.0",
+      "source_hashes": [
+        "ac57615c61f6437df6196e4051c35c711fa140a313bec7daac96129e84ee5a43"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+      "file_size": 1536,
+      "package_sha256": "e2672182a8dbfc11ed7495bffa886a6bb302c2e2b55f74ed8e76648e63564d3a",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-insufficient-AccountsPayableOtherCurrent-2025",
+      "file_size": 1504,
+      "package_sha256": "d2d97962dfe2fb3b53dfd2e0adfb9594373f719b86a8adf86bb6a697aa9a2d05",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-KO-insufficient-AvailableForSaleSecuritiesGrossRealizedGainsLossesSaleProceeds-2023",
+      "file_size": 1574,
+      "package_sha256": "09ddf6676cc76a553ee6414e7396232bfa7d1cf4cc8200cddcb71f9cf7679a77",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-cashflow-proxy-2023",
+      "file_size": 5261,
+      "package_sha256": "1729ec14c12ece372b6ef0094601e26d39567f5d84802a8c9fb782e7d5b013c5",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f705802ba62a01618fba0c203b569eaadf58dd391548c741207b88a7fb450e91",
+        "7870072637bb2eee44371cd8c8ace05b4d25f80f9a5192135bc5e1ac76b2825d"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-cashflow-proxy-2024",
+      "file_size": 5265,
+      "package_sha256": "95a37b93d5b5c34aaf188067ad3e49e537f123e1fafa6946dde051a3520e9d0e",
+      "package_version": "1.0",
+      "source_hashes": [
+        "e1abd6f28b5da8d9b164cb1627c1002111c527850184b65b0a8656620ad6dd73",
+        "4f7f0caa9e0820a32880681a77b6611ce3054e24f2230389be2192b29c3b4f9e"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-cashflow-proxy-2025",
+      "file_size": 5265,
+      "package_sha256": "d72db54bde5153efd918951295bd6e66cff663fc3007729a22c4a787dfbb57e8",
+      "package_version": "1.0",
+      "source_hashes": [
+        "4c8e89b428dde6c45ad0bf3fef50232d86a7aeacec473875427652f3a061859f",
+        "e7a6c54ef9ff6ff07b55344cd5120c91cc20bc1dc7a19f4756dd6fa983dab5d8"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-cashflow-proxy-2026",
+      "file_size": 5269,
+      "package_sha256": "eef7ee4daa2f6fd9c32f4009afd9df9293efc0cc210bd2dd5718ce7f3ac35fd4",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f899961e60086da3d362b34752d285f50b4955dce751bca1c44965a6af78654c",
+        "2e6a2a25f4c635a303c3d0bf090bfa834b5e33c7f8db3d81c9d589f28ec3d7f0"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-extractive-Assets-2023",
+      "file_size": 2522,
+      "package_sha256": "f0f2883091f51c45ea9e648198b61b61df4036455ce724a99f574e8f8428293d",
+      "package_version": "1.0",
+      "source_hashes": [
+        "5e95ed411bd3c017bb0a8fa79a33c060a3dec1cf35d5096e1c42b8536b33e5b3"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-extractive-Assets-2024",
+      "file_size": 2522,
+      "package_sha256": "92e180caedd9225ac315d8116ef5e224fab59443da753e50afdc4fe67e2db397",
+      "package_version": "1.0",
+      "source_hashes": [
+        "acaa1809db47149ae7b3e296808545d7a6f4fe9916401fcb09e716ee492b8c4f"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-extractive-Assets-2025",
+      "file_size": 2522,
+      "package_sha256": "91cebe36f970e35613133b538f089e43f73b3f069843f1bcd511ed14f3df34de",
+      "package_version": "1.0",
+      "source_hashes": [
+        "a473015cf7f5cc8ab4800e4b975396116ce87d913ff3d8864bbe2f11078e6907"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-extractive-NetIncomeLoss-2023",
+      "file_size": 2592,
+      "package_sha256": "ee22a88b81065c9d7fd4200f9d852a0b811f6d491a0536c27253cef957471dc6",
+      "package_version": "1.0",
+      "source_hashes": [
+        "9618a1a9a08d893b39707083a65483c8d26877b081c0e25e3205d9622d8144d4"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-extractive-NetIncomeLoss-2024",
+      "file_size": 2592,
+      "package_sha256": "b9581ea87297f6705828c3a3b162e9b961be5697396a1e83b7159536da63f30a",
+      "package_version": "1.0",
+      "source_hashes": [
+        "4fee3b8503b532553578c05d30c73d2bc318a043b14c6dc8e8ecca6446da98fb"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2025",
+      "file_size": 1498,
+      "package_sha256": "1a50cf53a610ea11ca05a4748a518601b665a238dab25fb180d58074bce1c87a",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2026",
+      "file_size": 1498,
+      "package_sha256": "2be09e83899c3eb001ce07eacddff7e5ed205052ccd1020ad9277a99b5f301bd",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-MSFT-insufficient-AssetsFairValueDisclosureRecurring-2023",
+      "file_size": 1524,
+      "package_sha256": "fe2e22765f8b746fdfe6b5576ca5114d2a0438424cc5de518178f019b411f0d1",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-cashflow-proxy-2022",
+      "file_size": 5249,
+      "package_sha256": "9c28b6dd79ba7d56bb7762ba50e3a0a5b6d54d541bc695c4469f5a4ac9901b06",
+      "package_version": "1.0",
+      "source_hashes": [
+        "8b1f90bf02d10c8be8c256d1da45acf16a2915206bc0e9ed0931defaa7843d90",
+        "b6516c1200f710e4b7d25052913800b1d60a1fadadce2457f48a36340e513495"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-cashflow-proxy-2023",
+      "file_size": 5249,
+      "package_sha256": "59540f17e6bb669549f5eef5527b8eb03a590a8efaaa588be0ed1d67fb745a26",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f590ecaa48c197a60a84116f1384f1e091edaee8b13550a3b234a54d5a7609a1",
+        "14d8624b35df2995f894b52caa8940f2db12c0bf8c7bc300c67a58af3d0378c6"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-cashflow-proxy-2024",
+      "file_size": 5249,
+      "package_sha256": "2e6cddd469c2fa59c3d1c2895f252cd6194458248069b8e1eeb57435f5ef96d4",
+      "package_version": "1.0",
+      "source_hashes": [
+        "2a1ef59f19d4693e82dd536f62ad01c1fe43b4f5372d9e3526dbbfccf1ad154e",
+        "7efaadc7b2fc06dcf36481f243083ab9438637186143abcc6e99161baf485e12"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-cashflow-proxy-2025",
+      "file_size": 5245,
+      "package_sha256": "d26ec10c80b166ced935e720a17a348073b1e9db0f1a2ad42b626bfd53963273",
+      "package_version": "1.0",
+      "source_hashes": [
+        "e545ecf3fcb00cf598591b8e51e74e72749c95f9b88c24c4cd448fd8587ade13",
+        "bc38643b33fd0ea22c5c164e405bc40ed858b8dee41f893a86f6f31fe6879369"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-extractive-Assets-2022",
+      "file_size": 2515,
+      "package_sha256": "3745f83ee88c349308ed14d0cfb44ebdb256120390fba13425e9f948c2a6cf56",
+      "package_version": "1.0",
+      "source_hashes": [
+        "61da67e15f0b81fed992427b11e334b8d8ba4ef3661a954b923c32cea3c63429"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-extractive-Assets-2023",
+      "file_size": 2515,
+      "package_sha256": "639872bf1d8cc622f374c415647b26530a42d6941827023e7e8c68c29b1106e9",
+      "package_version": "1.0",
+      "source_hashes": [
+        "6f08d6230c790e385722554955a1232ef2b814468df7123906b72de068fe40c9"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-extractive-NetIncomeLoss-2022",
+      "file_size": 2587,
+      "package_sha256": "08bb10893eedc123cc155d8004c20267721df07e47cb0bf34402b70d122cc281",
+      "package_version": "1.0",
+      "source_hashes": [
+        "f23b91ed2a256e7e9797aa02a6d6efb9fa812033d2cfbafc2d7afcb501d15570"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-extractive-NetIncomeLoss-2023",
+      "file_size": 2585,
+      "package_sha256": "238dd42134681175efeee1b06987b8383052bc828acc446ae1e9f38c0eab6054",
+      "package_version": "1.0",
+      "source_hashes": [
+        "fc6d5abeebe5a48441f769ad5b3f4ff646055e4df5705513291418e1691cff6f"
+      ]
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-insufficient-AccountsReceivableGrossCurrent-2025",
+      "file_size": 1513,
+      "package_sha256": "b14589e56ef6ed4713ed6600158d5c7937845b434bdcd3bf724fda9dbd12fedb",
+      "package_version": "1.0",
+      "source_hashes": []
+    },
+    {
+      "builder_commit": "7c1bf11",
+      "case_id": "finvest-UPS-insufficient-AccruedIncomeTaxesCurrent-2024",
+      "file_size": 1503,
+      "package_sha256": "51ca34ca5dd3ded94bd82cbada857ffca10a9cc0a461e8718c87c4b2c89b663f",
+      "package_version": "1.0",
+      "source_hashes": []
+    }
+  ],
+  "schema_version": "finvest-evidence-package-manifest.v1"
+}

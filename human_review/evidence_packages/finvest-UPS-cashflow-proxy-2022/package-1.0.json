@@ -1,0 +1,146 @@
+{
+  "builder_commit": "7c1bf11",
+  "calculation": {
+    "has_calculation": true,
+    "inputs": [
+      {
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "label": "Net cash provided by operating activities",
+        "raw_value": 14104000000.0,
+        "unit": "USD",
+        "value": "14,104,000,000"
+      },
+      {
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "raw_value": 4769000000.0,
+        "unit": "USD",
+        "value": "4,769,000,000"
+      }
+    ],
+    "note": "请根据上方两个输入独立计算并填写结果；机器候选答案在提交前不会显示。",
+    "operation": "first input − second input (absolute value where the source reports a negative outflow)"
+  },
+  "case_id": "finvest-UPS-cashflow-proxy-2022",
+  "definition": {
+    "assumptions": [
+      "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+    ],
+    "contested": false,
+    "statement": "本题按以下显式定义计算：first input − second input (absolute value where the source reports a negative outflow)。输入项分别为 OperatingCashFlow 和 CapitalExpenditure。"
+  },
+  "evidence_table": {
+    "rows": [
+      {
+        "accession": "0001090727-23-000006",
+        "concept": "NetCashProvidedByUsedInOperatingActivities",
+        "filing_date": "2023-02-21",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "FY2022",
+        "unit": "USD",
+        "value": "14,104,000,000"
+      },
+      {
+        "accession": "0001090727-23-000006",
+        "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "filing_date": "2023-02-21",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "FY2022",
+        "unit": "USD",
+        "value": "4,769,000,000"
+      }
+    ],
+    "source_footnote": "数值取自 SEC XBRL companyfacts（原始来源见时间版本卡）。"
+  },
+  "issuer": "UPS",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "package_version": "1.0",
+  "provenance": {
+    "answer_type": "derived",
+    "calculation_program": {
+      "inputs": [
+        "OperatingCashFlow",
+        "CapitalExpenditure"
+      ],
+      "operation": "subtract",
+      "period": "FY2022",
+      "result": 9335000000.0,
+      "scale": "1",
+      "unit": "USD"
+    },
+    "evidence_ids": [
+      "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+      "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006"
+    ],
+    "source_cutoff": "2023-02-21 00:00:00",
+    "target_fiscal_year": "FY2022",
+    "target_period_end": "2022-12-31"
+  },
+  "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2022-12-31?",
+  "raw_rows": [
+    {
+      "accn": "0001090727-23-000006",
+      "concept": "NetCashProvidedByUsedInOperatingActivities",
+      "end": "2022-12-31",
+      "filed": "2023-02-21",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2022",
+      "source_file": "research/cache/sec/ups_companyfacts.json",
+      "source_hash": "8b1f90bf02d10c8be8c256d1da45acf16a2915206bc0e9ed0931defaa7843d90",
+      "start": "2022-01-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 14104000000.0
+    },
+    {
+      "accn": "0001090727-23-000006",
+      "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "end": "2022-12-31",
+      "filed": "2023-02-21",
+      "form": "10-K",
+      "fp": "FY",
+      "fy": "2022",
+      "source_file": "research/cache/sec/ups_companyfacts.json",
+      "source_hash": "b6516c1200f710e4b7d25052913800b1d60a1fadadce2457f48a36340e513495",
+      "start": "2022-01-01",
+      "taxonomy": "us-gaap",
+      "unit": "USD",
+      "val": 4769000000.0
+    }
+  ],
+  "schema_version": "finvest-evidence-package.v2",
+  "time_version": {
+    "note": "若 filing date 晚于目标期结束日，需自行判断：后发 10-K 是否包含目标期 comparative figures，是否存在 amendment/restatement，以及是否应优先使用 更接近目标期的原始 filing。",
+    "rows": [
+      {
+        "accession": "0001090727-23-000006",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2023-02-21",
+        "fiscal_year": "2022",
+        "form": "10-K",
+        "label": "Net cash provided by operating activities",
+        "period": "2022-01-01 → 2022-12-31"
+      },
+      {
+        "accession": "0001090727-23-000006",
+        "after_target": true,
+        "amendment": "ORIGINAL",
+        "filing_date": "2023-02-21",
+        "fiscal_year": "2022",
+        "form": "10-K",
+        "label": "Payments for acquisition of property, plant and equipment",
+        "period": "2022-01-01 → 2022-12-31"
+      }
+    ],
+    "source_cutoff": "2023-02-21 00:00:00",
+    "target_period": "FY2022"
+  }
+}
