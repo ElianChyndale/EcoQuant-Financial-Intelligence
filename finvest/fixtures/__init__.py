@@ -1,0 +1,1 @@
+"""FinVEST committed test fixtures."""

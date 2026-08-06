@@ -1,0 +1,165 @@
+{
+  "cik": "0000320193",
+  "entityName": "Synthetic Fixture Inc.",
+  "facts": {
+    "us-gaap": {
+      "AccruedLiabilitiesCurrent": {
+        "label": "AccruedLiabilitiesCurrent",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-09-000111",
+              "end": "2008-09-27",
+              "filed": "2009-10-27",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2009,
+              "start": null,
+              "unit": "USD",
+              "val": 3376000000
+            },
+            {
+              "accn": "0000320193-10-000222",
+              "end": "2008-09-27",
+              "filed": "2010-10-27",
+              "form": "10-K/A",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2009,
+              "start": null,
+              "unit": "USD",
+              "val": 3852000000
+            }
+          ]
+        }
+      },
+      "Assets": {
+        "label": "Assets",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-24-000123",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": null,
+              "unit": "USD",
+              "val": 400000000000
+            }
+          ]
+        }
+      },
+      "DuplicateMetric": {
+        "label": "DuplicateMetric",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-24-000201",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": null,
+              "unit": "USD",
+              "val": 1000000000
+            },
+            {
+              "accn": "0000320193-24-000202",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": null,
+              "unit": "USD",
+              "val": 2000000000
+            }
+          ]
+        }
+      },
+      "EntityPublicFloat": {
+        "label": "EntityPublicFloat",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-10-000033",
+              "end": "2008-09-27",
+              "filed": "2010-01-25",
+              "form": "10-K/A",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2009,
+              "start": null,
+              "unit": "USD",
+              "val": 100000000
+            }
+          ]
+        }
+      },
+      "FutureExpense": {
+        "label": "FutureExpense",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-26-000999",
+              "end": "2024-09-28",
+              "filed": "2026-05-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2026,
+              "start": "2024-01-01",
+              "unit": "USD",
+              "val": 50000000
+            }
+          ]
+        }
+      },
+      "RevenueEur": {
+        "label": "RevenueEur",
+        "units": {
+          "EUR": [
+            {
+              "accn": "0000320193-24-000124",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": "2023-10-01",
+              "unit": "EUR",
+              "val": 360000000000
+            }
+          ]
+        }
+      },
+      "Revenues": {
+        "label": "Revenues",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-24-000123",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": "2023-10-01",
+              "unit": "USD",
+              "val": 391000000000
+            }
+          ]
+        }
+      }
+    }
+  }
+}
