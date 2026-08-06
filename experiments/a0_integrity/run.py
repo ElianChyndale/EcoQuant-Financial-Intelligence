@@ -12,7 +12,31 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))  # allow `python experiments/a0_integrity/run.py` directly
 OUTPUT = ROOT / "artifacts/results/a0_integrity.json"
+
+
+def _module_code_has_no_gold_accessor(module_path: Path) -> bool:
+    """True when a module's CODE (docstring stripped) has no gold-field accessor."""
+    import ast
+
+    from finvest.benchmark.leakage_audit import audit_source_for_gold
+
+    source = module_path.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(
+        tree.body[0].value, ast.Constant
+    ):
+        lines = source.splitlines(keepends=True)
+        source = "".join(lines[: tree.body[0].lineno - 1] + lines[tree.body[0].end_lineno:])
+    hits = audit_source_for_gold(source, function_name=module_path.stem)
+    gold_accessors = (
+        "gold_answer", "gold_evidence_ids", "acceptable_evidence_sets",
+        "minimal_evidence_sets", "selected_evidence_ids", "raw_rows",
+        "gold_support", "gold_minimal", "gold_coverage", "gold_program",
+        "gold_relevance", "gold_label",
+    )
+    return not any(h.lower() in gold_accessors for h in hits)
 
 
 def run_a0() -> dict[str, object]:
@@ -71,6 +95,14 @@ def run_a0() -> dict[str, object]:
     gates["feature_builder_no_gold_source"] = (
         not audit_source_for_gold(leak_free_path.read_text(encoding="utf-8"))
         or True  # source-level scan flags comments; function-level guard is authoritative
+    )
+
+    # 5b. Leak-free guard on the gold-blind corpus builder (Phase 2).
+    # Strip the module docstring first (it legitimately lists what must NOT be
+    # read), then assert no gold-field accessor appears in the code paths.
+    corpus_builder_path = ROOT / "finvest/benchmark/builders/leak_free_corpus.py"
+    gates["corpus_builder_no_gold_source"] = _module_code_has_no_gold_accessor(
+        corpus_builder_path
     )
 
     # 6. Model asset manifest (gitignored cache — SKIPPED honestly when absent).

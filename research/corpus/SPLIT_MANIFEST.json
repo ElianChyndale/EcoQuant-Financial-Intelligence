@@ -1,0 +1,20 @@
+{
+  "audit": {
+    "cross_split_leakage_violations": [],
+    "evidence_id_overlap_with_gold": 0,
+    "gold_tokens_in_corpus": []
+  },
+  "corpus_id": "af406d474f7455477e6a30d1b98900854fcfcd52b6e53a66b9f9a475b3e7c7c4",
+  "folds": {
+    "AAPL": "train",
+    "EQIX": "train",
+    "JNJ": "train",
+    "KO": "train",
+    "MSFT": "train",
+    "UPS": "test"
+  },
+  "record_count": 170229,
+  "schema_version": "finvest-split-manifest.v1",
+  "split_strategy": "issuer_holdout",
+  "test_issuer": "UPS"
+}
