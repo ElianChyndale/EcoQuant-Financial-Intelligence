@@ -40,8 +40,10 @@ from finvest.human_study.web.services.signing_adapter import (
     is_signed,
     record_problems_for,
 )
+from finvest.human_study.web.services.tooling_issue import report_tooling_issue
 
 ROOT = Path(__file__).resolve().parents[3]
+TOOLING_ISSUE_PATH = ROOT / "research" / "cache" / "workbench" / "tooling_issues.jsonl"
 DAY1 = ROOT / "human_review" / "day1"
 CACHE = ROOT / "research" / "cache"
 DB_PATH = ROOT / "research" / "cache" / "workbench" / "workbench.sqlite"
@@ -159,6 +161,37 @@ def save_draft(
 
     db.save_draft(reviewer, queue, key, json.loads(payload))
     db.record_interaction(reviewer, key, "autosave")
+    return JSONResponse({"ok": True})
+
+
+@app.post("/tooling-issue/{queue}/{key}")
+def tooling_issue(
+    request: Request,
+    queue: str,
+    key: str,
+    reviewer: str = Form(...),
+    evidence_id: str = Form(None),
+    category: str = Form(...),
+    note: str = Form(""),
+):
+    """Report a tooling issue (never a human label)."""
+    db: DraftService = request.app.state.db
+    request_id = request.headers.get("x-request-id", "web")
+    try:
+        report_tooling_issue(
+            issue_path=TOOLING_ISSUE_PATH,
+            case_id=key,
+            queue=queue,
+            evidence_id=evidence_id or None,
+            category=category,
+            note=note,
+            reviewer_id=reviewer,
+            commit="fix/day1-v0.2-scientific-e2e",
+            request_id=request_id,
+        )
+    except ValueError as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    db.record_interaction(reviewer, key, "tooling_issue", category)
     return JSONResponse({"ok": True})
 
 

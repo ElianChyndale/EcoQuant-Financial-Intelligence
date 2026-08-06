@@ -105,7 +105,10 @@
   <section class="panel judgement-panel">
     <h3>Human Judgement</h3>
     <p class="hint">Judgement values are entered by the researcher. AI never recommends a label.</p>
-    <form id="judgement-form" data-queue="{{ queue }}" data-key="{{ key }}" data-reviewer="{{ reviewer }}">
+    <form id="judgement-form" data-queue="{{ queue }}" data-key="{{ key }}" data-reviewer="{{ reviewer }}" data-preflight="{{ preflight.status if preflight else '' }}">
+      <div class="preflight-mini">
+        Status: {{ preflight.status if preflight else "—" }}{% if preflight and preflight.reason %}: {{ preflight.reason }}{% endif %}
+      </div>
       <label>Question valid
         <select name="question_valid">
           <option value="">—</option>
@@ -134,6 +137,31 @@
           <option>REVIEW_UNRESOLVED</option>
         </select>
       </label>
+      <label>Entity <input name="entity" placeholder="issuer or blank"></label>
+      <label>Metric <input name="metric" placeholder="metric or blank"></label>
+      <label>Target period <input name="target_period" placeholder="e.g. FY2024"></label>
+      <label>Unit & scale <input name="unit_and_scale" placeholder="e.g. USD, raw"></label>
+      <label>Reporting scope <input name="reporting_scope" placeholder="e.g. consolidated"></label>
+      <label>Mandatory requirements <input name="mandatory_requirements" placeholder="space-separated"></label>
+      <fieldset class="tristate">
+        <legend>Source time valid</legend>
+        <label><input type="radio" name="source_time_valid" value="true"> yes</label>
+        <label><input type="radio" name="source_time_valid" value="false"> no</label>
+        <label><input type="radio" name="source_time_valid" value=""> unsure/blank</label>
+      </fieldset>
+      <fieldset class="tristate">
+        <legend>Version valid</legend>
+        <label><input type="radio" name="version_valid" value="true"> yes</label>
+        <label><input type="radio" name="version_valid" value="false"> no</label>
+        <label><input type="radio" name="version_valid" value=""> unsure/blank</label>
+      </fieldset>
+      <fieldset class="tristate">
+        <legend>Calculation reproducible</legend>
+        <label><input type="radio" name="calculation_reproducible" value="true"> yes</label>
+        <label><input type="radio" name="calculation_reproducible" value="false"> no</label>
+        <label><input type="radio" name="calculation_reproducible" value=""> unsure/blank</label>
+      </fieldset>
+      <label>Final answer (or blank = abstain) <input name="final_answer_or_null"></label>
       <label>Confidence
         <select name="reviewer_confidence">
           <option value="">—</option>
@@ -144,12 +172,25 @@
         <textarea name="reviewer_notes" rows="3" placeholder="Explain why the selected evidence is or is not sufficient."></textarea>
       </label>
       <input type="hidden" name="supporting_evidence_ids" id="supporting-ids">
-      <input type="hidden" name="minimal_evidence_ids" id="minimal-ids">
+      <input type="hidden" name="minimal_evidence_set" id="minimal-ids">
       <div class="form-actions">
         <button type="button" id="save-draft">Save draft (Ctrl+S)</button>
         <button type="button" id="open-final-review">Review & sign (Ctrl+Enter)</button>
       </div>
+      <div id="save-status" class="save-status"></div>
     </form>
+    <details class="tooling-issue">
+      <summary>Report tooling issue (does not create a label)</summary>
+      <select id="issue-category">
+        {% for c in ("MISSING_VALUE","MISSING_UNIT","METADATA_INCONSISTENCY","EVIDENCE_RESOLUTION_FAILED","VERSION_TIMELINE_MISSING","WRONG_CONCEPT_DISPLAYED","UI_ACTION_FAILED","INVALID_BENCHMARK_CASE","OTHER_TOOLING_ISSUE") %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+      <input id="issue-evidence" placeholder="evidence ID (optional)">
+      <textarea id="issue-note" rows="2" placeholder="Short researcher note (not a label)"></textarea>
+      <button type="button" id="report-issue">Report issue</button>
+      <div id="issue-status" class="save-status"></div>
+    </details>
   </section>
 </div>
 
@@ -164,6 +205,8 @@
     {% endfor %}
   </ul>
 </section>
+
+<script>window.__draft = {{ draft | tojson if draft else {} }};</script>
 
 <!-- Final review + signing (requires typed SIGN) -->
 <div id="final-review-modal" hidden>
