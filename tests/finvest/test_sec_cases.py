@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.local_real_data
+
 from finvest.benchmark.builders.sec_cases import build_sec_cases
 from finvest.benchmark.conditions import generate_conditions
 from finvest.benchmark.schemas import EVIDENCE_CONDITIONS

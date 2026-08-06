@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.local_real_data
+
 from finvest.document_intelligence.html_parser import parse_10k_html
 
 ROOT = Path(__file__).resolve().parents[2]

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.local_real_data
+
 from finvest.human_study.web.services.preflight import (
     INVALID,
     READY,

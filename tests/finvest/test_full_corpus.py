@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.local_real_data
+
 from finvest.retrieval.full_corpus import build_full_corpus, bm25_retrieve, dense_retrieve
 from finvest.retrieval.metrics import (
     all_required_evidence_recall,
