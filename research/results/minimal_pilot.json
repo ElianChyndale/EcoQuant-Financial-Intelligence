@@ -1,0 +1,786 @@
+{
+  "abstains": 1,
+  "aggregated": {
+    "b1_top_k": {
+      "all_required_evidence_recall": 1.0,
+      "average_set_size": 1.9444,
+      "minimal_set_recall": 1.0,
+      "minimality_violation_rate": 0.0,
+      "redundancy": 0.0278,
+      "set_exact_match": 1.0,
+      "set_precision": 1.0
+    },
+    "b2_greedy": {
+      "all_required_evidence_recall": 1.0,
+      "average_set_size": 1.9444,
+      "minimal_set_recall": 1.0,
+      "minimality_violation_rate": 0.0,
+      "redundancy": 0.0,
+      "set_exact_match": 1.0,
+      "set_precision": 1.0
+    },
+    "b3_beam": {
+      "all_required_evidence_recall": 1.0,
+      "average_set_size": 1.9444,
+      "minimal_set_recall": 1.0,
+      "minimality_violation_rate": 0.0,
+      "redundancy": 0.0,
+      "set_exact_match": 1.0,
+      "set_precision": 1.0
+    },
+    "b4_oracle": {
+      "all_required_evidence_recall": 1.0,
+      "average_set_size": 1.9444,
+      "minimal_set_recall": 1.0,
+      "minimality_violation_rate": 0.0,
+      "redundancy": 0.0,
+      "set_exact_match": 1.0,
+      "set_precision": 1.0
+    }
+  },
+  "answers": 19,
+  "coverage_curve": {
+    "abstained": 1,
+    "answered": 18,
+    "coverage_pct": 90.0,
+    "proposed_pass_rate": 100.0
+  },
+  "experiment": "minimal_pilot_solo_provisional",
+  "gold_source": "SOLO_ANNOTATIONS.jsonl (solo-v1, provisional)",
+  "leakage_warning": "GOLD-DERIVED LEAKAGE: in this pilot the retrieval pool for each case is the case's own evidence rows, so B1-B4 trivially achieve 1.0. These numbers are NOT meaningful baseline results \u2014 a real run needs an independent retrieval corpus (full company facts). This pilot validates the HARNESS only.",
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "n_annotated": 20,
+  "n_with_evidence": 18,
+  "note": "PILOT: B1-B4 on provisional labels; B4 is an ORACLE upper bound, never a headline. Proposed verifier pass rate shown separately. Not paper results until labels reach HUMAN_VALIDATED_GOLD and a leak-free retrieval corpus is used.",
+  "per_case": [
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-AAPL-cashflow-proxy-2024",
+      "route": "REVIEW"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-AAPL-cashflow-proxy-2025",
+      "route": "REVIEW"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-JNJ-cashflow-proxy-2025",
+      "route": "REVIEW"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-KO-cashflow-proxy-2025",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-MSFT-cashflow-proxy-2025",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-MSFT-cashflow-proxy-2026",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-UPS-cashflow-proxy-2024",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-UPS-cashflow-proxy-2025",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 1.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.5,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 1.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 1.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 1.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-MSFT-cashflow-proxy-2023",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-KO-cashflow-proxy-2023",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-JNJ-cashflow-proxy-2023",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-UPS-cashflow-proxy-2022",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-AAPL-cashflow-proxy-2023",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-MSFT-cashflow-proxy-2024",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-KO-cashflow-proxy-2024",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-JNJ-cashflow-proxy-2024",
+      "route": "ANSWER"
+    },
+    {
+      "b1_top_k": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b2_greedy": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b3_beam": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "b4_oracle": {
+        "all_required_evidence_recall": 1.0,
+        "average_set_size": 2.0,
+        "minimal_set_recall": 1.0,
+        "minimality_violation_rate": 0.0,
+        "redundancy": 0.0,
+        "set_exact_match": 1.0,
+        "set_precision": 1.0
+      },
+      "case_id": "finvest-UPS-cashflow-proxy-2023",
+      "route": "ANSWER"
+    }
+  ],
+  "routes": [
+    "ABSTAIN",
+    "ANSWER",
+    "REVIEW"
+  ]
+}

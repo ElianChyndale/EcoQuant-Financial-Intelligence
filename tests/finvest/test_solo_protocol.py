@@ -249,3 +249,23 @@ def test_recheck_case_needs_two_rounds(tmp_path: Path) -> None:
     append_annotation(path, a)  # round 2 (identical)
     out = recheck_case(path, "c1")
     assert out is not None and out["status"] == "SOLO_CONFIRMED"
+
+
+# --- Minimal experiments harness (runs, honest about leakage) ---
+
+def test_minimal_experiments_harness_runs(tmp_path: Path) -> None:
+    """The pilot harness must run and flag its own leakage honestly."""
+    import subprocess, sys
+
+    script = Path(__file__).resolve().parents[2] / "experiments/a10_integration/minimal_experiments.py"
+    if not script.exists():
+        pytest.skip("minimal_experiments script not present")
+    r = subprocess.run(
+        [sys.executable, str(script)],
+        capture_output=True, text=True, timeout=120,
+    )
+    assert r.returncode == 0, r.stderr
+    out = json.loads(r.stdout)
+    assert out["n_annotated"] >= 20
+    assert "leakage_warning" in out  # honest about the pilot's leakage
+    assert out["coverage_curve"]["coverage_pct"] > 0
