@@ -68,6 +68,7 @@ def _evidence_item(fact: SecFact, ticker: str) -> EvidenceItem:
         scale="1",
         scope=fact.scope,
         content_hash=fact.fact_id,
+        fiscal_year=fact.fiscal_year,
     )
 
 
@@ -189,20 +190,30 @@ def _amended_case(bundle: SecBundle, ticker: str) -> FinVestCase | None:
     )
 
 
+_INSUFFICIENT_OFFSET = 0  # module-level counter for candidate diversity
+
+
 def _insufficient_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
-    """Insufficient case: a metric NOT reported for the year (honest ABSTAIN)."""
+    """Insufficient case: a metric NOT reported for the year (honest ABSTAIN).
+
+    Each call picks a DIFFERENT candidate metric (round-robin over the
+    concepts the company reports in other years but not this one), so multiple
+    calls per year produce diverse negative cases.
+    """
+    global _INSUFFICIENT_OFFSET
     # Pick a metric the company reports in OTHER years but not this one.
     reported_years: dict[str, set[int]] = {}
     for fact in bundle.facts:
         if fact.ticker == ticker and fact.form == "10-K":
             reported_years.setdefault(fact.concept, set()).add(fact.end.year)
-    candidates = [
+    candidates = sorted(
         concept for concept, years in reported_years.items()
         if year not in years and any(y < year for y in years)
-    ]
+    )
     if not candidates:
         return None
-    concept = sorted(candidates)[0]
+    concept = candidates[_INSUFFICIENT_OFFSET % len(candidates)]
+    _INSUFFICIENT_OFFSET += 1
     graph = RequirementGraph(
         nodes=(
             RequirementNode("metric", "METRIC", concept),
@@ -234,6 +245,71 @@ def _insufficient_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase
     )
 
 
+def _extractive_case(
+    bundle: SecBundle, ticker: str, year: int, concept: str
+) -> FinVestCase | None:
+    """Extractive case: direct value of a metric for a fiscal year.
+
+    Uses the ORIGINAL filing for the period: match on ``fiscal_year == year``
+    (not ``end.year``) — companies with calendar fiscal years (JNJ, KO, UPS)
+    report FY2023 with end=2023-12-31, and matching on end.year alone would
+    pick a WRONG period (e.g. an end=2023-01-01 partial row).
+    """
+    matches = [
+        fact for fact in bundle.facts
+        if fact.ticker == ticker and fact.concept == concept
+        and fact.form == "10-K" and fact.fiscal_year == year
+    ]
+    if not matches:
+        # Fallback: no fact carries the fiscal-year label; match on end.year.
+        matches = [
+            fact for fact in bundle.facts
+            if fact.ticker == ticker and fact.concept == concept
+            and fact.form == "10-K" and fact.end.year == year
+        ]
+    if not matches:
+        return None
+    original = [f for f in matches if f.fiscal_year == year]
+    pool = original or matches
+    # Prefer the FULL fiscal-year period: among facts with the same fiscal-year
+    # label, pick the one with the LATEST end (the complete year), then the
+    # latest filing. (JNJ FY2023 has BOTH start=2022-01-03/end=2023-01-01 and
+    # start=2023-01-02/end=2023-12-31 labelled fy=2023; the latter is the year.)
+    fact = max(pool, key=lambda f: (f.end, f.filed))
+    graph = RequirementGraph(
+        nodes=(
+            RequirementNode("metric", "METRIC", concept),
+            RequirementNode("ticker", "ENTITY", ticker),
+            RequirementNode("period", "PERIOD", str(year)),
+        ),
+        edges=(
+            RequirementEdge("metric", "ticker", "SAME_AS"),
+            RequirementEdge("metric", "period", "SAME_AS"),
+        ),
+    )
+    ev = _evidence_item(fact, ticker)
+    return FinVestCase(
+        case_id=f"finvest-{ticker}-extractive-{concept}-{year}",
+        base_question_id=f"bq-extractive-{concept}",
+        issuer_id=ticker,
+        jurisdiction=COMPANY_DOMAINS[ticker],
+        question=f"What is {concept} for {ticker} for fiscal year {year}?",
+        source_cutoff=datetime(fact.filed.year, fact.filed.month, fact.filed.day),
+        target_period_start=fact.start or fact.end,
+        target_period_end=fact.end,
+        target_fiscal_year=f"FY{year}",
+        answer_type="extractive",
+        gold_answer={"value": fact.value, "unit": fact.unit or "USD"},
+        decision_label="ANSWER",
+        sufficiency_label="SUPPORTED",
+        requirement_graph=graph,
+        acceptable_evidence_sets=(frozenset({ev.evidence_id}),),
+        minimal_evidence_sets=(frozenset({ev.evidence_id}),),
+        evidence_items=(ev,),
+        assumptions=(),
+    )
+
+
 def _annual_fact(bundle: SecBundle, ticker: str, year: int, concept: str) -> SecFact | None:
     """10-K fact for a concept in a fiscal year.
 
@@ -251,6 +327,9 @@ def _annual_fact(bundle: SecBundle, ticker: str, year: int, concept: str) -> Sec
         return None
     original = [f for f in matches if f.fiscal_year == year]
     pool = original or matches
+    # Among same fiscal-year facts, pick the one with the LATEST end (the full
+    # fiscal year), then the latest filing. (JNJ FY2023 has both
+    # end=2023-01-01 and end=2023-12-31 labelled fy=2023; the latter is the year.)
     return max(pool, key=lambda f: (f.end, f.filed))
 
 
@@ -290,11 +369,22 @@ def _amended_pair(bundle: SecBundle, ticker: str) -> tuple[SecFact | None, SecFa
 
 
 def build_sec_cases(
-    cache_dir: Path, tickers: tuple[str, ...], *, fixture: bool = False
+    cache_dir: Path,
+    tickers: tuple[str, ...],
+    *,
+    fixture: bool = False,
+    years_back: int = 2,
+    insufficient_per_year: int = 1,
+    extractive: bool = False,
 ) -> BuiltCases:
     """Build FinVEST cases from SEC XBRL companyfacts for the given tickers.
 
     ``fixture=True`` marks the manifest as synthetic (committed fixture).
+    ``years_back`` controls how many recent fiscal years to cover (default 2).
+    ``insufficient_per_year`` controls how many insufficient (abstain) cases
+    per year (default 1; more yields more negative cases).
+    ``extractive=True`` also adds direct-value extraction cases (Assets,
+    Revenues, NetIncomeLoss) for recent years.
     """
     bundle = load_companyfacts(cache_dir / "sec", tickers=tickers, fixture=fixture)
     cases: list[FinVestCase] = []
@@ -303,13 +393,19 @@ def build_sec_cases(
             fact.end.year for fact in bundle.facts
             if fact.ticker == ticker and fact.form == "10-K"
         })
-        for year in years[-2:]:
+        for year in years[-years_back:]:
             fcff = _fcff_case(bundle, ticker, year)
             if fcff is not None:
                 cases.append(fcff)
-            insufficient = _insufficient_case(bundle, ticker, year)
-            if insufficient is not None:
-                cases.append(insufficient)
+            for _ in range(insufficient_per_year):
+                insufficient = _insufficient_case(bundle, ticker, year)
+                if insufficient is not None:
+                    cases.append(insufficient)
+            if extractive:
+                for concept in ("Assets", "Revenues", "NetIncomeLoss"):
+                    ex = _extractive_case(bundle, ticker, year, concept)
+                    if ex is not None:
+                        cases.append(ex)
         amended = _amended_case(bundle, ticker)
         if amended is not None:
             cases.append(amended)

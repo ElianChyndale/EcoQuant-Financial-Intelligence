@@ -66,6 +66,7 @@ class EvidenceItem:
     scale: str | None = None
     scope: str | None = None
     content_hash: str | None = None
+    fiscal_year: int | None = None  # original filing's fiscal-year label (disambiguates comparatives)
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,3833 @@
+[
+ {
+  "case_id": "finvest-AAPL-cashflow-proxy-2023",
+  "base_question_id": "bq-cashflow-proxy-2023",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2023-09-30?",
+  "source_cutoff": "2023-11-03 00:00:00",
+  "target_period_start": "2022-09-25",
+  "target_period_end": "2023-09-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 99584000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106', 'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106', 'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "document_id": "AAPL-10-K-2023-09-30",
+    "document_version": "10-K",
+    "filing_date": "2023-11-03",
+    "valid_from": "2022-09-25",
+    "valid_to": "2023-09-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "fiscal_year": 2023
+   },
+   {
+    "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "document_id": "AAPL-10-K-2023-09-30",
+    "document_version": "10-K",
+    "filing_date": "2023-11-03",
+    "valid_from": "2022-09-25",
+    "valid_to": "2023-09-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 99584000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2023"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-cashflow-proxy-2023",
+  "base_question_id": "bq-cashflow-proxy-2023",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2023-06-30?",
+  "source_cutoff": "2023-07-27 00:00:00",
+  "target_period_start": "2022-07-01",
+  "target_period_end": "2023-06-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 59475000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "document_id": "MSFT-10-K-2023-06-30",
+    "document_version": "10-K",
+    "filing_date": "2023-07-27",
+    "valid_from": "2022-07-01",
+    "valid_to": "2023-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "fiscal_year": 2023
+   },
+   {
+    "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "document_id": "MSFT-10-K-2023-06-30",
+    "document_version": "10-K",
+    "filing_date": "2023-07-27",
+    "valid_from": "2022-07-01",
+    "valid_to": "2023-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 59475000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2023"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-cashflow-proxy-2023",
+  "base_question_id": "bq-cashflow-proxy-2023",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2023-12-31?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 9747000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009', 'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009', 'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "document_id": "KO-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "fiscal_year": 2023
+   },
+   {
+    "evidence_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "document_id": "KO-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 9747000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2023"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-cashflow-proxy-2023",
+  "base_question_id": "bq-cashflow-proxy-2023",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is JNJ operating cash flow minus capital expenditure for the fiscal period ending 2023-12-31?",
+  "source_cutoff": "2024-02-16 00:00:00",
+  "target_period_start": "2023-01-02",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 18248000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013', 'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013', 'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "document_id": "JNJ-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-01-02",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "fiscal_year": 2023
+   },
+   {
+    "evidence_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "document_id": "JNJ-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-01-02",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 18248000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2023"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-cashflow-proxy-2022",
+  "base_question_id": "bq-cashflow-proxy-2022",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2022-12-31?",
+  "source_cutoff": "2023-02-21 00:00:00",
+  "target_period_start": "2022-01-01",
+  "target_period_end": "2022-12-31",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 9335000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006', 'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006', 'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "document_id": "UPS-10-K-2022-12-31",
+    "document_version": "10-K",
+    "filing_date": "2023-02-21",
+    "valid_from": "2022-01-01",
+    "valid_to": "2022-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "fiscal_year": 2022
+   },
+   {
+    "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "document_id": "UPS-10-K-2022-12-31",
+    "document_version": "10-K",
+    "filing_date": "2023-02-21",
+    "valid_from": "2022-01-01",
+    "valid_to": "2022-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "fiscal_year": 2022
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 9335000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2022"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-cashflow-proxy-2024",
+  "base_question_id": "bq-cashflow-proxy-2024",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2024-06-30?",
+  "source_cutoff": "2024-07-30 00:00:00",
+  "target_period_start": "2023-07-01",
+  "target_period_end": "2024-06-30",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 74071000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843', 'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843', 'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "document_id": "MSFT-10-K-2024-06-30",
+    "document_version": "10-K",
+    "filing_date": "2024-07-30",
+    "valid_from": "2023-07-01",
+    "valid_to": "2024-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "fiscal_year": 2024
+   },
+   {
+    "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "document_id": "MSFT-10-K-2024-06-30",
+    "document_version": "10-K",
+    "filing_date": "2024-07-30",
+    "valid_from": "2023-07-01",
+    "valid_to": "2024-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 74071000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2024"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-cashflow-proxy-2024",
+  "base_question_id": "bq-cashflow-proxy-2024",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?",
+  "source_cutoff": "2025-02-20 00:00:00",
+  "target_period_start": "2024-01-01",
+  "target_period_end": "2024-12-31",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 4741000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011', 'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011', 'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "document_id": "KO-10-K-2024-12-31",
+    "document_version": "10-K",
+    "filing_date": "2025-02-20",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "fiscal_year": 2024
+   },
+   {
+    "evidence_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "document_id": "KO-10-K-2024-12-31",
+    "document_version": "10-K",
+    "filing_date": "2025-02-20",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0000021344-25-000011",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 4741000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2024"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-cashflow-proxy-2024",
+  "base_question_id": "bq-cashflow-proxy-2024",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is JNJ operating cash flow minus capital expenditure for the fiscal period ending 2024-12-29?",
+  "source_cutoff": "2025-02-13 00:00:00",
+  "target_period_start": "2024-01-01",
+  "target_period_end": "2024-12-29",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 19842000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038', 'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038', 'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "document_id": "JNJ-10-K-2024-12-29",
+    "document_version": "10-K",
+    "filing_date": "2025-02-13",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-29",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "fiscal_year": 2024
+   },
+   {
+    "evidence_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "document_id": "JNJ-10-K-2024-12-29",
+    "document_version": "10-K",
+    "filing_date": "2025-02-13",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-29",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 19842000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2024"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-cashflow-proxy-2023",
+  "base_question_id": "bq-cashflow-proxy-2023",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2023-12-31?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "derived",
+  "gold_answer": {
+   "value": 5080000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "cash_flow_proxy",
+     "node_type": "FINAL_VALUE",
+     "value": "simplified-cash-flow-proxy",
+     "attributes": {}
+    },
+    {
+     "node_id": "ocf",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "OperatingCashFlow",
+     "attributes": {}
+    },
+    {
+     "node_id": "capex",
+     "node_type": "INTERMEDIATE_VALUE",
+     "value": "CapitalExpenditure",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "ocf",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "cash_flow_proxy",
+     "target_id": "capex",
+     "relation": "DERIVES_FROM"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "ocf",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "capex",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "document_id": "UPS-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "concept": "NetCashProvidedByUsedInOperatingActivities",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "fiscal_year": 2023
+   },
+   {
+    "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "document_id": "UPS-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": {
+   "operation": "subtract",
+   "inputs": [
+    "OperatingCashFlow",
+    "CapitalExpenditure"
+   ],
+   "result": 5080000000.0,
+   "unit": "USD",
+   "scale": "1",
+   "period": "FY2023"
+  },
+  "assumptions": [
+   "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-extractive-Assets-2022",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is Assets for AAPL for fiscal year 2022?",
+  "source_cutoff": "2022-10-28 00:00:00",
+  "target_period_start": "2022-09-24",
+  "target_period_end": "2022-09-24",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 352755000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2022-09-24:10-K:0000320193-22-000108'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2022-09-24:10-K:0000320193-22-000108'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:Assets:USD::2022-09-24:10-K:0000320193-22-000108",
+    "document_id": "AAPL-10-K-2022-09-24",
+    "document_version": "10-K",
+    "filing_date": "2022-10-28",
+    "valid_from": "2022-09-24",
+    "valid_to": "2022-09-24",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:Assets:USD::2022-09-24:10-K:0000320193-22-000108",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:Assets:USD::2022-09-24:10-K:0000320193-22-000108",
+    "fiscal_year": 2022
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is Assets for MSFT for fiscal year 2023?",
+  "source_cutoff": "2023-07-27 00:00:00",
+  "target_period_start": "2023-06-30",
+  "target_period_end": "2023-06-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 411976000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:Assets:USD::2023-06-30:10-K:0000950170-23-035122",
+    "document_id": "MSFT-10-K-2023-06-30",
+    "document_version": "10-K",
+    "filing_date": "2023-07-27",
+    "valid_from": "2023-06-30",
+    "valid_to": "2023-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:Assets:USD::2023-06-30:10-K:0000950170-23-035122",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:Assets:USD::2023-06-30:10-K:0000950170-23-035122",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is Assets for KO for fiscal year 2023?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-12-31",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 97703000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009",
+    "document_id": "KO-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-12-31",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:Assets:USD::2023-12-31:10-K:0000021344-24-000009",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-EQIX-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "EQIX",
+  "jurisdiction": "US",
+  "question": "What is Assets for EQIX for fiscal year 2023?",
+  "source_cutoff": "2024-02-16 00:00:00",
+  "target_period_start": "2023-12-31",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 32650724000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "EQIX",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:Assets:USD::2023-12-31:10-K:0001628280-24-005350'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:Assets:USD::2023-12-31:10-K:0001628280-24-005350'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "EQIX:us-gaap:Assets:USD::2023-12-31:10-K:0001628280-24-005350",
+    "document_id": "EQIX-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-12-31",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "EQIX:us-gaap:Assets:USD::2023-12-31:10-K:0001628280-24-005350",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "EQIX:us-gaap:Assets:USD::2023-12-31:10-K:0001628280-24-005350",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is Assets for JNJ for fiscal year 2023?",
+  "source_cutoff": "2024-02-16 00:00:00",
+  "target_period_start": "2023-12-31",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 167558000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013",
+    "document_id": "JNJ-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-12-31",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:Assets:USD::2023-12-31:10-K:0000200406-24-000013",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-extractive-Assets-2022",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is Assets for UPS for fiscal year 2022?",
+  "source_cutoff": "2023-02-21 00:00:00",
+  "target_period_start": "2022-12-31",
+  "target_period_end": "2022-12-31",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 71124000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:Assets:USD::2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:Assets:USD::2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:Assets:USD::2022-12-31:10-K:0001090727-23-000006",
+    "document_id": "UPS-10-K-2022-12-31",
+    "document_version": "10-K",
+    "filing_date": "2023-02-21",
+    "valid_from": "2022-12-31",
+    "valid_to": "2022-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:Assets:USD::2022-12-31:10-K:0001090727-23-000006",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:Assets:USD::2022-12-31:10-K:0001090727-23-000006",
+    "fiscal_year": 2022
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-extractive-NetIncomeLoss-2022",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for AAPL for fiscal year 2022?",
+  "source_cutoff": "2022-10-28 00:00:00",
+  "target_period_start": "2021-09-26",
+  "target_period_end": "2022-09-24",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 99803000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:NetIncomeLoss:USD:2021-09-26:2022-09-24:10-K:0000320193-22-000108'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:NetIncomeLoss:USD:2021-09-26:2022-09-24:10-K:0000320193-22-000108'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:NetIncomeLoss:USD:2021-09-26:2022-09-24:10-K:0000320193-22-000108",
+    "document_id": "AAPL-10-K-2022-09-24",
+    "document_version": "10-K",
+    "filing_date": "2022-10-28",
+    "valid_from": "2021-09-26",
+    "valid_to": "2022-09-24",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:NetIncomeLoss:USD:2021-09-26:2022-09-24:10-K:0000320193-22-000108",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:NetIncomeLoss:USD:2021-09-26:2022-09-24:10-K:0000320193-22-000108",
+    "fiscal_year": 2022
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for MSFT for fiscal year 2023?",
+  "source_cutoff": "2023-07-27 00:00:00",
+  "target_period_start": "2022-07-01",
+  "target_period_end": "2023-06-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 72361000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetIncomeLoss:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetIncomeLoss:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:NetIncomeLoss:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "document_id": "MSFT-10-K-2023-06-30",
+    "document_version": "10-K",
+    "filing_date": "2023-07-27",
+    "valid_from": "2022-07-01",
+    "valid_to": "2023-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:NetIncomeLoss:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:NetIncomeLoss:USD:2022-07-01:2023-06-30:10-K:0000950170-23-035122",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-extractive-Revenues-2023",
+  "base_question_id": "bq-extractive-Revenues",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is Revenues for KO for fiscal year 2023?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 45754000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Revenues",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:Revenues:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:Revenues:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:Revenues:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "document_id": "KO-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:Revenues:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "concept": "Revenues",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:Revenues:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-EQIX-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "EQIX",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for EQIX for fiscal year 2023?",
+  "source_cutoff": "2024-02-16 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 969178000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "EQIX",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350",
+    "document_id": "EQIX-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "EQIX:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001628280-24-005350",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for JNJ for fiscal year 2023?",
+  "source_cutoff": "2024-02-16 00:00:00",
+  "target_period_start": "2023-01-02",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 35153000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetIncomeLoss:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetIncomeLoss:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:NetIncomeLoss:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "document_id": "JNJ-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-16",
+    "valid_from": "2023-01-02",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:NetIncomeLoss:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:NetIncomeLoss:USD:2023-01-02:2023-12-31:10-K:0000200406-24-000013",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-extractive-NetIncomeLoss-2022",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for UPS for fiscal year 2022?",
+  "source_cutoff": "2023-02-21 00:00:00",
+  "target_period_start": "2022-01-01",
+  "target_period_end": "2022-12-31",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 11548000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "document_id": "UPS-10-K-2022-12-31",
+    "document_version": "10-K",
+    "filing_date": "2023-02-21",
+    "valid_from": "2022-01-01",
+    "valid_to": "2022-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:NetIncomeLoss:USD:2022-01-01:2022-12-31:10-K:0001090727-23-000006",
+    "fiscal_year": 2022
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is Assets for AAPL for fiscal year 2023?",
+  "source_cutoff": "2023-11-03 00:00:00",
+  "target_period_start": "2023-09-30",
+  "target_period_end": "2023-09-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 352583000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:Assets:USD::2023-09-30:10-K:0000320193-23-000106",
+    "document_id": "AAPL-10-K-2023-09-30",
+    "document_version": "10-K",
+    "filing_date": "2023-11-03",
+    "valid_from": "2023-09-30",
+    "valid_to": "2023-09-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:Assets:USD::2023-09-30:10-K:0000320193-23-000106",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:Assets:USD::2023-09-30:10-K:0000320193-23-000106",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-extractive-Assets-2024",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is Assets for MSFT for fiscal year 2024?",
+  "source_cutoff": "2024-07-30 00:00:00",
+  "target_period_start": "2024-06-30",
+  "target_period_end": "2024-06-30",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 512163000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:Assets:USD::2024-06-30:10-K:0000950170-24-087843",
+    "document_id": "MSFT-10-K-2024-06-30",
+    "document_version": "10-K",
+    "filing_date": "2024-07-30",
+    "valid_from": "2024-06-30",
+    "valid_to": "2024-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:Assets:USD::2024-06-30:10-K:0000950170-24-087843",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:Assets:USD::2024-06-30:10-K:0000950170-24-087843",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for KO for fiscal year 2023?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 10714000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "document_id": "KO-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0000021344-24-000009",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-EQIX-extractive-Assets-2024",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "EQIX",
+  "jurisdiction": "US",
+  "question": "What is Assets for EQIX for fiscal year 2024?",
+  "source_cutoff": "2025-02-12 00:00:00",
+  "target_period_start": "2024-12-31",
+  "target_period_end": "2024-12-31",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 35085000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "EQIX",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:Assets:USD::2024-12-31:10-K:0001628280-25-005126'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:Assets:USD::2024-12-31:10-K:0001628280-25-005126'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "EQIX:us-gaap:Assets:USD::2024-12-31:10-K:0001628280-25-005126",
+    "document_id": "EQIX-10-K-2024-12-31",
+    "document_version": "10-K",
+    "filing_date": "2025-02-12",
+    "valid_from": "2024-12-31",
+    "valid_to": "2024-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "EQIX:us-gaap:Assets:USD::2024-12-31:10-K:0001628280-25-005126",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "EQIX:us-gaap:Assets:USD::2024-12-31:10-K:0001628280-25-005126",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-extractive-Assets-2024",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is Assets for JNJ for fiscal year 2024?",
+  "source_cutoff": "2025-02-13 00:00:00",
+  "target_period_start": "2024-12-29",
+  "target_period_end": "2024-12-29",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 180104000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:Assets:USD::2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:Assets:USD::2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:Assets:USD::2024-12-29:10-K:0000200406-25-000038",
+    "document_id": "JNJ-10-K-2024-12-29",
+    "document_version": "10-K",
+    "filing_date": "2025-02-13",
+    "valid_from": "2024-12-29",
+    "valid_to": "2024-12-29",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:Assets:USD::2024-12-29:10-K:0000200406-25-000038",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:Assets:USD::2024-12-29:10-K:0000200406-25-000038",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-extractive-Assets-2023",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is Assets for UPS for fiscal year 2023?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-12-31",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 70857000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:Assets:USD::2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:Assets:USD::2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:Assets:USD::2023-12-31:10-K:0001090727-24-000008",
+    "document_id": "UPS-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-12-31",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:Assets:USD::2023-12-31:10-K:0001090727-24-000008",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:Assets:USD::2023-12-31:10-K:0001090727-24-000008",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for AAPL for fiscal year 2023?",
+  "source_cutoff": "2023-11-03 00:00:00",
+  "target_period_start": "2022-09-25",
+  "target_period_end": "2023-09-30",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 96995000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:NetIncomeLoss:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:NetIncomeLoss:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:NetIncomeLoss:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "document_id": "AAPL-10-K-2023-09-30",
+    "document_version": "10-K",
+    "filing_date": "2023-11-03",
+    "valid_from": "2022-09-25",
+    "valid_to": "2023-09-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:NetIncomeLoss:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:NetIncomeLoss:USD:2022-09-25:2023-09-30:10-K:0000320193-23-000106",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-extractive-NetIncomeLoss-2024",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for MSFT for fiscal year 2024?",
+  "source_cutoff": "2024-07-30 00:00:00",
+  "target_period_start": "2023-07-01",
+  "target_period_end": "2024-06-30",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 88136000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "document_id": "MSFT-10-K-2024-06-30",
+    "document_version": "10-K",
+    "filing_date": "2024-07-30",
+    "valid_from": "2023-07-01",
+    "valid_to": "2024-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:NetIncomeLoss:USD:2023-07-01:2024-06-30:10-K:0000950170-24-087843",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-extractive-Assets-2024",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is Assets for KO for fiscal year 2024?",
+  "source_cutoff": "2025-02-20 00:00:00",
+  "target_period_start": "2024-12-31",
+  "target_period_end": "2024-12-31",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 100549000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'KO:us-gaap:Assets:USD::2024-12-31:10-K:0000021344-25-000011'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'KO:us-gaap:Assets:USD::2024-12-31:10-K:0000021344-25-000011'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "KO:us-gaap:Assets:USD::2024-12-31:10-K:0000021344-25-000011",
+    "document_id": "KO-10-K-2024-12-31",
+    "document_version": "10-K",
+    "filing_date": "2025-02-20",
+    "valid_from": "2024-12-31",
+    "valid_to": "2024-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "KO:us-gaap:Assets:USD::2024-12-31:10-K:0000021344-25-000011",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "KO:us-gaap:Assets:USD::2024-12-31:10-K:0000021344-25-000011",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-EQIX-extractive-NetIncomeLoss-2024",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "EQIX",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for EQIX for fiscal year 2024?",
+  "source_cutoff": "2025-02-12 00:00:00",
+  "target_period_start": "2024-01-01",
+  "target_period_end": "2024-12-31",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 815000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "EQIX",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-31:10-K:0001628280-25-005126'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'EQIX:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-31:10-K:0001628280-25-005126'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "EQIX:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-31:10-K:0001628280-25-005126",
+    "document_id": "EQIX-10-K-2024-12-31",
+    "document_version": "10-K",
+    "filing_date": "2025-02-12",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "EQIX:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-31:10-K:0001628280-25-005126",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "EQIX:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-31:10-K:0001628280-25-005126",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-JNJ-extractive-NetIncomeLoss-2024",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "JNJ",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for JNJ for fiscal year 2024?",
+  "source_cutoff": "2025-02-13 00:00:00",
+  "target_period_start": "2024-01-01",
+  "target_period_end": "2024-12-29",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 14066000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "JNJ",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "document_id": "JNJ-10-K-2024-12-29",
+    "document_version": "10-K",
+    "filing_date": "2025-02-13",
+    "valid_from": "2024-01-01",
+    "valid_to": "2024-12-29",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "JNJ:us-gaap:NetIncomeLoss:USD:2024-01-01:2024-12-29:10-K:0000200406-25-000038",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-UPS-extractive-NetIncomeLoss-2023",
+  "base_question_id": "bq-extractive-NetIncomeLoss",
+  "issuer_id": "UPS",
+  "jurisdiction": "US",
+  "question": "What is NetIncomeLoss for UPS for fiscal year 2023?",
+  "source_cutoff": "2024-02-20 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 6708000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "NetIncomeLoss",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "UPS",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'UPS:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "UPS:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "document_id": "UPS-10-K-2023-12-31",
+    "document_version": "10-K",
+    "filing_date": "2024-02-20",
+    "valid_from": "2023-01-01",
+    "valid_to": "2023-12-31",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "UPS:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "concept": "NetIncomeLoss",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "UPS:us-gaap:NetIncomeLoss:USD:2023-01-01:2023-12-31:10-K:0001090727-24-000008",
+    "fiscal_year": 2023
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-extractive-Assets-2024",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is Assets for AAPL for fiscal year 2024?",
+  "source_cutoff": "2024-11-01 00:00:00",
+  "target_period_start": "2024-09-28",
+  "target_period_end": "2024-09-28",
+  "target_fiscal_year": "FY2024",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 364980000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2024",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123",
+    "document_id": "AAPL-10-K-2024-09-28",
+    "document_version": "10-K",
+    "filing_date": "2024-11-01",
+    "valid_from": "2024-09-28",
+    "valid_to": "2024-09-28",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "AAPL:us-gaap:Assets:USD::2024-09-28:10-K:0000320193-24-000123",
+    "fiscal_year": 2024
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-extractive-Assets-2025",
+  "base_question_id": "bq-extractive-Assets",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is Assets for MSFT for fiscal year 2025?",
+  "source_cutoff": "2025-07-30 00:00:00",
+  "target_period_start": "2025-06-30",
+  "target_period_end": "2025-06-30",
+  "target_fiscal_year": "FY2025",
+  "answer_type": "extractive",
+  "gold_answer": {
+   "value": 619003000000.0,
+   "unit": "USD"
+  },
+  "decision_label": "ANSWER",
+  "sufficiency_label": "SUPPORTED",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "Assets",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2025",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2025-06-30:10-K:0000950170-25-100235'})"
+  ],
+  "minimal_evidence_sets": [
+   "frozenset({'MSFT:us-gaap:Assets:USD::2025-06-30:10-K:0000950170-25-100235'})"
+  ],
+  "evidence_items": [
+   {
+    "evidence_id": "MSFT:us-gaap:Assets:USD::2025-06-30:10-K:0000950170-25-100235",
+    "document_id": "MSFT-10-K-2025-06-30",
+    "document_version": "10-K",
+    "filing_date": "2025-07-30",
+    "valid_from": "2025-06-30",
+    "valid_to": "2025-06-30",
+    "page_id": null,
+    "section": null,
+    "table_id": null,
+    "row": null,
+    "column": null,
+    "text_span": null,
+    "xbrl_fact_id": "MSFT:us-gaap:Assets:USD::2025-06-30:10-K:0000950170-25-100235",
+    "concept": "Assets",
+    "unit": "USD",
+    "scale": "1",
+    "scope": null,
+    "content_hash": "MSFT:us-gaap:Assets:USD::2025-06-30:10-K:0000950170-25-100235",
+    "fiscal_year": 2025
+   }
+  ],
+  "calculation_program": null,
+  "assumptions": [],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-AAPL-insufficient-AccruedLiabilitiesCurrent-2022",
+  "base_question_id": "bq-insufficient-AccruedLiabilitiesCurrent",
+  "issuer_id": "AAPL",
+  "jurisdiction": "US",
+  "question": "What is AccruedLiabilitiesCurrent for AAPL for fiscal year 2022?",
+  "source_cutoff": "2023-06-30 00:00:00",
+  "target_period_start": "2022-01-01",
+  "target_period_end": "2022-12-31",
+  "target_fiscal_year": "FY2022",
+  "answer_type": "unanswerable",
+  "gold_answer": {},
+  "decision_label": "ABSTAIN",
+  "sufficiency_label": "INSUFFICIENT",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "AccruedLiabilitiesCurrent",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "AAPL",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2022",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [],
+  "minimal_evidence_sets": [],
+  "evidence_items": [],
+  "calculation_program": null,
+  "assumptions": [
+   "Metric not reported for the period (no public disclosure)"
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-MSFT-insufficient-AssetsFairValueDisclosureRecurring-2023",
+  "base_question_id": "bq-insufficient-AssetsFairValueDisclosureRecurring",
+  "issuer_id": "MSFT",
+  "jurisdiction": "US",
+  "question": "What is AssetsFairValueDisclosureRecurring for MSFT for fiscal year 2023?",
+  "source_cutoff": "2024-06-30 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "unanswerable",
+  "gold_answer": {},
+  "decision_label": "ABSTAIN",
+  "sufficiency_label": "INSUFFICIENT",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "AssetsFairValueDisclosureRecurring",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "MSFT",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [],
+  "minimal_evidence_sets": [],
+  "evidence_items": [],
+  "calculation_program": null,
+  "assumptions": [
+   "Metric not reported for the period (no public disclosure)"
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-KO-insufficient-AvailableForSaleSecuritiesGrossRealizedGainsLossesSaleProceeds-2023",
+  "base_question_id": "bq-insufficient-AvailableForSaleSecuritiesGrossRealizedGainsLossesSaleProceeds",
+  "issuer_id": "KO",
+  "jurisdiction": "US",
+  "question": "What is AvailableForSaleSecuritiesGrossRealizedGainsLossesSaleProceeds for KO for fiscal year 2023?",
+  "source_cutoff": "2024-06-30 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "unanswerable",
+  "gold_answer": {},
+  "decision_label": "ABSTAIN",
+  "sufficiency_label": "INSUFFICIENT",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "AvailableForSaleSecuritiesGrossRealizedGainsLossesSaleProceeds",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "KO",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [],
+  "minimal_evidence_sets": [],
+  "evidence_items": [],
+  "calculation_program": null,
+  "assumptions": [
+   "Metric not reported for the period (no public disclosure)"
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ },
+ {
+  "case_id": "finvest-EQIX-insufficient-AvailableForSaleSecuritiesDebtMaturitiesAfterOneThroughFiveYearsAmortizedCost-2023",
+  "base_question_id": "bq-insufficient-AvailableForSaleSecuritiesDebtMaturitiesAfterOneThroughFiveYearsAmortizedCost",
+  "issuer_id": "EQIX",
+  "jurisdiction": "US",
+  "question": "What is AvailableForSaleSecuritiesDebtMaturitiesAfterOneThroughFiveYearsAmortizedCost for EQIX for fiscal year 2023?",
+  "source_cutoff": "2024-06-30 00:00:00",
+  "target_period_start": "2023-01-01",
+  "target_period_end": "2023-12-31",
+  "target_fiscal_year": "FY2023",
+  "answer_type": "unanswerable",
+  "gold_answer": {},
+  "decision_label": "ABSTAIN",
+  "sufficiency_label": "INSUFFICIENT",
+  "requirement_graph": {
+   "nodes": [
+    {
+     "node_id": "metric",
+     "node_type": "METRIC",
+     "value": "AvailableForSaleSecuritiesDebtMaturitiesAfterOneThroughFiveYearsAmortizedCost",
+     "attributes": {}
+    },
+    {
+     "node_id": "ticker",
+     "node_type": "ENTITY",
+     "value": "EQIX",
+     "attributes": {}
+    },
+    {
+     "node_id": "period",
+     "node_type": "PERIOD",
+     "value": "2023",
+     "attributes": {}
+    }
+   ],
+   "edges": [
+    {
+     "source_id": "metric",
+     "target_id": "ticker",
+     "relation": "SAME_AS"
+    },
+    {
+     "source_id": "metric",
+     "target_id": "period",
+     "relation": "SAME_AS"
+    }
+   ]
+  },
+  "acceptable_evidence_sets": [],
+  "minimal_evidence_sets": [],
+  "evidence_items": [],
+  "calculation_program": null,
+  "assumptions": [
+   "Metric not reported for the period (no public disclosure)"
+  ],
+  "known_conflicts": [],
+  "version_relations": [],
+  "prohibited_claims": []
+ }
+]

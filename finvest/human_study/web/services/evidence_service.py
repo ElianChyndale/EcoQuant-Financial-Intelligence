@@ -104,15 +104,22 @@ class EvidenceResolver:
         target_form = evidence.get("document_version")
         target_filed = _parse_date(evidence.get("filing_date"))
         target_unit = evidence.get("unit")
+        target_fy = evidence.get("fiscal_year")
 
         matches = []
+        target_valid_to = _parse_date(evidence.get("valid_to"))
         for fact in self._bundle().facts:
             if fact.ticker != issuer or fact.concept != concept:
                 continue
-            # Period: duration facts match on their START, instant facts on END.
+            # Period: duration facts match on START and (when known) END;
+            # instant facts match on END. Matching END disambiguates rows that
+            # share a start but differ in length (e.g. a quarterly row and the
+            # full-year row both starting 2023-01-02 in JNJ FY2023).
             fact_end = _parse_date(fact.end)
             if fact.start is not None and target_end:
                 if _parse_date(fact.start) != target_end:
+                    continue
+                if target_valid_to and fact_end != target_valid_to:
                     continue
             elif target_end and fact_end != target_end:
                 continue
@@ -121,6 +128,8 @@ class EvidenceResolver:
             if target_filed and _parse_date(fact.filed) != target_filed:
                 continue
             if target_unit and fact.unit != target_unit:
+                continue
+            if target_fy and fact.fiscal_year != int(target_fy):
                 continue
             matches.append(fact)
         return matches
