@@ -2,6 +2,14 @@
 {% block content %}
 <h1>Evidence Review Workbench — Dashboard</h1>
 <p class="markers">EXPLORATORY_PILOT · SMALL_SAMPLE · NOT_PAPER_HEADLINE</p>
+{% if preflight %}
+<div class="preflight">
+  <strong>Base queue usability:</strong>
+  <span class="ready">{{ preflight.READY_FOR_ANNOTATION | length }} READY</span> ·
+  <span class="blocked">{{ preflight.TOOLING_BLOCKED | length }} TOOLING_BLOCKED</span> ·
+  <span class="invalid">{{ preflight.INVALID_CASE | length }} INVALID</span>
+</div>
+{% endif %}
 <table class="queues">
   <thead>
     <tr><th>Queue</th><th>Signed</th><th>Total</th><th>Status</th><th></th></tr>

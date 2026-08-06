@@ -29,6 +29,7 @@ from finvest.human_study.web.security import WorkbenchSecurity
 from finvest.human_study.web.services.draft_service import DraftService
 from finvest.human_study.web.services.evidence_service import resolve_evidence_set
 from finvest.human_study.web.services.mechanical_checks import run_neutral_checks
+from finvest.human_study.web.services.preflight import preflight_case, preflight_queues
 from finvest.human_study.web.services.queue_service import (
     queue_keys,
     queue_views,
@@ -90,8 +91,11 @@ def dashboard(request: Request, reviewer: str = "ELIAN_PRIMARY"):
             "complete": signed >= total,
             "first_key": keys[0] if keys else None,
         })
+    # Preflight counts for the base queue (READY / TOOLING_BLOCKED / INVALID).
+    preflight = preflight_queues(manifest, cache=CACHE)
     return templates.TemplateResponse("dashboard.html", {
         "request": request, "reviewer": reviewer, "rows": rows,
+        "preflight": preflight,
     })
 
 
@@ -132,10 +136,13 @@ def case_view(request: Request, queue: str, key: str, reviewer: str = "ELIAN_PRI
         case_issuer=view.get("issuer"),
     )
     signed_state = is_signed(DAY1, queue, key)
+    # Preflight: only READY cases are signable.
+    preflight = preflight_case(view, queue=queue, cache=CACHE) if queue == "base" else None
     return templates.TemplateResponse("case_base.html", {
         "request": request, "queue": queue, "key": key, "view": view,
         "resolved_evidence": resolved, "checks": checks,
         "draft": draft, "signed": signed_state, "reviewer": reviewer,
+        "preflight": preflight,
     })
 
 
@@ -169,6 +176,16 @@ def sign(
     manifest = _manifest()
     db: DraftService = request.app.state.db
     record = json.loads(payload)
+    # Preflight gate: never sign a TOOLING_BLOCKED or INVALID case.
+    if queue == "base":
+        view = _view_for(queue, key)
+        if view is not None:
+            preflight = preflight_case(view, queue=queue, cache=CACHE)
+            if preflight.status != "READY_FOR_ANNOTATION":
+                return JSONResponse(
+                    {"ok": False, "error": f"case not signable: {preflight.status} ({preflight.reason})"},
+                    status_code=400,
+                )
     try:
         signed = append_signed(
             DAY1, queue, key, record, reviewer, confirmation, manifest,
