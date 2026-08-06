@@ -113,24 +113,32 @@ def test_first_ready_case_opens(server, browser) -> None:
     page = browser.new_page()
     case_id = _first_case_id(server)
     page.goto(server["url"] + f"/case/base/{case_id}")
-    assert "Human Judgement" in page.content()
+    assert "人类判断" in page.content()
     assert page.locator("#judgement-form").count() == 1
     page.close()
 
 
 def test_all_required_form_fields_exist(server, browser) -> None:
+    """The redesigned form has 3 natural questions + confidence + calc slot."""
     page = browser.new_page()
     case_id = _first_case_id(server)
     page.goto(server["url"] + f"/case/base/{case_id}")
-    required = ["question_valid", "answerability", "sufficiency", "entity", "metric",
-                "target_period", "unit_and_scale", "reporting_scope",
-                "mandatory_requirements", "supporting_evidence_ids",
-                "minimal_evidence_set", "source_time_valid", "version_valid",
-                "calculation_reproducible", "final_answer_or_null",
-                "reviewer_confidence", "reviewer_notes"]
+    required = ["q1_answerable", "q2_answer_and_calc", "q3_conflicts",
+                "reviewer_confidence", "your_calculation"]
     for field in required:
         assert page.locator(f"#judgement-form [name={field}]").count() >= 1, f"missing {field}"
+    # No machine enum burden: the old 18-field form is gone from the page.
+    assert page.locator("#judgement-form [name=sufficiency]").count() == 0
     page.close()
+
+
+def _wait_save_status(page) -> str:
+    """Wait until the save-status element shows a real outcome (not empty)."""
+    page.wait_for_function(
+        "document.getElementById('save-status').textContent.trim() !== ''",
+        timeout=8000,
+    )
+    return page.locator("#save-status").text_content()
 
 
 def test_save_draft_click_works(server, browser) -> None:
@@ -138,11 +146,10 @@ def test_save_draft_click_works(server, browser) -> None:
     page = browser.new_page()
     case_id = _first_case_id(server)
     page.goto(server["url"] + f"/case/base/{case_id}")
-    page.select_option("#judgement-form [name=sufficiency]", "PARTIAL")
+    page.select_option("#judgement-form [name=q1_answerable]", "ANSWERABLE")
     page.click("#save-draft")
-    # Visible confirmation with the Saved text.
-    page.wait_for_selector("#save-status", timeout=5000)
-    status = page.locator("#save-status").text_content()
+    # Visible confirmation with the Saved text (await the fetch, not the div).
+    status = _wait_save_status(page)
     assert "Draft saved" in status
     page.close()
 
@@ -153,29 +160,30 @@ def test_sqlite_contains_draft(server, browser) -> None:
     page = browser.new_page()
     case_id = _first_case_id(server)
     page.goto(server["url"] + f"/case/base/{case_id}")
-    page.select_option("#judgement-form [name=sufficiency]", "CONFLICTING")
+    # PARTIAL -> derived sufficiency PARTIAL (transparent mapping).
+    page.select_option("#judgement-form [name=q1_answerable]", "PARTIAL")
     page.click("#save-draft")
-    page.wait_for_selector("#save-status", timeout=5000)
+    _wait_save_status(page)
     page.close()
-    # Verify SQLite has the draft.
+    # Verify SQLite has the draft with the DERIVED field.
     conn = sqlite3.connect(server["db"])
     rows = conn.execute("SELECT payload FROM drafts").fetchall()
     conn.close()
     assert rows
-    assert "CONFLICTING" in rows[0][0]
+    assert "PARTIAL" in rows[0][0]
 
 
 def test_refresh_restores_draft(server, browser) -> None:
     page = browser.new_page()
     case_id = _first_case_id(server)
     page.goto(server["url"] + f"/case/base/{case_id}")
-    page.select_option("#judgement-form [name=sufficiency]", "SUPPORTED")
-    page.fill("#judgement-form [name=reviewer_notes]", "e2e rationale")
+    page.select_option("#judgement-form [name=q1_answerable]", "ANSWERABLE")
+    page.fill("#judgement-form [name=q2_answer_and_calc]", "e2e rationale")
     page.click("#save-draft")
-    page.wait_for_selector("#save-status", timeout=5000)
+    _wait_save_status(page)
     page.reload()
-    assert page.locator("#judgement-form [name=sufficiency]").input_value() == "SUPPORTED"
-    assert page.locator("#judgement-form [name=reviewer_notes]").input_value() == "e2e rationale"
+    assert page.locator("#judgement-form [name=q1_answerable]").input_value() == "ANSWERABLE"
+    assert page.locator("#judgement-form [name=q2_answer_and_calc]").input_value() == "e2e rationale"
     page.close()
 
 

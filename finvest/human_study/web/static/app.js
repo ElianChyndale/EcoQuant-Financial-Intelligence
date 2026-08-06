@@ -36,9 +36,40 @@
     cb.addEventListener("change", syncHidden);
   });
 
-  // --- Build record from form (values only; no label invention) ---
-  // Emits the FULL CLI schema (BASE_FIELD_SPECS), including the CLI-correct
-  // field name minimal_evidence_set (not minimal_evidence_ids).
+  // --- Transparent mapping: 3 natural questions -> CLI schema fields ---
+  // The researcher answers Q1/Q2/Q3 (and confidence). The internal enum
+  // labels are DERIVED deterministically from those answers — never
+  // recommended by the system — and the full derived record is shown in the
+  // final-review modal before signing.
+  function deriveBaseFields(form, q1, q2, q3, confidence) {
+    var answerable = { ANSWERABLE: "VALID", PARTIAL: "AMBIGUOUS", UNANSWERABLE: "INVALID", REVIEW: "REVIEW_UNRESOLVED" }[q1] || "REVIEW_UNRESOLVED";
+    var answerability = { ANSWERABLE: "ANSWERABLE", PARTIAL: "ANSWERABLE", UNANSWERABLE: "UNANSWERABLE", REVIEW: "REVIEW_UNRESOLVED" }[q1] || "REVIEW_UNRESOLVED";
+    var sufficiency = { ANSWERABLE: "SUPPORTED", PARTIAL: "PARTIAL", UNANSWERABLE: "INSUFFICIENT", REVIEW: "REVIEW_UNRESOLVED" }[q1] || "REVIEW_UNRESOLVED";
+    if (q3 && /冲突|conflict|矛盾|不一致/.test(q3)) sufficiency = sufficiency === "SUPPORTED" ? "CONFLICTING" : sufficiency;
+    var route = { ANSWERABLE: "ANSWER", PARTIAL: "REVIEW", UNANSWERABLE: "ABSTAIN", REVIEW: "REVIEW_UNRESOLVED" }[q1] || "REVIEW_UNRESOLVED";
+    var notes = [];
+    if (q2) notes.push("Q2 答案与计算: " + q2);
+    if (q3) notes.push("Q3 冲突: " + q3);
+    var calcProvided = (q2 && /\d/.test(q2)) || form.elements["your_calculation"] && form.elements["your_calculation"].value.trim() !== "";
+    return {
+      question_valid: answerable,
+      answerability: answerability,
+      sufficiency: sufficiency,
+      entity: form.dataset.entity || null,
+      metric: form.dataset.metric || null,
+      target_period: form.dataset.targetPeriod || null,
+      unit_and_scale: form.dataset.unit || null,
+      reporting_scope: null,
+      mandatory_requirements: [],
+      source_time_valid: q3 && /日期|filing|时间|date/.test(q3) ? false : null,
+      version_valid: q3 && /版本|amendment|重述|restat/.test(q3) ? false : null,
+      calculation_reproducible: calcProvided ? true : null,
+      final_answer_or_null: q2 && q2.trim() !== "" ? q2.trim() : null,
+      reviewer_confidence: confidence || null,
+      reviewer_notes: notes.join("\n") || null,
+    };
+  }
+
   function collectRecord() {
     var form = document.getElementById("judgement-form");
     if (!form) return null;
@@ -80,29 +111,36 @@
       record.elapsed_seconds = 0;
       return record;
     }
-    // Base / paired / blind share the CLI BASE_FIELD_SPECS.
+    // Base / paired / blind: derive from the 3 natural questions.
     record.case_id = form.dataset.key;
     if (queue === "paired") { record.review_token = form.dataset.key; record.condition_identity = "HIDDEN_DURING_REVIEW"; record.pass = 1; }
     if (queue === "blind") { record.temp_id = form.dataset.key; record.pass = 2; }
-    record.question_valid = val("question_valid");
-    record.answerability = val("answerability");
-    record.sufficiency = val("sufficiency");
-    record.entity = val("entity");
-    record.metric = val("metric");
-    record.target_period = val("target_period");
-    record.unit_and_scale = val("unit_and_scale");
-    record.reporting_scope = val("reporting_scope");
-    record.mandatory_requirements = idList("mandatory_requirements");
+    var derived = deriveBaseFields(
+      form,
+      val("q1_answerable") || "",
+      val("q2_answer_and_calc") || "",
+      val("q3_conflicts") || "",
+      val("reviewer_confidence") || ""
+    );
+    Object.keys(derived).forEach(function (k) { record[k] = derived[k]; });
     record.supporting_evidence_ids = idList("supporting_evidence_ids");
     record.minimal_evidence_set = idList("minimal_evidence_set"); // CLI-correct name
-    record.source_time_valid = val("source_time_valid");
-    record.version_valid = val("version_valid");
-    record.calculation_reproducible = val("calculation_reproducible");
-    record.final_answer_or_null = val("final_answer_or_null");
-    record.reviewer_confidence = val("reviewer_confidence");
-    record.reviewer_notes = val("reviewer_notes");
     record.elapsed_seconds = 0;
+    // Raw answers are persisted for draft RESTORE only; stripped before sign.
+    record._raw = {
+      q1_answerable: val("q1_answerable") || "",
+      q2_answer_and_calc: val("q2_answer_and_calc") || "",
+      q3_conflicts: val("q3_conflicts") || "",
+      reviewer_confidence: val("reviewer_confidence") || "",
+      your_calculation: val("your_calculation") || "",
+    };
     return record;
+  }
+
+  function stripRaw(record) {
+    var copy = {};
+    Object.keys(record).forEach(function (k) { if (k !== "_raw") copy[k] = record[k]; });
+    return copy;
   }
 
   // --- Save draft (button click + Ctrl+S autosave, with visible outcome) ---
@@ -118,141 +156,148 @@
     if (!form) return Promise.resolve(false);
     var record = collectRecord();
     if (!record) return Promise.resolve(false);
-    var btn = document.getElementById("save-draft");
-    var originalLabel = btn ? btn.textContent : "";
-    if (btn) btn.textContent = "Saving...";
-    var requestId = "req-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
     return fetch("/draft/" + form.dataset.queue + "/" + form.dataset.key, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        reviewer: form.dataset.reviewer,
-        payload: JSON.stringify(record),
-        _request_id: requestId,
-      }),
-    }).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    }).then(function (res) {
-      if (!res.ok) throw new Error(res.error || "draft save failed");
-      if (btn) btn.textContent = originalLabel;
-      var now = new Date();
-      var ts = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2) + ":" + ("0" + now.getSeconds()).slice(-2);
-      showSaveStatus("Draft saved locally at " + ts + " (id " + requestId + ")", false);
-      return true;
-    }).catch(function (err) {
-      if (btn) btn.textContent = originalLabel;
-      showSaveStatus("Save failed: " + (err && err.message ? err.message : "unknown") + " (id " + requestId + "). Click Save draft to retry.", true);
+      body: "reviewer=" + encodeURIComponent(form.dataset.reviewer || "ELIAN_PRIMARY") +
+            "&payload=" + encodeURIComponent(JSON.stringify(record)),
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.ok) { showSaveStatus("Draft saved", false); return true; }
+      showSaveStatus("Draft save failed: " + (j && j.error || "unknown"), true);
       return false;
-    });
+    }).catch(function (e) { showSaveStatus("Draft save failed: " + e, true); return false; });
   }
   var saveBtn = document.getElementById("save-draft");
-  if (saveBtn) saveBtn.addEventListener("click", function () { autosave(); });
-  document.querySelectorAll("#judgement-form select, #judgement-form textarea, #judgement-form input").forEach(function (el) {
-    el.addEventListener("change", function () { autosave(); });
-  });
-  document.addEventListener("keydown", function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); autosave(); }
-  });
-
-  // --- Final review + explicit signing (no shortcut) ---
-  function openFinalReview() {
-    var record = collectRecord();
-    if (!record) return;
-    document.getElementById("final-record-json").textContent = JSON.stringify(record, null, 2);
-    document.getElementById("final-review-modal").hidden = false;
-    document.getElementById("sign-confirm").value = "";
-    document.getElementById("sign-confirm").focus();
-  }
-  // --- Restore draft values on page load (refresh + restart recovery) ---
-  function restoreDraft() {
-    var form = document.getElementById("judgement-form");
-    if (!form || !window.__draft) return;
-    var draft = window.__draft;
-    Object.keys(draft).forEach(function (key) {
-      var value = draft[key];
-      var el = form.elements[key];
-      if (!el) return;
-      if (el.type === "radio") {
-        for (var i = 0; i < el.length; i++) {
-          if (String(el[i].value) === String(value)) el[i].checked = true;
-        }
-      } else if (el.type === "checkbox") {
-        el.checked = !!value;
-      } else if (el.tagName === "SELECT" || el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
-        el.value = value === null || value === undefined ? "" : value;
+  if (saveBtn) {
+    saveBtn.addEventListener("click", function () { autosave(); });
+    document.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        autosave();
       }
     });
-    // Restore evidence checkboxes from supporting/minimal arrays.
-    if (draft.supporting_evidence_ids) {
-      document.querySelectorAll(".ev-support").forEach(function (cb) {
-        if (draft.supporting_evidence_ids.indexOf(cb.dataset.eid) !== -1) cb.checked = true;
-      });
-    }
-    if (draft.minimal_evidence_set) {
-      document.querySelectorAll(".ev-minimal").forEach(function (cb) {
-        if (draft.minimal_evidence_set.indexOf(cb.dataset.eid) !== -1) cb.checked = true;
+  }
+
+  // --- Draft restore (from the persisted RAW answers) ---
+  if (window.__draft) {
+    var raw = window.__draft._raw || window.__draft;
+    var form = document.getElementById("judgement-form");
+    if (form) {
+      Object.keys(raw).forEach(function (name) {
+        if (!form.elements[name]) return;
+        var el = form.elements[name];
+        if (el.type === "radio") {
+          var val = raw[name];
+          for (var i = 0; i < el.length; i++) {
+            if (String(el[i].value) === String(val)) { el[i].checked = true; }
+          }
+        } else {
+          el.value = raw[name] != null ? raw[name] : "";
+        }
       });
     }
     syncHidden();
-    showSaveStatus("Draft restored from local save", false);
   }
 
-  // --- Report tooling issue (never a label) ---
-  var issueBtn = document.getElementById("report-issue");
-  if (issueBtn) {
-    issueBtn.addEventListener("click", function () {
+  // --- Final review + sign (requires typed SIGN <case-key>) ---
+  var openReview = document.getElementById("open-final-review");
+  var modal = document.getElementById("final-review-modal");
+  var recordJson = document.getElementById("final-record-json");
+  function openFinalReview() {
+    var record = collectRecord();
+    if (!record) return;
+    recordJson.textContent = JSON.stringify(stripRaw(record), null, 2);
+    modal.hidden = false;
+  }
+  if (openReview && modal && recordJson) {
+    openReview.addEventListener("click", openFinalReview);
+    // Ctrl+Enter opens the final review (NEVER signs).
+    document.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        openFinalReview();
+      }
+    });
+  }
+  var doSign = document.getElementById("do-sign");
+  if (doSign) {
+    // Sign is bound ONLY to the button click — never a keyboard shortcut.
+    document.getElementById("do-sign").addEventListener("click", function () {
       var form = document.getElementById("judgement-form");
-      var body = new URLSearchParams({
-        reviewer: form.dataset.reviewer,
-        category: document.getElementById("issue-category").value,
-        evidence_id: document.getElementById("issue-evidence").value,
-        note: document.getElementById("issue-note").value,
-      });
+      var confirmation = document.getElementById("sign-confirm").value.trim();
+      var record = JSON.parse(recordJson.textContent);  // already stripped of _raw
+      var expected = "SIGN " + form.dataset.key;
+      if (confirmation !== expected) {
+        alert("Confirmation must be: " + expected);
+        return;
+      }
+      fetch("/sign/" + form.dataset.queue + "/" + form.dataset.key, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "reviewer=" + encodeURIComponent(form.dataset.reviewer || "ELIAN_PRIMARY") +
+              "&payload=" + encodeURIComponent(JSON.stringify(record)) +
+              "&confirmation=" + encodeURIComponent(confirmation),
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.ok) { window.location.reload(); }
+        else { alert("Sign failed: " + (j && j.error || "unknown")); }
+      }).catch(function (e) { alert("Sign failed: " + e); });
+    });
+  }
+
+  // --- Tooling issue ---
+  var reportIssue = document.getElementById("report-issue");
+  if (reportIssue) {
+    reportIssue.addEventListener("click", function () {
+      var form = document.getElementById("judgement-form");
+      var category = document.getElementById("issue-category").value;
+      var evidenceId = document.getElementById("issue-evidence").value.trim();
+      var note = document.getElementById("issue-note").value.trim();
       fetch("/tooling-issue/" + form.dataset.queue + "/" + form.dataset.key, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body,
-      }).then(function (r) { return r.json(); }).then(function (res) {
-        var s = document.getElementById("issue-status");
-        if (s) { s.textContent = res.ok ? "Issue reported (not a label)." : "Failed: " + res.error; }
+        body: "reviewer=" + encodeURIComponent(form.dataset.reviewer || "ELIAN_PRIMARY") +
+              "&category=" + encodeURIComponent(category) +
+              "&evidence_id=" + encodeURIComponent(evidenceId) +
+              "&note=" + encodeURIComponent(note),
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        var el = document.getElementById("issue-status");
+        el.textContent = j.ok ? "Issue reported" : "Failed: " + (j.error || "unknown");
+        el.className = "save-status " + (j.ok ? "ok" : "error");
       });
     });
   }
 
-  var openReviewBtn = document.getElementById("open-final-review");
-  if (!openReviewBtn) return; // dashboard page: no case controls
-  openReviewBtn.addEventListener("click", openFinalReview);
-  restoreDraft();
-
-  document.getElementById("do-sign").addEventListener("click", function () {
-    var form = document.getElementById("judgement-form");
-    var confirmation = document.getElementById("sign-confirm").value;
-    fetch("/sign/" + form.dataset.queue + "/" + form.dataset.key, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        reviewer: form.dataset.reviewer,
-        payload: JSON.stringify(collectRecord()),
-        confirmation: confirmation,
-      }),
-    }).then(function (r) { return r.json(); }).then(function (res) {
-      if (res.ok) {
-        document.getElementById("final-review-modal").hidden = true;
-        location.href = "/case/" + form.dataset.queue + "/" + form.dataset.key;
-      } else {
-        alert("Signing failed: " + (res.error || "unknown"));
-      }
+  // --- Practice mode: submit first, reveal reference AFTER submission ---
+  var practiceForm = document.getElementById("practice-form");
+  if (practiceForm) {
+    practiceForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var data = new FormData(practiceForm);
+      fetch("/practice/" + practiceForm.dataset.key, {
+        method: "POST",
+        body: data,
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        var status = document.getElementById("practice-status");
+        if (!j.ok) {
+          status.textContent = "提交失败: " + (j.error || "unknown");
+          status.className = "save-status error";
+          return;
+        }
+        status.textContent = "已提交练习。参考答案如下（提交后揭示）。";
+        status.className = "save-status ok";
+        document.getElementById("practice-reveal").hidden = false;
+        document.getElementById("reveal-reference").textContent = j.reveal.reference_answer;
+        document.getElementById("reveal-explanation").textContent = j.reveal.source_explanation;
+        document.getElementById("reveal-disagreement").textContent =
+          j.reveal.disagreement_reason || "—";
+        // Lock the form so the answer cannot be changed after the reveal.
+        practiceForm.querySelectorAll("input, textarea, select, button").forEach(function (el) {
+          el.disabled = true;
+        });
+      }).catch(function (err) {
+        document.getElementById("practice-status").textContent = "提交失败: " + err;
+        document.getElementById("practice-status").className = "save-status error";
+      });
     });
-  });
-
-  // Ctrl+Enter opens final review (NOT signing).
-  document.addEventListener("keydown", function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); openFinalReview(); }
-  });
-
-  // Close modal with Escape.
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") document.getElementById("final-review-modal").hidden = true;
-  });
+  }
 })();

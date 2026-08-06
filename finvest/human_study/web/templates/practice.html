@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="practice-banner">练习模式 — 先独立作答，提交后才显示参考答案（不产生正式标签）</div>
+
+<div class="case-layout">
+  <!-- A. Question + definition (NO candidate answer) -->
+  <section class="panel question-panel">
+    <h2>Practice: {{ key }}</h2>
+    <p class="question">{{ package.question }}</p>
+    <dl class="meta">
+      <dt>Issuer</dt><dd>{{ package.issuer or "—" }}</dd>
+      <dt>Source cutoff</dt><dd>{{ package.time_version.source_cutoff }}</dd>
+      <dt>Target period</dt><dd>{{ package.time_version.target_period }}</dd>
+    </dl>
+    <h3>指标定义（显式）</h3>
+    <p class="definition">{{ package.definition.statement }}</p>
+    {% if package.definition.contested %}
+      <div class="definition-contested">⚠ 定义未定稿——练习中请记录你的判断，此 case 不可进入正式标注。</div>
+    {% endif %}
+  </section>
+
+  <!-- B/C/D/E. Evidence package (inputs only, NO result) -->
+  <section class="panel evidence-panel">
+    <ul class="tabs" role="tablist">
+      <li><button class="tab active" data-tab="table">证据表</button></li>
+      <li><button class="tab" data-tab="time">时间与版本</button></li>
+      <li><button class="tab" data-tab="calc">独立计算</button></li>
+    </ul>
+    <div class="tab-panel active" data-panel="table">
+      {% if package.evidence_table.rows %}
+      <table class="ev-table">
+        <thead><tr><th>行项目</th><th>数值</th><th>单位</th><th>期间</th><th>来源 (form · filed · accn)</th></tr></thead>
+        <tbody>
+          {% for r in package.evidence_table.rows %}
+          <tr>
+            <td class="row-label">{{ r.label }}</td>
+            <td class="row-value">{{ r.value }}</td>
+            <td>{{ r.unit }}</td>
+            <td>{{ r.period }}</td>
+            <td class="muted">{{ r.form }} · {{ r.filing_date }} · {{ r.accession or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">无已解析证据。</p>
+      {% endif %}
+    </div>
+    <div class="tab-panel" data-panel="time">
+      <table class="tv-table">
+        <tbody>
+          <tr><td>问题目标期</td><td>{{ package.time_version.target_period }}</td></tr>
+          <tr><td>Source cutoff</td><td>{{ package.time_version.source_cutoff }}</td></tr>
+          {% for r in package.time_version.rows %}
+          <tr><td>{{ r.label }}</td><td>{{ r.period }} · filed {{ r.filing_date }} ({{ r.form }}) · accn {{ r.accession or "—" }} · {% if r.after_target %}晚于目标期{% elif r.after_target is false %}在目标期内{% else %}时间关系未知{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="tab-panel" data-panel="calc">
+      {% if package.calculation.has_calculation %}
+      <p><strong>运算方式：</strong>{{ package.calculation.operation }}</p>
+      <table class="calc-inputs">
+        <thead><tr><th>输入</th><th>数值</th><th>单位</th></tr></thead>
+        <tbody>
+          {% for inp in package.calculation.inputs %}
+          <tr><td class="row-label">{{ inp.label }}</td><td class="row-value">{{ inp.value }}</td><td>{{ inp.unit }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">参考答案在提交后才显示。请先独立计算。</p>
+      {% else %}
+      <p class="muted">本 case 无计算程序（直接提取/事实性问题）。</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- F. Three natural questions -->
+  <section class="panel judgement-panel">
+    <h3>练习判断（3 个自然问题）</h3>
+    <form id="practice-form" data-key="{{ key }}" data-reviewer="{{ reviewer }}">
+      <label>Q1. 只根据页面中的材料，这个问题能回答吗？
+        <select name="q1_answerable">
+          <option value="">—</option>
+          <option value="ANSWERABLE">能，证据充分</option>
+          <option value="PARTIAL">部分能，缺一些信息</option>
+          <option value="UNANSWERABLE">不能，证据不足</option>
+          <option value="REVIEW">不能，材料本身有问题</option>
+        </select>
+      </label>
+      <label>Q2. 答案是多少？请写出计算过程。
+        <textarea name="q2_answer_and_calc" rows="4" placeholder="你的独立答案与计算过程"></textarea>
+      </label>
+      <label>Q3. 是否存在日期、版本、定义、单位或证据冲突？
+        <textarea name="q3_conflicts" rows="3" placeholder="没有则留空"></textarea>
+      </label>
+      <label>你的独立计算（可选，便于对照）
+        <input name="your_calculation" placeholder="例如：118,000,000,000 − 11,000,000,000 = 107,000,000,000">
+      </label>
+      <button type="submit" id="submit-practice">提交练习（随后显示参考答案）</button>
+      <div id="practice-status" class="save-status"></div>
+    </form>
+  </section>
+</div>
+
+<!-- Reveal panel: shown only AFTER submission -->
+<div id="practice-reveal" hidden>
+  <h3>参考答案与来源解析（提交后揭示）</h3>
+  <dl>
+    <dt>机器候选答案</dt><dd id="reveal-reference"></dd>
+    <dt>来源解释</dt><dd id="reveal-explanation"></dd>
+    <dt>与你判断的差异</dt><dd id="reveal-disagreement"></dd>
+  </dl>
+</div>
+{% endblock %}

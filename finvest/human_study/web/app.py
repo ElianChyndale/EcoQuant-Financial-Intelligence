@@ -115,9 +115,10 @@ def dashboard(request: Request, reviewer: str = "ELIAN_PRIMARY"):
         })
     # Preflight counts for the base queue (READY / TOOLING_BLOCKED / INVALID).
     preflight = preflight_queues(manifest, cache=CACHE)
+    practice = practice_summary(PRACTICE_PATH)
     return templates.TemplateResponse("dashboard.html", {
         "request": request, "reviewer": reviewer, "rows": rows,
-        "preflight": preflight,
+        "preflight": preflight, "practice": practice,
     })
 
 
@@ -141,6 +142,31 @@ def queue_dashboard(request: Request, queue: str):
     return RedirectResponse(f"/case/{queue}/{keys[-1]}")
 
 
+def _sealed_case(manifest: dict, queue: str, key: str) -> dict | None:
+    """Sealed manifest case (server-side only) for the SHEP definition/calc."""
+    if queue != "base":
+        return None
+    for case in manifest["sealed"].get("base_22_queue", []):
+        if case["case_id"] == key:
+            return case
+    return None
+
+
+def _evidence_package_for(view: dict, manifest: dict, queue: str, key: str) -> dict:
+    """Build the Self-Contained Human Evidence Package for a case view."""
+    from finvest.human_study.web.services.evidence_package import (
+        build_evidence_package,
+        package_gate,
+    )
+
+    evidence_items = view.get("evidence", [])
+    resolved = resolve_evidence_set(evidence_items, CACHE)
+    sealed = _sealed_case(manifest, queue, key)
+    package = build_evidence_package(view, resolved, sealed_case=sealed)
+    package["gate"] = package_gate(package).as_dict()
+    return package
+
+
 @app.get("/case/{queue}/{key}", response_class=HTMLResponse)
 def case_view(request: Request, queue: str, key: str, reviewer: str = "ELIAN_PRIMARY"):
     manifest = _manifest()
@@ -149,9 +175,10 @@ def case_view(request: Request, queue: str, key: str, reviewer: str = "ELIAN_PRI
         return HTMLResponse("case not found", status_code=404)
     db: DraftService = request.app.state.db
     draft = db.load_draft(reviewer, queue, key)
-    # Resolve ORIGINAL evidence from the local cache.
+    # Self-Contained Human Evidence Package (human-readable; candidate result
+    # stays sealed per policy rule 2).
+    package = _evidence_package_for(view, manifest, queue, key)
     evidence_items = view.get("evidence", [])
-    resolved = resolve_evidence_set(evidence_items, CACHE)
     checks = run_neutral_checks(
         evidence_items,
         source_cutoff=view.get("source_cutoff"),
@@ -162,7 +189,7 @@ def case_view(request: Request, queue: str, key: str, reviewer: str = "ELIAN_PRI
     preflight = preflight_case(view, queue=queue, cache=CACHE) if queue == "base" else None
     return templates.TemplateResponse("case_base.html", {
         "request": request, "queue": queue, "key": key, "view": view,
-        "resolved_evidence": resolved, "checks": checks,
+        "package": package, "checks": checks,
         "draft": draft, "signed": signed_state, "reviewer": reviewer,
         "preflight": preflight,
     })
@@ -215,31 +242,91 @@ def tooling_issue(
     return JSONResponse({"ok": True})
 
 
+def _practice_reference(manifest: dict, key: str) -> dict[str, str]:
+    """Machine candidate reference for the AFTER-submit reveal (practice only).
+
+    Builds the reference from the sealed candidate: the machine decision,
+    sufficiency, the sealed gold answer, and the calculation result. This is
+    revealed ONLY after the researcher submits their own judgement.
+    """
+    sealed = None
+    for case in manifest["sealed"].get("base_22_queue", []):
+        if case["case_id"] == key:
+            sealed = case
+            break
+    if sealed is None:
+        return {"reference_answer": "—", "source_explanation": "case not found",
+                "disagreement_reason": None}
+    candidate = sealed.get("gold_answer") or {}
+    calc = sealed.get("calculation_program")
+    calc_result = None
+    if calc:
+        calc_result = f"{calc.get('result')} {calc.get('unit') or ''}".strip()
+    reference = (
+        f"机器候选: {sealed.get('decision_label')} / {sealed.get('sufficiency_label')}"
+        + (f" · 数值 {candidate.get('value')} {candidate.get('unit') or ''}".rstrip()
+           if candidate.get("value") is not None else "")
+        + (f" · 计算结果 {calc_result}" if calc_result else "")
+    )
+    explanation = (
+        "来源: 页面证据表中标注的 XBRL facts（见技术详情: 概念、accession、filing date）。"
+        "候选为机器判定——若你的独立计算与之不同，请核对定义与输入是否一致。"
+    )
+    return {
+        "reference_answer": reference,
+        "source_explanation": explanation,
+        "disagreement_reason": None,
+    }
+
+
+@app.get("/practice/{key}", response_class=HTMLResponse)
+def practice_page(request: Request, key: str, reviewer: str = "ELIAN_PRIMARY"):
+    """Practice page: SHEP ONLY — no candidate answer until submission."""
+    manifest = _manifest()
+    view = _view_for("base", key)
+    if view is None:
+        return HTMLResponse("case not found", status_code=404)
+    package = _evidence_package_for(view, manifest, "base", key)
+    return templates.TemplateResponse("practice.html", {
+        "request": request, "key": key, "package": package,
+        "reviewer": reviewer,
+    })
+
+
 @app.post("/practice/{key}")
 def practice(
     request: Request,
     key: str,
     reviewer: str = Form(...),
-    judgement: str = Form(...),
-    reference_answer: str = Form(""),
-    source_explanation: str = Form(""),
-    disagreement_reason: str = Form(None),
+    q1_answerable: str = Form(...),
+    q2_answer_and_calc: str = Form(""),
+    q3_conflicts: str = Form(""),
+    your_calculation: str = Form(""),
 ):
-    """Submit a practice judgement (NEVER a formal label)."""
+    """Submit a practice judgement; reveal the reference ONLY now (NEVER a label)."""
     try:
+        reference = _practice_reference(_manifest(), key)
         record_practice(
             practice_path=PRACTICE_PATH,
             case_id=key,
-            researcher_judgement=judgement,
-            reference_answer=reference_answer,
-            source_explanation=source_explanation,
-            disagreement_reason=disagreement_reason or None,
+            q1_answerable=q1_answerable,
+            q2_answer_and_calc=q2_answer_and_calc,
+            q3_conflicts=q3_conflicts,
+            your_calculation=your_calculation or None,
+            reference_answer=reference["reference_answer"],
+            source_explanation=reference["source_explanation"],
+            disagreement_reason=reference.get("disagreement_reason"),
             reviewer_id=reviewer,
         )
     except Exception as exc:
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
     summary = practice_summary(PRACTICE_PATH)
-    return JSONResponse({"ok": True, "summary": summary.__dict__})
+    reference = _practice_reference(_manifest(), key)
+    return JSONResponse({
+        "ok": True,
+        "summary": summary.__dict__,
+        "reveal": reference,
+    })
 
 
 @app.get("/practice/status")
@@ -270,6 +357,16 @@ def sign(
             if preflight.status not in ("READY_POSITIVE", "READY_NEGATIVE_VERIFIED"):
                 return JSONResponse(
                     {"ok": False, "error": f"case not signable: {preflight.status} ({preflight.reason})"},
+                    status_code=400,
+                )
+            # SHEP gate: a case with an unsettled definition or no human-readable
+            # evidence cannot be judged from one page — refuse to sign.
+            package = _evidence_package_for(view, manifest, queue, key)
+            gate = package.get("gate", {})
+            if not gate.get("signable", True):
+                reasons = ", ".join(gate.get("reasons", []))
+                return JSONResponse(
+                    {"ok": False, "error": f"case not signable: evidence package incomplete ({reasons})"},
                     status_code=400,
                 )
     try:

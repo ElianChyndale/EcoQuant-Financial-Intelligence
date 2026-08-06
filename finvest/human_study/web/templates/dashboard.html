@@ -33,4 +33,5 @@
     {% endfor %}
   </tbody>
 </table>
+<p class="muted">练习模式：<a href="/practice/{{ rows[0].first_key if rows and rows[0].first_key else '' }}">打开练习（先独立作答，提交后显示参考答案）</a> · 完成 {{ practice.completed }}/{{ practice.required }} 个后即可开始正式 pilot。</p>
 {% endblock %}

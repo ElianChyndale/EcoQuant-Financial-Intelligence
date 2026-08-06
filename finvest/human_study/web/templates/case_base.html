@@ -1,194 +1,184 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="case-layout">
-  <!-- Left: question + frozen metadata + requirements -->
+  <!-- A. Question + explicit metric definition -->
   <section class="panel question-panel">
     <h2>Case {{ key }} <span class="queue-tag">{{ queue }}</span></h2>
     {% if signed %}<div class="signed-badge">SIGNED</div>{% endif %}
-    <p class="question">{{ view.question }}</p>
+    <p class="question">{{ package.question }}</p>
     <dl class="meta">
-      <dt>Issuer</dt><dd>{{ view.issuer or "—" }}</dd>
-      <dt>Source cutoff</dt><dd>{{ view.source_cutoff or "—" }}</dd>
-      <dt>Target period</dt><dd>{{ view.target_period or "—" }}</dd>
+      <dt>Issuer</dt><dd>{{ package.issuer or "—" }}</dd>
+      <dt>Source cutoff</dt><dd>{{ package.time_version.source_cutoff }}</dd>
+      <dt>Target period</dt><dd>{{ package.time_version.target_period }}</dd>
     </dl>
+    <h3>指标定义（显式）</h3>
+    <p class="definition">{{ package.definition.statement }}</p>
+    {% if package.definition.contested %}
+      <div class="definition-contested">⚠ 指标定义未定稿（contested）——本 case 不得签署。</div>
+    {% endif %}
+    {% if package.definition.assumptions %}
+      <ul class="assumptions">
+        {% for a in package.definition.assumptions %}<li>{{ a }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% if preflight and preflight.status not in ("READY_POSITIVE", "READY_NEGATIVE_VERIFIED") %}
+      <div class="preflight-blocked">Preflight: {{ preflight.status }} — {{ preflight.reason }}</div>
+    {% endif %}
   </section>
 
-  <!-- Center: original evidence with tabs -->
+  <!-- B+C+D+E. Self-Contained Human Evidence Package -->
   <section class="panel evidence-panel">
     <ul class="tabs" role="tablist">
-      <li><button class="tab active" data-tab="text">TEXT</button></li>
-      <li><button class="tab" data-tab="table">TABLE</button></li>
-      <li><button class="tab" data-tab="xbrl">XBRL</button></li>
-      <li><button class="tab" data-tab="version">VERSION</button></li>
-      <li><button class="tab" data-tab="context">CONTEXT</button></li>
+      <li><button class="tab active" data-tab="table">证据表</button></li>
+      <li><button class="tab" data-tab="time">时间与版本</button></li>
+      <li><button class="tab" data-tab="calc">独立计算</button></li>
+      <li><button class="tab" data-tab="machine">技术详情</button></li>
     </ul>
 
-    <div class="tab-panel active" data-panel="text">
-      {% for ev in resolved_evidence %}
-      <div class="evidence-item" data-eid="{{ ev.evidence_id }}">
-        {% if ev.resolution_status == "EVIDENCE_RESOLUTION_FAILED" %}
-          <div class="resolution-failed">
-            <strong>EVIDENCE_RESOLUTION_FAILED</strong> — missing: {{ ev.missing_asset }}
-          </div>
-        {% elif ev.resolution_status == "EVIDENCE_METADATA_INCONSISTENCY" %}
-          <div class="resolution-failed">
-            <strong>EVIDENCE_METADATA_INCONSISTENCY</strong> — {{ ev.inconsistency_fields }}
-          </div>
-        {% else %}
-          <label class="evidence-select">
-            <input type="checkbox" class="ev-support" data-eid="{{ ev.evidence_id }}"> SUPPORT
-            <input type="checkbox" class="ev-minimal" data-eid="{{ ev.evidence_id }}"> MINIMAL
-          </label>
-          <code class="eid">{{ ev.evidence_id }}</code>
-          <p class="value">{{ ev.value }} <span class="unit">{{ ev.unit }}</span></p>
-          <span class="concept">{{ ev.concept }}</span> ·
-          <span class="docmeta">{{ ev.form }} · {{ ev.filing_date }} · accn {{ ev.accession }}</span>
-        {% endif %}
-      </div>
-      {% endfor %}
+    <div class="tab-panel active" data-panel="table">
+      {% if package.evidence_table.rows %}
+      <table class="ev-table">
+        <thead>
+          <tr><th>支持?</th><th>行项目</th><th>数值</th><th>单位</th><th>期间</th><th>来源 (form · filed · accn)</th></tr>
+        </thead>
+        <tbody>
+          {% for r in package.evidence_table.rows %}
+          <tr data-eid="{{ r.concept }}">
+            <td>
+              <input type="checkbox" class="ev-support" data-eid="{{ r.concept }}"> 支持
+              <input type="checkbox" class="ev-minimal" data-eid="{{ r.concept }}"> 最小
+            </td>
+            <td class="row-label">{{ r.label }}</td>
+            <td class="row-value">{{ r.value }}</td>
+            <td>{{ r.unit }}</td>
+            <td>{{ r.period }}</td>
+            <td class="muted">{{ r.form }} · {{ r.filing_date }} · {{ r.accession or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">{{ package.evidence_table.source_footnote }}</p>
+      {% else %}
+      <p class="muted">无已解析证据 —— 本 case 无法从单页判断（应报告 tooling issue）。</p>
+      {% endif %}
     </div>
 
-    <div class="tab-panel" data-panel="table">
-      <p class="muted">Original table structure is resolved from the source filing; see TEXT/XBRL for the canonical fact.</p>
-      {% for ev in resolved_evidence %}
-        {% if ev.resolution_status == "resolved" %}
-        <div class="version-row">{{ ev.concept }} · {{ ev.value }} {{ ev.unit }} · {{ ev.form }} {{ ev.filing_date }}</div>
-        {% endif %}
-      {% endfor %}
+    <div class="tab-panel" data-panel="time">
+      <table class="tv-table">
+        <thead><tr><th>检查项</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>问题目标期</td><td>{{ package.time_version.target_period }}</td></tr>
+          <tr><td>Source cutoff</td><td>{{ package.time_version.source_cutoff }}</td></tr>
+          {% for r in package.time_version.rows %}
+          <tr>
+            <td>{{ r.label }}（{{ r.period }}）</td>
+            <td>
+              filing {{ r.filing_date }} ({{ r.form }}) · accn {{ r.accession or "—" }} ·
+              {% if r.after_target %}filing 晚于目标期{% elif r.after_target is false %}filing 在目标期内{% else %}时间关系未知{% endif %}
+              {% if r.amendment %} · {{ r.amendment }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">{{ package.time_version.note }}</p>
     </div>
 
-    <div class="tab-panel" data-panel="xbrl">
-      {% for ev in resolved_evidence %}
-        {% if ev.resolution_status in ("resolved", "EVIDENCE_METADATA_INCONSISTENCY") %}
-        <div class="evidence-item">
-          <code class="eid">{{ ev.evidence_id }}</code>
-          <table class="xbrl-table">
-            <tbody>
-              <tr><th>Concept</th><td>{{ ev.concept }}</td></tr>
-              <tr><th>Value</th><td>{{ ev.value }} <span class="unit">{{ ev.unit }}</span></td></tr>
-              <tr><th>Unit</th><td>{{ ev.unit }}</td></tr>
-              <tr><th>Period</th><td>{{ ev.start or "—" }} → {{ ev.end or "—" }}</td></tr>
-              <tr><th>Fiscal period</th><td>FY{{ ev.fiscal_year }} {{ ev.fiscal_period }}</td></tr>
-              <tr><th>Dimensions</th>
-                <td>
-                  {% if ev.dimensions %}{{ ev.dimensions }}{% else %}
-                  <span class="muted">Not exposed by companyfacts — see original XBRL filing for segment axes</span>
-                  {% endif %}
-                </td>
-              </tr>
-              <tr><th>Filing date</th><td>{{ ev.filing_date }}</td></tr>
-              <tr><th>Accession</th><td><code>{{ ev.accession or "—" }}</code></td></tr>
-              <tr><th>Form type</th><td>{{ ev.form }}</td></tr>
-              <tr><th>Amendment</th><td>{{ ev.amendment_status }}</td></tr>
-            </tbody>
-          </table>
-        </div>
-        {% elif ev.resolution_status == "EVIDENCE_RESOLUTION_FAILED" %}
-        <div class="resolution-failed"><strong>EVIDENCE_RESOLUTION_FAILED</strong> — {{ ev.missing_asset }}</div>
-        {% endif %}
-      {% endfor %}
+    <div class="tab-panel" data-panel="calc">
+      {% if package.calculation.has_calculation %}
+      <p><strong>运算方式：</strong>{{ package.calculation.operation }}</p>
+      <table class="calc-inputs">
+        <thead><tr><th>输入</th><th>数值</th><th>单位</th></tr></thead>
+        <tbody>
+          {% for inp in package.calculation.inputs %}
+          <tr><td class="row-label">{{ inp.label }}</td><td class="row-value">{{ inp.value }}</td><td>{{ inp.unit }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="muted">{{ package.calculation.note }}</p>
+      {% else %}
+      <p class="muted">本 case 无计算程序（直接提取/事实性问题）。</p>
+      {% endif %}
     </div>
 
-    <div class="tab-panel" data-panel="version">
-      <p class="muted">Version timeline and amendment relationships.</p>
-      {% for ev in resolved_evidence %}
-        <div class="version-row">{{ ev.form }} · {{ ev.filing_date }} · {{ ev.amendment_status }}</div>
+    <div class="tab-panel" data-panel="machine">
+      <p class="muted">机器字段（技术详情；非主要展示面）。</p>
+      {% for m in package.machine %}
+      <details class="machine-row">
+        <summary><code>{{ m.evidence_id }}</code></summary>
+        <table class="xbrl-table">
+          <tbody>
+            <tr><th>Concept</th><td><code>{{ m.concept }}</code></td></tr>
+            <tr><th>Taxonomy</th><td>{{ m.taxonomy or "—" }}</td></tr>
+            <tr><th>Value / unit / scale</th><td>{{ m.value }} {{ m.unit }} / {{ m.scale or "—" }}</td></tr>
+            <tr><th>Scope</th><td>{{ m.scope or "—" }}</td></tr>
+            <tr><th>Period</th><td>{{ m.start or "—" }} → {{ m.end or "—" }}</td></tr>
+            <tr><th>Fiscal</th><td>FY{{ m.fiscal_year }} {{ m.fiscal_period or "" }}</td></tr>
+            <tr><th>Form / filed</th><td>{{ m.form }} · {{ m.filing_date }}</td></tr>
+            <tr><th>Accession</th><td><code>{{ m.accession or "—" }}</code></td></tr>
+            <tr><th>Amendment</th><td>{{ m.amendment_status or "—" }}</td></tr>
+            <tr><th>Content hash</th><td><code class="hash">{{ m.content_hash or "—" }}</code></td></tr>
+          </tbody>
+        </table>
+      </details>
       {% endfor %}
-    </div>
-
-    <div class="tab-panel" data-panel="context">
-      <p class="muted">Local permitted-document context expansion (no internet, no LLM).</p>
     </div>
   </section>
 
-  <!-- Right: human judgement form -->
+  <!-- F. Human judgement: three natural questions -->
   <section class="panel judgement-panel">
-    <h3>Human Judgement</h3>
-    <p class="hint">Judgement values are entered by the researcher. AI never recommends a label.</p>
-    <form id="judgement-form" data-queue="{{ queue }}" data-key="{{ key }}" data-reviewer="{{ reviewer }}" data-preflight="{{ preflight.status if preflight else '' }}">
-      <div class="preflight-mini">
-        Status: {{ preflight.status if preflight else "—" }}{% if preflight and preflight.reason %}: {{ preflight.reason }}{% endif %}
-      </div>
-      <label>Question valid
-        <select name="question_valid">
+    <h3>人类判断（3 个自然问题）</h3>
+    <p class="hint">只根据本页材料独立作答。AI 不推荐任何标签；系统仅把你的回答透明地映射为记录字段（签署前可在最终审查中核对）。</p>
+    <form id="judgement-form" data-queue="{{ queue }}" data-key="{{ key }}" data-reviewer="{{ reviewer }}"
+          data-preflight="{{ preflight.status if preflight else '' }}"
+          data-entity="{{ package.issuer or '' }}"
+          data-metric="{{ package.calculation.inputs[0].label if package.calculation.inputs else (package.evidence_table.rows[0].label if package.evidence_table.rows else '') }}"
+          data-target-period="{{ package.time_version.target_period }}"
+          data-unit="{{ package.evidence_table.rows[0].unit if package.evidence_table.rows else '' }}"
+          data-signable="{{ '1' if package.gate.signable and (preflight is none or preflight.status in ('READY_POSITIVE','READY_NEGATIVE_VERIFIED')) else '0' }}">
+      <label>Q1. 只根据页面中的材料，这个问题能回答吗？
+        <select name="q1_answerable">
           <option value="">—</option>
-          <option>VALID</option><option>AMBIGUOUS</option><option>INVALID</option>
-          <option>REVIEW_UNRESOLVED</option>
+          <option value="ANSWERABLE">能，证据充分</option>
+          <option value="PARTIAL">部分能，缺一些信息</option>
+          <option value="UNANSWERABLE">不能，证据不足</option>
+          <option value="REVIEW">不能，材料本身有问题（应报告 tooling issue）</option>
         </select>
       </label>
-      <label>Answerability
-        <select name="answerability">
-          <option value="">—</option>
-          <option>ANSWERABLE</option><option>UNANSWERABLE</option>
-          <option>REVIEW_UNRESOLVED</option>
-        </select>
+      <label>Q2. 答案是多少？请写出计算过程。
+        <textarea name="q2_answer_and_calc" rows="4" placeholder="例如：净经营现金流 118,000,000,000 − 资本支出 11,000,000,000 = 107,000,000,000。若应弃答请留空并在 Q3 说明。"></textarea>
       </label>
-      <label>Sufficiency
-        <select name="sufficiency">
-          <option value="">—</option>
-          <option>SUPPORTED</option><option>PARTIAL</option><option>INSUFFICIENT</option>
-          <option>CONFLICTING</option><option>REFUTED</option><option>REVIEW_UNRESOLVED</option>
-        </select>
+      <label class="your-calc">你的独立计算（便于对照，可选）
+        <input name="your_calculation" placeholder="例如：118,000,000,000 − 11,000,000,000 = 107,000,000,000">
       </label>
-      <label>Route
-        <select name="route">
-          <option value="">—</option>
-          <option>ANSWER</option><option>REVIEW</option><option>ABSTAIN</option>
-          <option>REVIEW_UNRESOLVED</option>
-        </select>
+      <label>Q3. 是否存在日期、版本、定义、单位或证据冲突？
+        <textarea name="q3_conflicts" rows="3" placeholder="例如：filing 晚于目标期；定义与问题不符；单位不一致；amendment 未确认。没有则留空。"></textarea>
       </label>
-      <label>Entity <input name="entity" placeholder="issuer or blank"></label>
-      <label>Metric <input name="metric" placeholder="metric or blank"></label>
-      <label>Target period <input name="target_period" placeholder="e.g. FY2024"></label>
-      <label>Unit & scale <input name="unit_and_scale" placeholder="e.g. USD, raw"></label>
-      <label>Reporting scope <input name="reporting_scope" placeholder="e.g. consolidated"></label>
-      <label>Mandatory requirements <input name="mandatory_requirements" placeholder="space-separated"></label>
-      <fieldset class="tristate">
-        <legend>Source time valid</legend>
-        <label><input type="radio" name="source_time_valid" value="true"> yes</label>
-        <label><input type="radio" name="source_time_valid" value="false"> no</label>
-        <label><input type="radio" name="source_time_valid" value=""> unsure/blank</label>
-      </fieldset>
-      <fieldset class="tristate">
-        <legend>Version valid</legend>
-        <label><input type="radio" name="version_valid" value="true"> yes</label>
-        <label><input type="radio" name="version_valid" value="false"> no</label>
-        <label><input type="radio" name="version_valid" value=""> unsure/blank</label>
-      </fieldset>
-      <fieldset class="tristate">
-        <legend>Calculation reproducible</legend>
-        <label><input type="radio" name="calculation_reproducible" value="true"> yes</label>
-        <label><input type="radio" name="calculation_reproducible" value="false"> no</label>
-        <label><input type="radio" name="calculation_reproducible" value=""> unsure/blank</label>
-      </fieldset>
-      <label>Final answer (or blank = abstain) <input name="final_answer_or_null"></label>
-      <label>Confidence
+      <label>置信度（1–5）
         <select name="reviewer_confidence">
           <option value="">—</option>
           {% for i in range(1, 6) %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
         </select>
       </label>
-      <label>Rationale
-        <textarea name="reviewer_notes" rows="3" placeholder="Explain why the selected evidence is or is not sufficient."></textarea>
-      </label>
+      <p class="muted">系统将把你的回答映射为：问题有效性、可答性、充分性、路由、时间/版本有效性、计算可复现性。映射表在“审查并签署”中展示，你可修改技术字段。</p>
       <input type="hidden" name="supporting_evidence_ids" id="supporting-ids">
       <input type="hidden" name="minimal_evidence_set" id="minimal-ids">
       <div class="form-actions">
-        <button type="button" id="save-draft">Save draft (Ctrl+S)</button>
-        <button type="button" id="open-final-review">Review & sign (Ctrl+Enter)</button>
+        <button type="button" id="save-draft">保存草稿 (Ctrl+S)</button>
+        <button type="button" id="open-final-review">审查并签署 (Ctrl+Enter)</button>
       </div>
       <div id="save-status" class="save-status"></div>
     </form>
     <details class="tooling-issue">
-      <summary>Report tooling issue (does not create a label)</summary>
+      <summary>报告 tooling issue（不产生标签）</summary>
       <select id="issue-category">
-        {% for c in ("MISSING_VALUE","MISSING_UNIT","METADATA_INCONSISTENCY","EVIDENCE_RESOLUTION_FAILED","VERSION_TIMELINE_MISSING","WRONG_CONCEPT_DISPLAYED","UI_ACTION_FAILED","INVALID_BENCHMARK_CASE","OTHER_TOOLING_ISSUE") %}
+        {% for c in ("MISSING_VALUE","MISSING_UNIT","METADATA_INCONSISTENCY","EVIDENCE_RESOLUTION_FAILED","VERSION_TIMELINE_MISSING","WRONG_CONCEPT_DISPLAYED","EVIDENCE_DISPLAY_INCOMPLETE","DEFINITION_UNSETTLED","INVALID_BENCHMARK_CASE","UI_ACTION_FAILED","OTHER_TOOLING_ISSUE") %}
         <option value="{{ c }}">{{ c }}</option>
         {% endfor %}
       </select>
       <input id="issue-evidence" placeholder="evidence ID (optional)">
       <textarea id="issue-note" rows="2" placeholder="Short researcher note (not a label)"></textarea>
-      <button type="button" id="report-issue">Report issue</button>
+      <button type="button" id="report-issue">报告问题</button>
       <div id="issue-status" class="save-status"></div>
     </details>
   </section>
@@ -196,7 +186,7 @@
 
 <!-- Neutral mechanical checks -->
 <section class="panel checks-panel">
-  <h3>Neutral mechanical checks</h3>
+  <h3>中性机械检查</h3>
   <ul class="checks">
     {% for check in checks %}
     <li class="check {{ 'ok' if check.ok else ('warn' if check.ok is false else 'na') }}">
@@ -210,9 +200,10 @@
 
 <!-- Final review + signing (requires typed SIGN) -->
 <div id="final-review-modal" hidden>
-  <h3>Final record review</h3>
+  <h3>最终记录审查</h3>
+  <p class="muted">以下为你的 3 个回答经透明映射生成的记录字段。如有异议请直接修改后保存草稿，再重新打开审查。</p>
   <pre id="final-record-json"></pre>
-  <label>Type to sign: <input id="sign-confirm" placeholder="SIGN <case-key>"></label>
-  <button id="do-sign">Sign</button>
+  <label>输入签署口令: <input id="sign-confirm" placeholder="SIGN <case-key>"></label>
+  <button id="do-sign">签署</button>
 </div>
 {% endblock %}

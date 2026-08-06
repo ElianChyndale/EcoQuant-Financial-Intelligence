@@ -48,3 +48,22 @@ button { padding:.4rem .7rem; cursor:pointer; background:var(--accent); color:#f
 fieldset.tristate { border:1px solid var(--border); border-radius:4px; margin:.4rem 0; padding:.4rem .6rem; }
 fieldset.tristate legend { font-weight:600; font-size:12px; }
 fieldset.tristate label { display:inline; margin-right:.6rem; font-weight:400; }
+
+/* Phase 11 — Self-Contained Human Evidence Package */
+.definition { background:#eef6ee; border-left:3px solid var(--ok); padding:.5rem .7rem; border-radius:4px; }
+.definition-contested { background:#fdf0ef; border-left:3px solid var(--bad); padding:.5rem .7rem; border-radius:4px; font-weight:600; color:#a33; }
+.assumptions { font-size:12px; color:#555; padding-left:1.2rem; }
+.preflight-blocked { background:#fdf0ef; border:1px solid var(--bad); color:#a33; padding:.5rem .7rem; border-radius:4px; margin-top:.5rem; }
+.ev-table, .tv-table, .calc-inputs { border-collapse:collapse; width:100%; }
+.ev-table th, .ev-table td, .tv-table th, .tv-table td, .calc-inputs th, .calc-inputs td { border:1px solid var(--border); padding:.4rem .6rem; text-align:left; font-size:13px; }
+.ev-table th { background:#f0f2f7; }
+.row-label { font-weight:600; }
+.row-value { font-variant-numeric:tabular-nums; }
+.machine-row { margin-bottom:.4rem; }
+.machine-row summary { cursor:pointer; font-size:12px; }
+.your-calc { display:block; margin-top:.6rem; font-weight:600; }
+.your-calc input { width:100%; margin-top:.2rem; padding:.35rem; font-family:monospace; }
+.practice-banner { background:#eaf3fb; border:1px solid #b8d4ec; color:#1c5d8f; padding:.5rem .8rem; border-radius:6px; margin-bottom:.8rem; font-weight:600; }
+#practice-reveal { margin-top:1rem; padding:1rem; border:1px solid var(--ok); border-radius:6px; background:#f6fbf6; }
+#practice-reveal dt { font-weight:600; margin-top:.5rem; }
+#practice-reveal dd { margin:0 0 .4rem 0; }

@@ -1,4 +1,10 @@
-"""Practice-mode tests (Phase 10) — practice never enters formal results."""
+"""Practice-mode tests (Phase 10/11) — practice never enters formal results.
+
+Phase 11: the practice record stores the researcher's 3 natural-question
+answers FIRST (q1/q2/q3), and the reference answer is only attached at
+record time (reveal-after-submit), so the stored record always captures the
+independent judgement.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,21 @@ from finvest.human_study.web.services.practice_mode import (
 )
 
 
+def _record(path: Path, case_id: str, *, q1: str = "ANSWERABLE",
+            reference: str = "ans") -> None:
+    record_practice(
+        practice_path=path, case_id=case_id,
+        q1_answerable=q1,
+        q2_answer_and_calc="118e9 - 11e9 = 107e9",
+        q3_conflicts="",
+        your_calculation="107,000,000,000",
+        reference_answer=reference,
+        source_explanation="why",
+        disagreement_reason=None,
+        reviewer_id="ELIAN_PRIMARY",
+    )
+
+
 def test_practice_requires_five(tmp_path: Path) -> None:
     path = tmp_path / "practice.jsonl"
     s0 = practice_summary(path)
@@ -19,22 +40,12 @@ def test_practice_requires_five(tmp_path: Path) -> None:
     assert s0.ready is False
     # 4 practice records -> not ready.
     for i in range(4):
-        record_practice(
-            practice_path=path, case_id=f"c{i}",
-            researcher_judgement="SUPPORTED",
-            reference_answer="ans", source_explanation="why",
-            disagreement_reason=None, reviewer_id="ELIAN_PRIMARY",
-        )
+        _record(path, f"c{i}")
     s4 = practice_summary(path)
     assert s4.completed == 4
     assert s4.ready is False
     # 5th -> ready.
-    record_practice(
-        practice_path=path, case_id="c4",
-        researcher_judgement="PARTIAL",
-        reference_answer="ans", source_explanation="why",
-        disagreement_reason="period mismatch", reviewer_id="ELIAN_PRIMARY",
-    )
+    _record(path, "c4")
     s5 = practice_summary(path)
     assert s5.completed == 5
     assert s5.ready is True
@@ -42,14 +53,13 @@ def test_practice_requires_five(tmp_path: Path) -> None:
 
 def test_practice_record_is_not_a_label(tmp_path: Path) -> None:
     path = tmp_path / "practice.jsonl"
-    record_practice(
-        practice_path=path, case_id="c1",
-        researcher_judgement="SUPPORTED",
-        reference_answer="ans", source_explanation="why",
-        disagreement_reason=None, reviewer_id="ELIAN_PRIMARY",
-    )
+    _record(path, "c1")
     raw = path.read_text(encoding="utf-8").strip()
     entry = json.loads(raw)
     # Practice is explicitly not a signed human label.
     assert "signed_by" not in entry or entry.get("signed") is not True
     assert entry["reviewer_id"] == "ELIAN_PRIMARY"
+    # The researcher's own answers are stored (not a machine label).
+    assert entry["q1_answerable"] == "ANSWERABLE"
+    assert "107e9" in entry["q2_answer_and_calc"]
+    assert entry["reference_answer"] == "ans"  # attached at record time only
