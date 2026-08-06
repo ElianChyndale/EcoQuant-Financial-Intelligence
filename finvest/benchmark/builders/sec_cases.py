@@ -50,42 +50,58 @@ class BuiltCases:
 
 
 def _evidence_item(fact: SecFact, ticker: str) -> EvidenceItem:
-    """Map a SecFact to a benchmark EvidenceItem."""
+    """Map a SecFact to a benchmark EvidenceItem.
+
+    Phase 4/6: unit comes from the FACT (never hardcoded USD); scope is None
+    unless the source actually states it (never auto-"consolidated").
+    """
     return EvidenceItem(
         evidence_id=fact.fact_id,
         document_id=f"{ticker}-{fact.form}-{fact.end}",
         document_version=fact.form,
         filing_date=fact.filed,
-        valid_from=fact.end,
-        valid_to=None,
+        valid_from=fact.start or fact.end,
+        valid_to=fact.end,
         xbrl_fact_id=fact.fact_id,
         concept=fact.concept,
-        unit="USD",
+        unit=fact.unit or "USD",
         scale="1",
-        scope="consolidated",
+        scope=fact.scope,
         content_hash=fact.fact_id,
     )
 
 
 def _fcff_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
-    """Derived case: FCFF = operating cash flow - capex for a fiscal year."""
+    """Derived case: SIMPLIFIED cash-flow proxy (OCF - capex) for a fiscal year.
+
+    Phase 6: this is NOT claimed to be standard FCFF. The question states the
+    explicit operation. Facts are filtered by source cutoff. Target period uses
+    the REAL XBRL start/end (never Jan 1 default). Units come from the fact,
+    not hardcoded USD.
+    """
     ocf = _annual_fact(bundle, ticker, year, "NetCashProvidedByUsedInOperatingActivities")
     capex = _annual_fact(bundle, ticker, year, "PaymentsToAcquirePropertyPlantAndEquipment")
     if ocf is None or capex is None:
         return None
-    fcff = ocf.val - capex.val
+    # Source cutoff: after both facts' filings (only facts filed <= cutoff are
+    # eligible; any later filing must not be used).
+    source_cutoff = max(ocf.filed, capex.filed)
+    # Real period from the fact's start/end (not Jan 1 default).
+    period_start = ocf.start or ocf.end
     period_end = ocf.end
+    proxy = ocf.value - capex.value
+    unit = ocf.unit or "USD"
     graph = RequirementGraph(
         nodes=(
-            RequirementNode("fcff", "FINAL_VALUE", "FCFF"),
+            RequirementNode("cash_flow_proxy", "FINAL_VALUE", "simplified-cash-flow-proxy"),
             RequirementNode("ocf", "INTERMEDIATE_VALUE", "OperatingCashFlow"),
             RequirementNode("capex", "INTERMEDIATE_VALUE", "CapitalExpenditure"),
             RequirementNode("ticker", "ENTITY", ticker),
             RequirementNode("period", "PERIOD", str(year)),
         ),
         edges=(
-            RequirementEdge("fcff", "ocf", "DERIVES_FROM"),
-            RequirementEdge("fcff", "capex", "DERIVES_FROM"),
+            RequirementEdge("cash_flow_proxy", "ocf", "DERIVES_FROM"),
+            RequirementEdge("cash_flow_proxy", "capex", "DERIVES_FROM"),
             RequirementEdge("ocf", "ticker", "SAME_AS"),
             RequirementEdge("ocf", "period", "SAME_AS"),
             RequirementEdge("capex", "ticker", "SAME_AS"),
@@ -95,22 +111,25 @@ def _fcff_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
     program = CalculationProgram(
         operation="subtract",
         inputs=("OperatingCashFlow", "CapitalExpenditure"),
-        result=fcff, unit="USD", scale="1", period=f"FY{year}",
+        result=proxy, unit=unit, scale="1", period=f"FY{year}",
     )
     ev_ocf = _evidence_item(ocf, ticker)
     ev_capex = _evidence_item(capex, ticker)
     return FinVestCase(
-        case_id=f"finvest-{ticker}-fcff-{year}",
-        base_question_id=f"bq-fcff-{year}",
+        case_id=f"finvest-{ticker}-cashflow-proxy-{year}",
+        base_question_id=f"bq-cashflow-proxy-{year}",
         issuer_id=ticker,
         jurisdiction=COMPANY_DOMAINS[ticker],
-        question=f"What is {ticker} free cash flow to the firm for fiscal year {year}?",
-        source_cutoff=datetime(period_end.year + 1, 6, 30),
-        target_period_start=date(year, 1, 1),
+        question=(
+            f"What is {ticker} operating cash flow minus capital expenditure "
+            f"for the fiscal period ending {period_end}?"
+        ),
+        source_cutoff=datetime(source_cutoff.year, source_cutoff.month, source_cutoff.day),
+        target_period_start=period_start,
         target_period_end=period_end,
         target_fiscal_year=f"FY{year}",
         answer_type="derived",
-        gold_answer={"value": fcff, "unit": "USD"},
+        gold_answer={"value": proxy, "unit": unit},
         decision_label="ANSWER",
         sufficiency_label="SUPPORTED",
         requirement_graph=graph,
@@ -118,7 +137,10 @@ def _fcff_case(bundle: SecBundle, ticker: str, year: int) -> FinVestCase | None:
         minimal_evidence_sets=(frozenset({ev_ocf.evidence_id, ev_capex.evidence_id}),),
         evidence_items=(ev_ocf, ev_capex),
         calculation_program=program,
-        assumptions=("FCFF approximated as OCF - capex",),
+        assumptions=(
+            "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF "
+            "(no tax/interest/working-capital adjustments).",
+        ),
     )
 
 

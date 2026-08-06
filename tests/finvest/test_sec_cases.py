@@ -31,12 +31,13 @@ def test_builder_has_derived_and_insufficient(built) -> None:
     assert "unanswerable" in types
 
 
-def test_fcff_case_has_program(built) -> None:
+def test_cashflow_proxy_case_has_program(built) -> None:
+    """The simplified cash-flow proxy case must carry a calculation program."""
     derived = [c for c in built.cases if c.answer_type == "derived"]
     assert derived
-    fcff = [c for c in derived if "fcff" in c.case_id]
-    assert fcff
-    case = fcff[0]
+    proxy = [c for c in derived if "cashflow-proxy" in c.case_id]
+    assert proxy
+    case = proxy[0]
     assert case.calculation_program is not None
     assert case.calculation_program.operation == "subtract"
     assert case.requirement_graph is not None
