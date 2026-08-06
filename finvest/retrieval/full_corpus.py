@@ -83,10 +83,17 @@ def bm25_retrieve(corpus: FullCorpus, query: str, top_k: int = 20) -> tuple[Rank
 
 
 def dense_retrieve(corpus: FullCorpus, query: str, top_k: int = 20) -> tuple[RankedResult, ...]:
-    """Dense bi-encoder retrieval over the full corpus (all-MiniLM-L6-v2)."""
+    """Dense bi-encoder retrieval over the full corpus (all-MiniLM-L6-v2).
+
+    Document embeddings are cached to disk keyed by a corpus fingerprint, so a
+    170k-record corpus is encoded ONCE and reused across queries/cases (the
+    A11 production path would otherwise re-encode on every call).
+    """
+    import hashlib
     from functools import lru_cache
     from pathlib import Path as _P
 
+    import numpy as _np
     from sklearn.metrics.pairwise import cosine_similarity
 
     model_dir = _P(__file__).resolve().parents[2] / "research/cache/models/all-MiniLM-L6-v2"
@@ -98,8 +105,20 @@ def dense_retrieve(corpus: FullCorpus, query: str, top_k: int = 20) -> tuple[Ran
 
     model = _model()
     texts = [u.text_span or "" for u in corpus.units]
-    # Encode in batches to bound memory; cache per corpus length.
-    doc_embeddings = model.encode(texts, normalize_embeddings=True, batch_size=64)
+
+    # Embedding cache keyed by content hash of the corpus texts.
+    cache_key = hashlib.sha256(
+        "\x1f".join(texts).encode("utf-8")
+    ).hexdigest()[:24]
+    cache_dir = _P(__file__).resolve().parents[2] / "research/cache/embeddings"
+    cache_path = cache_dir / f"{cache_key}.npy"
+    if cache_path.exists():
+        doc_embeddings = _np.load(str(cache_path))
+    else:
+        doc_embeddings = model.encode(texts, normalize_embeddings=True, batch_size=64)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        _np.save(str(cache_path), doc_embeddings)
+
     query_embedding = model.encode([query], normalize_embeddings=True)
     scores = cosine_similarity(query_embedding, doc_embeddings).ravel()
     ranked = sorted(
