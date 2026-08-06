@@ -64,7 +64,9 @@ def server(tmp_path_factory):
          "finvest.human_study.web.app:app",
          "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"],
         cwd=ROOT, env=env,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        # stderr inherits pytest's capture so server errors surface in logs.
+        stderr=None,
     )
     base_url = f"http://127.0.0.1:{port}"
     # Wait for readiness.
