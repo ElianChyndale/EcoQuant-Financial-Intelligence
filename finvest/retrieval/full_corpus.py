@@ -28,9 +28,14 @@ class FullCorpus:
     by_document: dict[str, tuple[EvidenceItem, ...]]
 
 
-def build_full_corpus(cache_dir: Path) -> FullCorpus:
-    """Parse all cached full 10-K HTML into one corpus of evidence units."""
-    full_10k = cache_dir / "sec" / "full_10k"
+def build_full_corpus(cache_dir: Path, corpus_dir: Path | None = None) -> FullCorpus:
+    """Parse full 10-K HTML into one corpus of evidence units.
+
+    ``cache_dir`` is the gitignored SEC cache (default). Pass ``corpus_dir``
+    to point at a committed fixture directory (e.g. ``finvest/fixtures``) so
+    tests run without the cache.
+    """
+    full_10k = corpus_dir or cache_dir / "sec" / "full_10k"
     units: list[EvidenceItem] = []
     documents: list[str] = []
     for path in sorted(full_10k.glob("*.htm")):

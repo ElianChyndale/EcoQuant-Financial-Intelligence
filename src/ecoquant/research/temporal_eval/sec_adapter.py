@@ -20,6 +20,10 @@ from pathlib import Path
 
 TEMPORAL_FORMS = frozenset({"10-K", "10-Q", "10-K/A"})
 
+# Commit-safe manifest value so tests that load the synthetic fixture do not
+# violate the ``cache_only`` redistribution status.
+FIXTURE_MANIFEST_SOURCE = "synthetic-fixture"
+
 
 @dataclass(frozen=True)
 class SecFact:
@@ -65,16 +69,25 @@ def _parse_date(value: str) -> date:
     return date.fromisoformat(value)
 
 
-def load_companyfacts(cache_dir: Path, tickers: tuple[str, ...] = ("AAPL", "MSFT", "KO")) -> SecBundle:
-    """Load SEC companyfacts for the given tickers into a SecBundle."""
+def load_companyfacts(
+    cache_dir: Path,
+    tickers: tuple[str, ...] = ("AAPL", "MSFT", "KO"),
+    *,
+    fixture: bool = False,
+) -> SecBundle:
+    """Load SEC companyfacts for the given tickers into a SecBundle.
+
+    ``fixture=True`` marks the manifest as synthetic (not SEC cache-only data)
+    so tests loading the committed fixture do not mislabel redistribution.
+    """
     facts: list[SecFact] = []
     manifest: dict[str, object] = {
         "dataset_id": "sec-edgar-companyfacts-v1",
         "adapter_version": "0.1.0",
         "tickers": list(tickers),
-        "source": "https://data.sec.gov/api/xbrl/companyfacts/",
+        "source": FIXTURE_MANIFEST_SOURCE if fixture else "https://data.sec.gov/api/xbrl/companyfacts/",
         "license": "public-domain",
-        "redistribution_status": "cache_only",
+        "redistribution_status": "fixture" if fixture else "cache_only",
     }
     for ticker in tickers:
         path = cache_dir / f"{ticker.lower()}_companyfacts.json"

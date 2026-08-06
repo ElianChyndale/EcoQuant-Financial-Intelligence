@@ -30,11 +30,14 @@ jobs:
       - name: Frozen v0.1 hash verification (no local cache required)
         run: python -m experiments.a9_human.run_day1 verify
 
-      - name: Annotation CLI tests
+      - name: Annotation CLI + day-1 pilot tests (committed fixture, no cache)
         run: python -m pytest tests/finvest/test_annotate_cli.py tests/finvest/test_day1_pilot.py -q
 
       - name: Fixture + identity + practice + negative-evidence tests (committed fixture, no cache)
         run: python -m pytest tests/finvest/test_sec_fixture.py tests/finvest/test_practice_mode.py -q
+
+      - name: v0.2 amendment integrity + preflight 4-state (committed fixture)
+        run: python -m pytest tests/finvest/test_v02_amendment_integrity.py tests/finvest/test_preflight.py -q
 
       - name: Workbench unit/integration tests (cache-dependent tests skip via local_real_data)
         run: python -m pytest tests/finvest/test_workbench.py tests/finvest/test_workbench_smoke.py -q

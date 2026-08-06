@@ -12,6 +12,7 @@ dependencies = [
     "numpy>=1.26.0",
     "networkx>=3.2",
     "pycryptodome>=3.20.0",
+    "ecdsa>=0.19",
 ]
 
 [project.optional-dependencies]

@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from finvest.benchmark.schemas import EvidenceItem
+from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 from finvest.human_study.day1_pilot import (
     ANNOTATION_FIELDS,
     SIGNATURE_FIELDS,
@@ -49,23 +50,49 @@ from finvest.human_study.day1_pilot import (
 )
 from finvest.retrieval.full_corpus import FullCorpus
 
+# An empty injected corpus keeps freeze/interface determinism without the
+# gitignored SEC cache: no fabricated pages, honest empty page lists.
+EMPTY_FULL_CORPUS = FullCorpus(units=(), documents=(), by_document={})
+
 
 # ---------------------------------------------------------------------------
-# Queue construction
+# Fixture-backed queue construction (never the gitignored SEC cache)
 # ---------------------------------------------------------------------------
 
-def test_build_base_queue_is_deterministic_and_complete() -> None:
+@pytest.fixture(scope="module")
+def sec_cache(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A temp cache built from the committed SEC companyfacts fixture.
+
+    ``build_sec_cases`` expects one companyfacts file PER TICKER (lowercased),
+    so the synthetic payload is duplicated across the BASE_TICKERS filenames.
+    """
+    tmp = tmp_path_factory.mktemp("sec-cache")
+    sec = tmp / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in BASE_TICKERS:
+        (sec / f"{ticker.lower()}_companyfacts.json").write_text(
+            fixture_json, encoding="utf-8"
+        )
+    return tmp
+
+
+def test_build_base_queue_is_deterministic_and_complete(sec_cache: Path) -> None:
     # v0.2: the repaired builder produces 21 valid base cases (v0.1 had an
     # invalid cross-concept amended case, now removed). The count is derived
-    # from the valid data, not a frozen 22.
-    cases = build_base_queue(min_cases=1)
+    # from the valid data, not a frozen 22. Built from the committed fixture.
+    cases = build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
     assert len(cases) >= 21
-    assert [c.case_id for c in cases] == [c.case_id for c in build_base_queue(min_cases=1)]
+    assert [c.case_id for c in cases] == [
+        c.case_id for c in build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
+    ]
     assert {c.issuer_id for c in cases} == set(BASE_TICKERS)
 
 
-def test_paired_queue_stratified_12() -> None:
-    cases = build_base_queue(min_cases=1)
+def test_paired_queue_stratified_12(sec_cache: Path) -> None:
+    cases = build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
     paired = build_paired_queue(cases, seed=FREEZE_SEED)
     assert len(paired) == len(PAIRED_CONDITIONS) * PAIRED_PER_CONDITION == 12
     conditions = [i.condition for i in paired]
@@ -76,15 +103,15 @@ def test_paired_queue_stratified_12() -> None:
     assert len(set(pairs)) == len(pairs)
 
 
-def test_paired_queue_deterministic() -> None:
-    cases = build_base_queue(min_cases=1)
+def test_paired_queue_deterministic(sec_cache: Path) -> None:
+    cases = build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
     a = build_paired_queue(cases, seed=FREEZE_SEED)
     b = build_paired_queue(cases, seed=FREEZE_SEED)
     assert [i.instance_id for i in a] == [i.instance_id for i in b]
 
 
-def test_blind_repeat_selection() -> None:
-    cases = build_base_queue(min_cases=1)
+def test_blind_repeat_selection(sec_cache: Path) -> None:
+    cases = build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
     ids = {c.case_id for c in cases}
     selection = select_blind_repeat(cases, seed=FREEZE_SEED)
     assert len(selection) == BLIND_REPEAT_SIZE == 5
@@ -98,12 +125,14 @@ def test_blind_repeat_selection() -> None:
     assert selection == again
 
 
-def test_interface_cases_9_distinct_balanced() -> None:
-    cases = build_base_queue(min_cases=1)
+def test_interface_cases_9_distinct_balanced(sec_cache: Path) -> None:
+    cases = build_base_queue(cache_dir=sec_cache, min_cases=1, fixture=True)
     interface = build_interface_cases(cases, seed=FREEZE_SEED)
     assert len(interface) == len(INTERFACE_DISPLAY_CONDITIONS) * INTERFACE_PER_CONDITION == 9
-    questions = {i["base_question_id"] for i in interface}
-    assert len(questions) == 9
+    # Distinct (issuer, base_question) pairs (a base_question may repeat across
+    # issuers — only the pair must be unique).
+    pairs = {(i["case_id"].split("-")[1], i["base_question_id"]) for i in interface}
+    assert len(pairs) == 9
     conditions = [i["display_condition"] for i in interface]
     for condition in INTERFACE_DISPLAY_CONDITIONS:
         assert conditions.count(condition) == INTERFACE_PER_CONDITION, condition
@@ -118,7 +147,7 @@ def test_interface_cases_9_distinct_balanced() -> None:
 @pytest.fixture(scope="module")
 def frozen(tmp_path_factory: pytest.TempPathFactory) -> Path:
     day1 = tmp_path_factory.mktemp("day1_frozen")
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1, corpus=EMPTY_FULL_CORPUS)
     return Path(day1)
 
 
@@ -140,7 +169,7 @@ def test_verify_frozen_no_violations(frozen: Path) -> None:
 
 
 def test_verify_frozen_detects_tampering(tmp_path: Path) -> None:
-    freeze_day1(seed=FREEZE_SEED, day1_dir=tmp_path, min_cases=1)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=tmp_path, min_cases=1, corpus=EMPTY_FULL_CORPUS)
     manifest_path = tmp_path / "QUEUE_MANIFEST.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["sealed"]["base_22_queue"][0]["question"] = "tampered question"
@@ -317,6 +346,10 @@ def test_vista_gate_insufficient_without_labels(frozen: Path) -> None:
     assert payload["result"] is None
     assert all(marker in payload["markers"] for marker in PILOT_MARKERS)
     assert out.exists()
+    # No full-corpus cache in CI -> the (unreached) training path must degrade
+    # honestly to an empty-corpus sentinel, never fabricate pages.
+    if payload["status"] != "INSUFFICIENT_DATA_FOR_TRAINING":
+        assert payload.get("corpus") == "EMPTY_CACHE_NO_FULL_CORPUS"
 
 
 def test_vista_gate_below_eligibility_threshold(

@@ -55,6 +55,21 @@ def build_companyfacts_payload() -> dict:
                       form="10-K", accn="0000320193-24-000123", fy=2024, fp="FY"),
             ]},
         },
+        # FCFF-style derived case inputs (OCF - capex), FY2024 duration facts.
+        "NetCashProvidedByUsedInOperatingActivities": {
+            "label": "NetCashProvidedByUsedInOperatingActivities", "units": {"USD": [
+                _fact(FCFF_OCF_CONCEPT, 118_000_000_000,
+                      start="2023-10-01", end="2024-09-28", filed="2024-11-01",
+                      form="10-K", accn="0000320193-24-000123", fy=2024, fp="FY"),
+            ]},
+        },
+        "PaymentsToAcquirePropertyPlantAndEquipment": {
+            "label": "PaymentsToAcquirePropertyPlantAndEquipment", "units": {"USD": [
+                _fact(FCFF_CAPEX_CONCEPT, 11_000_000_000,
+                      start="2023-10-01", end="2024-09-28", filed="2024-11-01",
+                      form="10-K", accn="0000320193-24-000123", fy=2024, fp="FY"),
+            ]},
+        },
         # Correct amendment pair: AccruedLiabilitiesCurrent restated by 10-K/A.
         "AccruedLiabilitiesCurrent": {
             "label": "AccruedLiabilitiesCurrent", "units": {"USD": [
@@ -91,6 +106,15 @@ def build_companyfacts_payload() -> dict:
                       form="10-K", accn="0000320193-24-000124", fy=2024, fp="FY", unit="EUR"),
             ]},
         },
+        # Revenue in a different fiscal year (FY2023) so the insufficient
+        # builder has a reported-in-other-years metric for a 2024 gap.
+        "RevenueOld": {
+            "label": "RevenueOld", "units": {"USD": [
+                _fact("RevenueOld", 365_000_000_000,
+                      start="2022-09-29", end="2023-09-30", filed="2023-11-02",
+                      form="10-K", accn="0000320193-23-000313", fy=2023, fp="FY"),
+            ]},
+        },
         # Duplicate identity: two facts same concept/end/form/unit (ambiguous).
         "DuplicateMetric": {
             "label": "DuplicateMetric", "units": {"USD": [
@@ -108,6 +132,12 @@ def build_companyfacts_payload() -> dict:
         "entityName": "Synthetic Fixture Inc.",
         "facts": {"us-gaap": facts},
     }
+
+
+# Concepts for the FCFF-style derived case (OCF - capex). The synthetic fixture
+# needs a duration-period 10-K fact per concept so _fcff_case can build.
+FCFF_OCF_CONCEPT = "NetCashProvidedByUsedInOperatingActivities"
+FCFF_CAPEX_CONCEPT = "PaymentsToAcquirePropertyPlantAndEquipment"
 
 
 def write_fixture(dir_path: Path | None = None) -> tuple[Path, str]:

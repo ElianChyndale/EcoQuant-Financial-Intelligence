@@ -80,9 +80,12 @@ def preflight_case(
     queue: str,
     cache: Path,
     negative_certificates: dict[str, object] | None = None,
+    tickers: tuple[str, ...] | None = None,
 ) -> CasePreflight:
     """Classify one frozen case into one of the four states."""
-    records = resolve_evidence_set(case.get("evidence_items", []), cache)
+    records = resolve_evidence_set(
+        case.get("evidence_items", []), cache, tickers=tickers
+    )
     statuses = tuple(r.resolution_status for r in records)
 
     # SCIENTIFICALLY_INVALID: broken version relation.
@@ -123,12 +126,14 @@ def preflight_case(
 
 def preflight_queues(
     manifest: dict, *, cache: Path, negative_certificates: dict[str, object] | None = None,
+    tickers: tuple[str, ...] | None = None,
 ) -> dict[str, dict[str, list[str]]]:
     counts: dict[str, dict[str, list[str]]] = {
         READY_POSITIVE: [], READY_NEGATIVE_VERIFIED: [], BLOCKED: [], INVALID: [],
     }
     for case in manifest["sealed"].get("base_22_queue", []):
         result = preflight_case(case, queue="base", cache=cache,
-                                negative_certificates=negative_certificates)
+                                negative_certificates=negative_certificates,
+                                tickers=tickers)
         counts[result.status].append(case["case_id"])
     return counts

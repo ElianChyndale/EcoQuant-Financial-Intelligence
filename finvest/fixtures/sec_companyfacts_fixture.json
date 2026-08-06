@@ -122,6 +122,44 @@
           ]
         }
       },
+      "NetCashProvidedByUsedInOperatingActivities": {
+        "label": "NetCashProvidedByUsedInOperatingActivities",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-24-000123",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": "2023-10-01",
+              "unit": "USD",
+              "val": 118000000000
+            }
+          ]
+        }
+      },
+      "PaymentsToAcquirePropertyPlantAndEquipment": {
+        "label": "PaymentsToAcquirePropertyPlantAndEquipment",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-24-000123",
+              "end": "2024-09-28",
+              "filed": "2024-11-01",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2024,
+              "start": "2023-10-01",
+              "unit": "USD",
+              "val": 11000000000
+            }
+          ]
+        }
+      },
       "RevenueEur": {
         "label": "RevenueEur",
         "units": {
@@ -137,6 +175,25 @@
               "start": "2023-10-01",
               "unit": "EUR",
               "val": 360000000000
+            }
+          ]
+        }
+      },
+      "RevenueOld": {
+        "label": "RevenueOld",
+        "units": {
+          "USD": [
+            {
+              "accn": "0000320193-23-000313",
+              "end": "2023-09-30",
+              "filed": "2023-11-02",
+              "form": "10-K",
+              "fp": "FY",
+              "frame": null,
+              "fy": 2023,
+              "start": "2022-09-29",
+              "unit": "USD",
+              "val": 365000000000
             }
           ]
         }

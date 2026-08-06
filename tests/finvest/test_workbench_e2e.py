@@ -39,14 +39,23 @@ def server(tmp_path_factory):
     issues_path = tmp / "tooling_issues.jsonl"
 
     # Freeze an isolated v0.2 protocol (accepts actual case count).
+    from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
     from finvest.human_study.day1_pilot import FREEZE_SEED, freeze_day1
 
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1)
+    cache = tmp / "cache"
+    sec = cache / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in ("aapl", "msft", "ko", "eqix", "jnj", "ups"):
+        (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache)
 
     port = _free_port()
     env = dict(os.environ)
     env["FINVEST_DAY1"] = str(day1_dir)
-    env["FINVEST_CACHE"] = str(ROOT / "research" / "cache")
+    env["FINVEST_CACHE"] = str(cache)
     env["FINVEST_WORKBENCH_DB"] = str(db_path)
     env["FINVEST_TOOLING_ISSUES"] = str(issues_path)
 

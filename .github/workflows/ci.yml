@@ -7,6 +7,7 @@ on:
     branches: [main]
 
 jobs:
+  # Fast CPU-only checks (unit + integration + finvest + lint). No Torch.
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -34,9 +35,9 @@ jobs:
         run: |
           python -m pytest tests/integration/ -v
 
-      - name: Run research tests (fixture mode)
+      - name: Run FinVEST tests (committed fixtures, no cache)
         run: |
-          python -m pytest tests/research/ -v
+          python -m pytest tests/finvest/ -q
 
   lint:
     runs-on: ubuntu-latest
@@ -60,6 +61,7 @@ jobs:
           python -c "from ecoquant.uncertainty.calibration import PlattCalibrator"
           python -c "from ecoquant.attestation.eip712 import keccak256"
 
+  # Heavy research pipeline (needs sentence-transformers/Torch) — one job.
   research:
     runs-on: ubuntu-latest
     steps:
@@ -77,7 +79,7 @@ jobs:
 
       - name: Run research pipeline (fixture mode)
         run: |
-          python scripts/run_research.py --seed 20260710 --fixture
+          python scripts/run_research.py --mode fixture --seed 20260710
 
       - name: Verify artifacts
         run: |

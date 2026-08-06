@@ -36,6 +36,9 @@ CONSISTENCY_FIELDS = (
     "form", "filing_date", "accession", "fiscal_year", "fiscal_period",
 )
 
+# Default tickers for the resolver (single source of truth).
+DEFAULT_TICKERS = ("AAPL", "MSFT", "KO", "EQIX", "JNJ", "UPS")
+
 
 @dataclass(frozen=True)
 class CanonicalEvidenceRecord:
@@ -80,14 +83,17 @@ def _issuer_of(evidence: dict) -> str:
 class EvidenceResolver:
     """Loads companyfacts once and resolves evidence by STRICT identity."""
 
-    def __init__(self, cache: Path, tickers: tuple[str, ...] = ("AAPL", "MSFT", "KO", "EQIX", "JNJ", "UPS")) -> None:
+    def __init__(self, cache: Path, tickers: tuple[str, ...] = DEFAULT_TICKERS) -> None:
         self._cache = cache
         self._tickers = tickers
         self._bundle_cache = None
 
     def _bundle(self):
         if self._bundle_cache is None:
-            self._bundle_cache = load_companyfacts(self._cache / "sec", tickers=self._tickers)
+            self._bundle_cache = load_companyfacts(
+                self._cache / "sec", tickers=self._tickers,
+                fixture=bool((self._cache / "sec").glob("*.json")),
+            )
         return self._bundle_cache
 
     def _candidates(self, evidence: dict) -> list:
@@ -98,13 +104,17 @@ class EvidenceResolver:
         target_form = evidence.get("document_version")
         target_filed = _parse_date(evidence.get("filing_date"))
         target_unit = evidence.get("unit")
-        target_start = _parse_date(evidence.get("valid_from"))  # start not in v0.1 descriptor
 
         matches = []
         for fact in self._bundle().facts:
             if fact.ticker != issuer or fact.concept != concept:
                 continue
-            if target_end and _parse_date(fact.end) != target_end:
+            # Period: duration facts match on their START, instant facts on END.
+            fact_end = _parse_date(fact.end)
+            if fact.start is not None and target_end:
+                if _parse_date(fact.start) != target_end:
+                    continue
+            elif target_end and fact_end != target_end:
                 continue
             if target_form and fact.form != target_form:
                 continue
@@ -187,16 +197,19 @@ def _consistency_conflicts(evidence: dict, fact) -> list[str]:
         "issuer": _issuer_of(evidence),
         "concept": evidence.get("concept"),
         "unit": evidence.get("unit"),
-        "end": _parse_date(evidence.get("valid_from")),
+        "period": _parse_date(evidence.get("valid_from")),
         "form": evidence.get("document_version"),
         "filing_date": _parse_date(evidence.get("filing_date")),
         "accession": None,  # v0.1 descriptor has no accession; fact does
     }
+    # Period identity: duration facts compare on START (the frozen descriptor
+    # carries start in valid_from), instant facts on END.
+    fact_period = _parse_date(fact.start) if fact.start is not None else _parse_date(fact.end)
     actual = {
         "issuer": fact.ticker,
         "concept": fact.concept,
         "unit": fact.unit,
-        "end": _parse_date(fact.end),
+        "period": fact_period,
         "form": fact.form,
         "filing_date": _parse_date(fact.filed),
         "accession": fact.accession,
@@ -215,6 +228,11 @@ def resolve_evidence(evidence: dict, cache: Path) -> CanonicalEvidenceRecord:
     return EvidenceResolver(cache).resolve(evidence)
 
 
-def resolve_evidence_set(evidence_items: list[dict], cache: Path) -> list[CanonicalEvidenceRecord]:
-    resolver = EvidenceResolver(cache)
+def resolve_evidence_set(
+    evidence_items: list[dict],
+    cache: Path,
+    *,
+    tickers: tuple[str, ...] | None = None,
+) -> list[CanonicalEvidenceRecord]:
+    resolver = EvidenceResolver(cache, tickers=tickers or DEFAULT_TICKERS)
     return [resolver.resolve(item) for item in evidence_items]

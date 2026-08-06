@@ -12,12 +12,27 @@ import tempfile
 from pathlib import Path
 
 from finvest.human_study.day1_pilot import FREEZE_SEED, freeze_day1
+from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 from finvest.human_study.web.services.draft_service import DraftService
 from finvest.human_study.web.services.evidence_service import resolve_evidence_set
 from finvest.human_study.web.services.signing_adapter import append_signed
 
 ROOT = Path(__file__).resolve().parents[3]
 CACHE = ROOT / "research" / "cache"
+FIXTURE_TICKERS = ("aapl", "msft", "ko", "eqix", "jnj", "ups")
+
+
+def _fixture_cache(tmp_root: Path) -> Path:
+    """Build a temp cache from the committed SEC fixture (never real cache)."""
+    cache = tmp_root / "cache"
+    sec = cache / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in FIXTURE_TICKERS:
+        (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
+    return cache
 
 
 def run_smoke_test(tmp_root: Path | None = None) -> dict[str, object]:
@@ -25,7 +40,8 @@ def run_smoke_test(tmp_root: Path | None = None) -> dict[str, object]:
     tmp_root = tmp_root or Path(tempfile.mkdtemp(prefix="finvest-smoke-"))
     day1_dir = tmp_root / "day1"
     # v0.2 temp freeze: accept the actual valid-case count (not the frozen v0.1 22).
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1)
+    cache = _fixture_cache(tmp_root)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache)
     manifest_path = day1_dir / "QUEUE_MANIFEST.json"
 
     from finvest.human_study.annotate_cli import load_manifest
@@ -39,8 +55,12 @@ def run_smoke_test(tmp_root: Path | None = None) -> dict[str, object]:
     results["queues"] = sorted(reviewer_view.keys())
 
     # 2. One base case renders + evidence resolves.
-    case = manifest["sealed"]["base_22_queue"][0]
-    evidence = resolve_evidence_set(case["evidence_items"], CACHE)
+    # Pick the first case WITH evidence (insufficient cases legitimately have
+    # none and are not a valid evidence-resolution target).
+    case = next(
+        c for c in manifest["sealed"]["base_22_queue"] if c["evidence_items"]
+    )
+    evidence = resolve_evidence_set(case["evidence_items"], cache)
     results["first_case"] = case["case_id"]
     results["evidence_count"] = len(evidence)
     results["evidence_resolved"] = sum(

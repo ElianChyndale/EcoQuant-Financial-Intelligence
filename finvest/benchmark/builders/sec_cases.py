@@ -279,9 +279,14 @@ def _amended_pair(bundle: SecBundle, ticker: str) -> tuple[SecFact | None, SecFa
     return None, None
 
 
-def build_sec_cases(cache_dir: Path, tickers: tuple[str, ...]) -> BuiltCases:
-    """Build FinVEST cases from SEC XBRL companyfacts for the given tickers."""
-    bundle = load_companyfacts(cache_dir / "sec", tickers=tickers)
+def build_sec_cases(
+    cache_dir: Path, tickers: tuple[str, ...], *, fixture: bool = False
+) -> BuiltCases:
+    """Build FinVEST cases from SEC XBRL companyfacts for the given tickers.
+
+    ``fixture=True`` marks the manifest as synthetic (committed fixture).
+    """
+    bundle = load_companyfacts(cache_dir / "sec", tickers=tickers, fixture=fixture)
     cases: list[FinVestCase] = []
     for ticker in tickers:
         years = sorted({

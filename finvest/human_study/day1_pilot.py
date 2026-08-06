@@ -118,7 +118,7 @@ def sha256_hex(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def build_base_queue(
-    cache_dir: Path = CACHE_DIR, *, min_cases: int = 22
+    cache_dir: Path = CACHE_DIR, *, min_cases: int = 22, fixture: bool = False
 ) -> tuple[FinVestCase, ...]:
     """The candidate SEC base cases (AI-generated; verification pending).
 
@@ -127,7 +127,7 @@ def build_base_queue(
     fresh v0.2 queue pass the actual minimum rather than mutating the v0.1
     contract.
     """
-    built = build_sec_cases(cache_dir, tickers=BASE_TICKERS)
+    built = build_sec_cases(cache_dir, tickers=BASE_TICKERS, fixture=fixture)
     if len(built.cases) < min_cases:
         raise RuntimeError(
             f"expected >= {min_cases} candidate base cases, got {len(built.cases)}; "
@@ -232,9 +232,20 @@ def _candidate_answer(case: FinVestCase) -> dict[str, Any]:
     return {"candidate": True, "value": case.gold_answer, "note": "AI candidate"}
 
 
-def _top_k_pages(question: str, top_k: int = 5) -> list[dict[str, Any]]:
-    """Deterministic BM25 top-k pages over the cached full-corpus (sealed)."""
-    corpus = build_full_corpus(CACHE_DIR)
+def _top_k_pages(question: str, top_k: int = 5, *, corpus: Any = None) -> list[dict[str, Any]]:
+    """Deterministic BM25 top-k pages over the full-corpus (sealed).
+
+    ``corpus`` may be injected (fixture corpus); when absent it is built from
+    the gitignored SEC cache and, if that cache is missing, the honest result
+    is an empty page list (no fabricated pages).
+    """
+    if corpus is None:
+        try:
+            corpus = build_full_corpus(CACHE_DIR)
+        except OSError:
+            corpus = None
+    if corpus is None or not corpus.units:
+        return []
     return [
         {"evidence_id": r.evidence_id, "document_id": r.document_id,
          "score": round(float(r.score), 6), "rank": r.rank}
@@ -273,6 +284,7 @@ def _vista_package(case: FinVestCase) -> dict[str, Any]:
 def build_interface_cases(
     cases: tuple[FinVestCase, ...],
     seed: int = FREEZE_SEED,
+    corpus: Any = None,
 ) -> tuple[dict[str, Any], ...]:
     """9 interface cases: distinct base questions, 3 per display condition."""
     rng = random.Random(seed)
@@ -281,24 +293,25 @@ def build_interface_cases(
     )  # 3 of each
     rng.shuffle(conditions)
     chosen: list[FinVestCase] = []
-    seen_questions: set[str] = set()
+    seen_pairs: set[tuple[str, str]] = set()  # (issuer, base_question) distinct
     pool = list(cases)
     rng.shuffle(pool)
     for case in pool:
         if len(chosen) == len(conditions):
             break
-        if case.base_question_id in seen_questions:
+        pair = (case.issuer_id, case.base_question_id)
+        if pair in seen_pairs:
             continue
         chosen.append(case)
-        seen_questions.add(case.base_question_id)
+        seen_pairs.add(pair)
     if len(chosen) < len(conditions):
-        raise RuntimeError("fewer than 9 distinct base questions available")
+        raise RuntimeError("fewer than 9 distinct (issuer, base-question) pairs available")
     result: list[dict[str, Any]] = []
     for case, condition in zip(chosen, conditions):
         bundle: dict[str, Any] = {"display_condition": condition}
         bundle["candidate_answer"] = _candidate_answer(case)
         if condition == "answer_topk_pages":
-            bundle["top_k_pages"] = _top_k_pages(case.question)
+            bundle["top_k_pages"] = _top_k_pages(case.question, corpus=corpus)
         if condition == "answer_vista_package":
             bundle["vista_package"] = _vista_package(case)
         result.append({"case_id": case.case_id, "base_question_id": case.base_question_id,
@@ -384,6 +397,8 @@ def freeze_day1(
     *,
     min_cases: int | None = None,
     protocol: object | None = None,
+    corpus: Any = None,
+    cache_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Build and freeze all queues; write manifest, hashes, empty records.
 
@@ -404,10 +419,12 @@ def freeze_day1(
         day1_dir = proto.dir
     if min_cases is None:
         min_cases = proto.min_base_cases
-    cases = build_base_queue(min_cases=min_cases)
+    cases = build_base_queue(
+        cache_dir or CACHE_DIR, min_cases=min_cases, fixture=cache_dir is not None
+    )
     paired = build_paired_queue(cases, seed=seed)
     blind = select_blind_repeat(cases, seed=seed)
-    interface = build_interface_cases(cases, seed=seed)
+    interface = build_interface_cases(cases, seed=seed, corpus=corpus)
     split = _split_manifest(cases)
     config = _experiment_config()
 
@@ -1257,7 +1274,20 @@ def _run_exploratory_pilot(
     manifest = json.loads((DAY1_DIR / "QUEUE_MANIFEST.json").read_text(encoding="utf-8"))
     cases = manifest["sealed"]["base_22_queue"]
     gold_by_case = {rec["case_id"]: rec for rec in signed}
-    corpus = build_full_corpus(CACHE_DIR)
+    try:
+        corpus = build_full_corpus(CACHE_DIR)
+    except OSError:
+        corpus = None
+    if corpus is None or not corpus.units:
+        return {
+            "folds": [], "seeds_run": [],
+            "per_seed": {}, "aggregated": {},
+            "corpus": "EMPTY_CACHE_NO_FULL_CORPUS",
+            "exploratory_note": (
+                "EXPLORATORY_PILOT · SMALL_SAMPLE · NOT_PAPER_HEADLINE — "
+                "full-corpus cache absent; evaluation honestly skipped"
+            ),
+        }
 
     per_seed: dict[str, Any] = {}
     all_records: list[dict[str, Any]] = []

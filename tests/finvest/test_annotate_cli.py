@@ -26,6 +26,7 @@ from typing import Any
 
 import pytest
 
+from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 from finvest.human_study.annotate_cli import (
     AnnotateOptions,
     BASE_FIELD_SPECS,
@@ -50,9 +51,13 @@ from finvest.human_study.day1_pilot import (
     sha256_hex,
     verify_frozen,
 )
+from finvest.retrieval.full_corpus import FullCorpus
 
 BASE_ORDER = [spec.name for spec in BASE_FIELD_SPECS]
 INTERFACE_ORDER = [spec.name for spec in INTERFACE_FIELD_SPECS]
+
+# Empty injected corpus: no full-10K cache in CI, no fabricated pages.
+EMPTY_FULL_CORPUS = FullCorpus(units=(), documents=(), by_document={})
 
 
 class FakeIO:
@@ -75,7 +80,19 @@ class FakeIO:
 @pytest.fixture()
 def env(tmp_path: Path) -> tuple[Path, dict[str, Any]]:
     day1 = tmp_path / "day1"
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1)
+    # build_sec_cases expects ONE companyfacts file PER TICKER (lowercased).
+    cache_dir = tmp_path / "cache"
+    sec = cache_dir / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in ("aapl", "msft", "ko", "eqix", "jnj", "ups"):
+        (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
+    freeze_day1(
+        seed=FREEZE_SEED, day1_dir=day1, min_cases=1,
+        corpus=EMPTY_FULL_CORPUS, cache_dir=cache_dir,
+    )  # fixture=True is implied by passing cache_dir
     manifest = json.loads((day1 / "QUEUE_MANIFEST.json").read_text(encoding="utf-8"))
     return day1, manifest
 

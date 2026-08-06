@@ -12,12 +12,15 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.local_real_data
-
 from finvest.benchmark.builders.sec_cases import build_sec_cases
+from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "research/cache"
+
+# v0.2 amendment-integrity checks run against the COMMITTED fixture (never the
+# gitignored SEC cache), so CI exercises the amendment/version constraints.
+pytestmark = pytest.mark.local_real_data
 
 
 def _amended_cases(built) -> list:
@@ -88,5 +91,16 @@ def test_no_cross_concept_pair_in_built_queue(built) -> None:
 
 
 @pytest.fixture(scope="module")
-def built():
-    return build_sec_cases(CACHE, tickers=("AAPL", "MSFT", "KO"))
+def built(tmp_path_factory: pytest.TempPathFactory):
+    # Build from the committed fixture: one companyfacts file PER TICKER.
+    tmp = tmp_path_factory.mktemp("sec-cache")
+    sec = tmp / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in ("AAPL", "MSFT", "KO"):
+        (sec / f"{ticker.lower()}_companyfacts.json").write_text(
+            fixture_json, encoding="utf-8"
+        )
+    return build_sec_cases(tmp, tickers=("AAPL", "MSFT", "KO"), fixture=True)

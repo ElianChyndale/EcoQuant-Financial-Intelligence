@@ -83,7 +83,7 @@ def test_fixture_sha256_stable() -> None:
     """The committed fixture's content hash must be stable (reproducibility)."""
     content = FIXTURE.read_text(encoding="utf-8")
     digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
-    assert digest.startswith("db8ede83ef6902ca")
+    assert digest.startswith("03ef86b54b0072fd")
 
 
 # ---------------------------------------------------------------------------
