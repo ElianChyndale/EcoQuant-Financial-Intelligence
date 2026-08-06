@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,18 +51,41 @@ CREATE TABLE IF NOT EXISTS interaction_audit (
 class DraftService:
     def __init__(self, db_path: Path) -> None:
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.executescript(SCHEMA)
-        self._conn.commit()
+        self._db_path = str(db_path)
+        # One connection per thread: sqlite3 connections are not safe to share
+        # across threads even with check_same_thread=False (races surface as
+        # InterfaceError: bad parameter under concurrent ASGI workers).
+        self._local = threading.local()
+        self._init_conn(self._conn)
+
+    def _init_conn(self, conn: sqlite3.Connection) -> None:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript(SCHEMA)
+        conn.commit()
+
+    @property
+    def _conn(self) -> sqlite3.Connection:
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            conn = sqlite3.connect(self._db_path)
+            self._init_conn(conn)
+            self._local.conn = conn
+        return conn
+
+    def close(self) -> None:
+        conn = getattr(self._local, "conn", None)
+        if conn is not None:
+            conn.close()
+            self._local.conn = None
 
     @contextmanager
     def _tx(self):
+        conn = self._conn
         try:
-            yield self._conn
-            self._conn.commit()
+            yield conn
+            conn.commit()
         except Exception:
-            self._conn.rollback()
+            conn.rollback()
             raise
 
     def save_draft(self, reviewer_id: str, queue: str, key: str, payload: dict) -> None:
