@@ -66,13 +66,17 @@ class DraftService:
 
     def save_draft(self, reviewer_id: str, queue: str, key: str, payload: dict) -> None:
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        # The payload is serialized BEFORE entering the transaction: under
+        # concurrent ASGI worker threads, passing a fresh str to execute() is
+        # safe (sqlite3 can otherwise raise InterfaceError: bad parameter).
+        payload_text = json.dumps(payload, default=str)
         with self._tx() as conn:
             conn.execute(
                 "INSERT INTO drafts(reviewer_id, queue, key, payload, updated_at) "
                 "VALUES(?,?,?,?,?) "
                 "ON CONFLICT(reviewer_id, queue, key) DO UPDATE SET payload=excluded.payload, "
                 "updated_at=excluded.updated_at",
-                (reviewer_id, queue, key, json.dumps(payload, default=str), now),
+                (reviewer_id, queue, key, payload_text, now),
             )
 
     def load_draft(self, reviewer_id: str, queue: str, key: str) -> dict | None:
