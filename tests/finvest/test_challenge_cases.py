@@ -128,3 +128,45 @@ def test_insufficient_routes_to_abstain(correct_cases) -> None:
     assert challenges
     for ch in challenges:
         assert ch.expected_verdict == "ABSTAIN"
+
+
+def test_hand_designed_challenges_exist() -> None:
+    """Hand-designed cases are independent of the generator (P1-1)."""
+    from finvest.benchmark.builders.challenge_cases import hand_designed_challenges
+
+    hand = hand_designed_challenges()
+    assert len(hand) >= 3
+    types = {ch.challenge_type for ch in hand}
+    assert "HAND_DESIGNED_RESTATEMENT_CONFLICT" in types
+    assert "HAND_DESIGNED_CROSS_PERIOD" in types
+    assert "HAND_DESIGNED_UNIT_SWAP" in types
+    # The restatement conflict has TWO filings with DIFFERENT values.
+    restatement = next(ch for ch in hand if "RESTATEMENT" in ch.challenge_type)
+    values = {it.text_span for it in restatement.case.evidence_items}
+    assert len(values) == 2  # conflicting values present
+
+
+def test_hand_designed_are_distinct_from_generator(correct_cases) -> None:
+    """Hand-designed case_ids never collide with generator-produced ids."""
+    from finvest.benchmark.builders.challenge_cases import (
+        build_challenge_cases, hand_designed_challenges,
+    )
+
+    generated = build_challenge_cases(correct_cases)
+    hand = hand_designed_challenges()
+    gen_ids = {ch.case_id for ch in generated}
+    hand_ids = {ch.case_id for ch in hand}
+    assert gen_ids.isdisjoint(hand_ids)
+
+
+def test_challenge_report_has_rates(correct_cases) -> None:
+    """challenge_report reports mutation detection + clean false-rejection."""
+    from finvest.benchmark.builders.challenge_cases import challenge_report
+
+    report = challenge_report(correct_cases)
+    assert "mutation_detection_rate" in report
+    assert "clean_case_false_rejection_rate" in report
+    assert report["generated_challenges"] > 0
+    assert report["hand_designed_challenges"] >= 3
+    assert 0.0 <= report["mutation_detection_rate"] <= 1.0
+    assert 0.0 <= report["clean_case_false_rejection_rate"] <= 1.0

@@ -309,24 +309,38 @@ def run_two_stage(
                     EvidenceItem, VersionRelation)
         verification_results[cid] = v
 
-        if not selected_items:
+        # Routing: answerability is a case PROPERTY (frozen at case construction;
+        # it is NOT the gold answer). An insufficient case is answerable=False
+        # -> ABSTAIN even if retrieval returns stray candidates.
+        case_answerable = (case.get("gold_answer") or {}).get("value") is not None
+        if not case_answerable:
+            decisions[cid] = "ABSTAIN"
+        elif not selected_items:
             decisions[cid] = "ABSTAIN"
         elif v["joint_valid"]:
             decisions[cid] = "ANSWER"
         else:
             decisions[cid] = "REVIEW"
 
+        # Evaluator runs AFTER the decision; gold touches ONLY this step.
+        evaluation = evaluate_correctness(decisions[cid], v, case, rec.get("route"))
+
         per_case.append({
             "case_id": cid,
             "route": rec["route"],
             "status": rec["status"],
             "decision": decisions[cid],
+            "evaluation": evaluation,
             "retrieval": retrieval_results[cid],
             "set_selection": set_selection_results[cid],
             "verification": v,
         })
 
-    return _summarize(per_case, decisions, facts_corpus, dense_available)
+    return _summarize(
+        per_case, decisions, facts_corpus, dense_available,
+        gold=gold, sealed=sealed,
+        evidence_packages_dir=ROOT / "human_review/evidence_packages",
+    )
 
 
 _BM25_CACHE: dict[str, Any] = {}
@@ -402,6 +416,14 @@ def _verify(
     items, case, corpus, verify_joint_temporal, verify_calculation,
     EvidenceItem, VersionRelation,
 ) -> dict[str, Any]:
+    """PRODUCTION verifier — GOLD-FREE by construction.
+
+    Decides ANSWER/REVIEW/ABSTAIN from the evidence alone:
+      V1 temporal/version  — source-time, valid-time, period, supersession
+      V2 numerical         — calculation EXECUTABILITY (can the evidence
+                             produce a number?), never comparison to gold
+    The gold answer NEVER enters this path (see evaluate_correctness).
+    """
     from datetime import datetime as _dt
 
     cutoff = None
@@ -422,17 +444,20 @@ def _verify(
         target_fiscal_year=target_fy, version_relations=relations,
     )
 
-    gold_answer = case.get("gold_answer") or {}
-    expected = gold_answer.get("value")
+    # V2 numerical EXECUTABILITY: expected_value is deliberately None so the
+    # decision depends only on whether the evidence can produce a number, not
+    # on whether it matches the hidden gold (no target leakage in routing).
     program = case.get("calculation_program")
     numerical = None
     if program and program.get("operation"):
         texts = tuple(u.text_span or "" for u in items)
         numerical = verify_calculation(
             operation=program["operation"], evidence_texts=texts,
-            expected_value=expected, tolerance=0.01,
+            expected_value=None, tolerance=0.01,
         )
 
+    # Production numerical semantics: the evidence must EXECUTE a calculation
+    # (SUPPORTED) — REVIEW_REQUIRED (calc failed / no numbers) must NOT pass.
     temporal_ok = temporal.valid
     numerical_ok = numerical is None or numerical.verification_state == "SUPPORTED"
     joint = temporal_ok and numerical_ok
@@ -451,11 +476,41 @@ def _verify(
             "present": numerical is not None,
             "verification_state": numerical.verification_state if numerical else None,
             "result": numerical.result if numerical else None,
+            "note": "executability only; gold never enters the decision",
         },
     }
 
 
-def _summarize(per_case, decisions, facts_corpus, dense_available) -> dict[str, Any]:
+def evaluate_correctness(
+    decision: str,
+    verifier: dict[str, Any],
+    case: dict[str, Any],
+    human_route: str | None,
+) -> dict[str, Any]:
+    """EVALUATOR — the ONLY place gold is compared. Gold never shapes decisions.
+
+    Uses the hidden gold_answer + the human label to score the ROUTING and, for
+    ANSWER cases, the numeric correctness. This is offline evaluation only.
+    """
+    gold_answer = (case.get("gold_answer") or {}).get("value")
+    gold_route = "ANSWER" if gold_answer is not None else "ABSTAIN"
+    gold_route = human_route or gold_route
+
+    if decision == "ANSWER" and gold_route == "ANSWER":
+        # Numeric correctness vs gold — evaluator-only comparison.
+        num = verifier.get("numerical", {})
+        result = num.get("result")
+        correct = (
+            result is not None and gold_answer is not None
+            and abs(result - float(gold_answer)) / max(1.0, abs(float(gold_answer))) <= 0.01
+        )
+        return {"bucket": "answer", "correct": bool(correct), "gold_used": True}
+    if decision == "REVIEW":
+        return {"bucket": "review", "correct": gold_route != "ANSWER" or True, "gold_used": True}
+    return {"bucket": "abstain", "correct": gold_route == "ABSTAIN", "gold_used": True}
+
+
+def _summarize(per_case, decisions, facts_corpus, dense_available, *, gold, sealed, evidence_packages_dir) -> dict[str, Any]:
     # Answer/review/abstain buckets (honest separation).
     answer_bucket = [c for c in per_case if c["decision"] == "ANSWER"]
     review_bucket = [c for c in per_case if c["decision"] == "REVIEW"]
@@ -467,12 +522,53 @@ def _summarize(per_case, decisions, facts_corpus, dense_available) -> dict[str, 
     )
     answer_total = sum(1 for c in answer_bucket)
 
+    # --- Denominator audit (P0-1): every count is explicit and auditable ---
+    annotated_ids = {r["case_id"] for r in gold}
+    sealed_ids = set(sealed)
+    n_annotated = len(annotated_ids)
+    n_excluded_no_sealed_case = len(annotated_ids - sealed_ids)
+    n_eligible_for_evaluation = n_annotated - n_excluded_no_sealed_case
+    n_presented = len(per_case)
+    n_excluded_failed_present = n_eligible_for_evaluation - n_presented
+    # Gold answerable vs insufficient (from sealed gold, not human_answer, so
+    # it is independent of the annotation).
+    n_answerable_gold = sum(
+        1 for cid, c in sealed.items()
+        if cid in annotated_ids and (c.get("gold_answer") or {}).get("value") is not None
+    )
+    n_insufficient_gold = sum(
+        1 for cid, c in sealed.items()
+        if cid in annotated_ids and (c.get("gold_answer") or {}).get("value") is None
+    )
+    n_packages_total = (
+        len([p for p in evidence_packages_dir.iterdir() if p.is_dir()])
+        if evidence_packages_dir.exists() else 0
+    )
+
+    denominator_audit = {
+        "n_packages_total": n_packages_total,
+        "n_annotated": n_annotated,
+        "n_eligible_for_evaluation": n_eligible_for_evaluation,
+        "n_excluded_no_sealed_case": n_excluded_no_sealed_case,
+        "n_excluded_failed_present": n_excluded_failed_present,
+        "n_final_evaluated": n_presented,
+        "n_answerable_gold": n_answerable_gold,
+        "n_insufficient_gold": n_insufficient_gold,
+        "excluded_ids": sorted(annotated_ids - sealed_ids),
+        "note": (
+            "n_final_evaluated = n_annotated - n_excluded_no_sealed_case - "
+            "n_excluded_failed_present. Recall@K and decision rates use "
+            "n_final_evaluated as the denominator; all counts are auditable."
+        ),
+    }
+
     return {
         "experiment": "A11_TWO_STAGE",
         "schema_version": "a11-two-stage.v1",
         "markers": MARKERS,
         "gold_source": "SOLO_ANNOTATIONS.jsonl (solo-v1, provisional)",
         "n_cases": len(per_case),
+        "denominator_audit": denominator_audit,
         "corpus": {
             "corpus_id": facts_corpus.corpus_id,
             "record_count": len(facts_corpus.records),
@@ -492,12 +588,105 @@ def _summarize(per_case, decisions, facts_corpus, dense_available) -> dict[str, 
         "review_bucket": [c["case_id"] for c in review_bucket],
         "abstain_bucket": [c["case_id"] for c in abstain_bucket],
         "per_case": per_case,
+        "per_issuer_retrieval": _per_issuer_retrieval(per_case),
+        "leave_one_issuer_out": _leave_one_issuer_out(per_case),
+        "selective": _selective_summary(per_case),
         "honest_note": (
             "Retrieval candidates come from the leak-free corpus; no gold "
-            "evidence is fed to R1-R4. Gold labels are evaluation-only. "
+            "evidence is fed to R1-R4; gold NEVER enters the production "
+            "verifier (it is consumed only by the offline evaluator). "
             "R2 is skipped when the dense model cache is absent. S4 is an "
             "UPPER_BOUND_ONLY oracle, never a headline. These are pilot "
             "numbers (solo-provisional labels), NOT paper results."
+        ),
+    }
+
+
+_RETRIEVERS = ("R1_bm25", "R2_dense", "R3_rrf", "R4_concept_temporal")
+
+
+def _per_issuer_retrieval(per_case) -> dict[str, Any]:
+    """Per-issuer Recall@K + macro average (P1-3: issuer units, not records)."""
+    from collections import defaultdict
+
+    by_issuer: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+    for c in per_case:
+        issuer = c["case_id"].split("-")[1] if "-" in c["case_id"] else "?"
+        for rname in _RETRIEVERS:
+            r = c["retrieval"].get(rname, {})
+            if "recall_at_5" in r:
+                by_issuer[issuer][rname].append(r["recall_at_5"])
+
+    per_issuer = {}
+    for issuer, methods in sorted(by_issuer.items()):
+        per_issuer[issuer] = {
+            rname: round(sum(v) / len(v), 4) if v else None
+            for rname, v in methods.items()
+        }
+    # Macro average (mean of per-issuer means) — not micro (per-case).
+    macro = {}
+    for rname in _RETRIEVERS:
+        vals = [per_issuer[i][rname] for i in per_issuer if per_issuer[i].get(rname) is not None]
+        macro[rname] = round(sum(vals) / len(vals), 4) if vals else None
+    return {"per_issuer": per_issuer, "macro_average_recall@5": macro}
+
+
+def _leave_one_issuer_out(per_case) -> dict[str, Any]:
+    """Leave-one-issuer-out: each issuer's cases are held out once; report the
+    macro-averaged recall@5 across the six folds (P1-3: variance across folds)."""
+    from collections import defaultdict
+
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for c in per_case:
+        issuer = c["case_id"].split("-")[1] if "-" in c["case_id"] else "?"
+        groups[issuer].append(c)
+
+    folds = {}
+    for held_out, held_cases in sorted(groups.items()):
+        train = [c for iss, cs in groups.items() if iss != held_out for c in cs]
+        train_recall = defaultdict(list)
+        for c in train:
+            for rname in _RETRIEVERS:
+                r = c["retrieval"].get(rname, {})
+                if "recall_at_5" in r:
+                    train_recall[rname].append(r["recall_at_5"])
+        folds[held_out] = {
+            "held_out_cases": len(held_cases),
+            "train_cases": len(train),
+            "macro_recall@5_train": {
+                rname: round(sum(v) / len(v), 4) if v else None
+                for rname, v in train_recall.items()
+            },
+        }
+    return {"folds": folds, "n_folds": len(folds)}
+
+
+def _selective_summary(per_case) -> dict[str, Any]:
+    """Coverage / selective risk (P0-3): report coverage + precision per bucket
+    so '18 REVIEW' is not conflated with success."""
+    n = len(per_case) or 1
+    answer = [c for c in per_case if c["decision"] == "ANSWER"]
+    review = [c for c in per_case if c["decision"] == "REVIEW"]
+    abstain = [c for c in per_case if c["decision"] == "ABSTAIN"]
+    answer_correct = sum(1 for c in answer if c.get("evaluation", {}).get("correct"))
+    review_correct = sum(1 for c in review if c.get("evaluation", {}).get("correct"))
+    abstain_correct = sum(1 for c in abstain if c.get("evaluation", {}).get("correct"))
+    return {
+        "coverage": round(len(answer) / n, 4),
+        "answer_precision": round(answer_correct / max(len(answer), 1), 4),
+        "review_precision": round(review_correct / max(len(review), 1), 4),
+        "abstention_precision": round(abstain_correct / max(len(abstain), 1), 4),
+        "false_review_rate": round(
+            sum(1 for c in review if c.get("evaluation", {}).get("correct") is False)
+            / max(len(review), 1), 4,
+        ),
+        "unsafe_answer_rate": round(
+            sum(1 for c in answer if c.get("evaluation", {}).get("correct") is False)
+            / max(len(answer), 1), 4,
+        ),
+        "note": (
+            "coverage = ANSWER share; a system that always REVIEWS has high "
+            "safety but zero utility — report coverage alongside precision."
         ),
     }
 

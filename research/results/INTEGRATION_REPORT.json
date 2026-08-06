@@ -1,0 +1,32 @@
+{
+  "adapters": {
+    "contracts_adapter": {
+      "collected": 6,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "reproduction_lab_adapter": {
+      "collected": 3,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "verification_kit_adapter": {
+      "collected": 4,
+      "skipped": 0,
+      "status": "PASS"
+    }
+  },
+  "all_pass": true,
+  "installed_tools": {
+    "financial_ai_contracts": true,
+    "financial_systems_verification": true,
+    "paper_reproduction_lab": true
+  },
+  "note": "Core CI keeps adapter tests importorskip (green without sibling repos). This report is generated in integration-ci AFTER installing the pinned commits; all_pass requires every adapter test to RUN with zero skips.",
+  "pinned_commits": {
+    "financial-ai-contracts": "4b232218ad7a250ce03124d51dfa036082aee284",
+    "financial-systems-verification-kit": "b0b1024",
+    "paper-reproduction-lab": "9ca75082751c28ca46902f33fb8e269e4b79e05a"
+  },
+  "schema_version": "finvest-integration-report.v1"
+}

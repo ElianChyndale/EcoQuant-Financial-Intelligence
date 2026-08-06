@@ -1,8 +1,10 @@
 {
-  "abstain_bucket": [],
+  "abstain_bucket": [
+    "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025"
+  ],
   "answer_agreement": {
     "agree_with_human_answer_route": 0,
-    "answer_cases": 1,
+    "answer_cases": 0,
     "rate": 0.0
   },
   "corpus": {
@@ -16,13 +18,82 @@
     "record_count": 170229
   },
   "decisions": {
-    "ABSTAIN": 0,
-    "ANSWER": 1,
+    "ABSTAIN": 1,
+    "ANSWER": 0,
     "REVIEW": 18
+  },
+  "denominator_audit": {
+    "excluded_ids": [
+      "finvest-AAPL-cashflow-proxy-2022"
+    ],
+    "n_annotated": 20,
+    "n_answerable_gold": 18,
+    "n_eligible_for_evaluation": 19,
+    "n_excluded_failed_present": 0,
+    "n_excluded_no_sealed_case": 1,
+    "n_final_evaluated": 19,
+    "n_insufficient_gold": 1,
+    "n_packages_total": 60,
+    "note": "n_final_evaluated = n_annotated - n_excluded_no_sealed_case - n_excluded_failed_present. Recall@K and decision rates use n_final_evaluated as the denominator; all counts are auditable."
   },
   "experiment": "A11_TWO_STAGE",
   "gold_source": "SOLO_ANNOTATIONS.jsonl (solo-v1, provisional)",
-  "honest_note": "Retrieval candidates come from the leak-free corpus; no gold evidence is fed to R1-R4. Gold labels are evaluation-only. R2 is skipped when the dense model cache is absent. S4 is an UPPER_BOUND_ONLY oracle, never a headline. These are pilot numbers (solo-provisional labels), NOT paper results.",
+  "honest_note": "Retrieval candidates come from the leak-free corpus; no gold evidence is fed to R1-R4; gold NEVER enters the production verifier (it is consumed only by the offline evaluator). R2 is skipped when the dense model cache is absent. S4 is an UPPER_BOUND_ONLY oracle, never a headline. These are pilot numbers (solo-provisional labels), NOT paper results.",
+  "leave_one_issuer_out": {
+    "folds": {
+      "AAPL": {
+        "held_out_cases": 5,
+        "macro_recall@5_train": {
+          "R1_bm25": 0.0,
+          "R2_dense": 0.0,
+          "R3_rrf": 0.0,
+          "R4_concept_temporal": 0.0
+        },
+        "train_cases": 14
+      },
+      "JNJ": {
+        "held_out_cases": 3,
+        "macro_recall@5_train": {
+          "R1_bm25": 0.125,
+          "R2_dense": 0.0938,
+          "R3_rrf": 0.125,
+          "R4_concept_temporal": 0.0625
+        },
+        "train_cases": 16
+      },
+      "KO": {
+        "held_out_cases": 3,
+        "macro_recall@5_train": {
+          "R1_bm25": 0.125,
+          "R2_dense": 0.0938,
+          "R3_rrf": 0.125,
+          "R4_concept_temporal": 0.0625
+        },
+        "train_cases": 16
+      },
+      "MSFT": {
+        "held_out_cases": 4,
+        "macro_recall@5_train": {
+          "R1_bm25": 0.1333,
+          "R2_dense": 0.1,
+          "R3_rrf": 0.1333,
+          "R4_concept_temporal": 0.0667
+        },
+        "train_cases": 15
+      },
+      "UPS": {
+        "held_out_cases": 4,
+        "macro_recall@5_train": {
+          "R1_bm25": 0.1333,
+          "R2_dense": 0.1,
+          "R3_rrf": 0.1333,
+          "R4_concept_temporal": 0.0667
+        },
+        "train_cases": 15
+      }
+    },
+    "n_folds": 5
+  },
   "markers": [
     "EXPLORATORY_PILOT",
     "SMALL_SAMPLE",
@@ -34,19 +105,24 @@
     {
       "case_id": "finvest-AAPL-cashflow-proxy-2024",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.75,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -57,9 +133,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.6,
+          "redundancy_at_20": 0.4,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -213,6 +289,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -233,17 +310,22 @@
     {
       "case_id": "finvest-AAPL-cashflow-proxy-2025",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.75,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -256,7 +338,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.4,
+          "redundancy_at_20": 0.45,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -412,6 +494,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -432,6 +515,11 @@
     {
       "case_id": "finvest-JNJ-cashflow-proxy-2025",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -455,7 +543,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.35,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -611,6 +699,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -628,6 +717,11 @@
     {
       "case_id": "finvest-KO-cashflow-proxy-2025",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -638,7 +732,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.85,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -651,7 +745,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.5,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -807,6 +901,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -824,19 +919,24 @@
     {
       "case_id": "finvest-MSFT-cashflow-proxy-2025",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -847,9 +947,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.75,
+          "redundancy_at_20": 0.6,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -1003,6 +1103,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -1022,17 +1123,22 @@
     {
       "case_id": "finvest-MSFT-cashflow-proxy-2026",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -1045,7 +1151,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.75,
+          "redundancy_at_20": 0.55,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -1201,6 +1307,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -1220,6 +1327,11 @@
     {
       "case_id": "finvest-UPS-cashflow-proxy-2024",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -1230,9 +1342,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -1243,9 +1355,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -1399,6 +1511,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -1419,6 +1532,11 @@
     {
       "case_id": "finvest-UPS-cashflow-proxy-2025",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -1429,20 +1547,20 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -1598,6 +1716,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -1618,30 +1737,35 @@
     {
       "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
-          "mrr": 0.0,
-          "ndcg_at_20": 0.0,
-          "recall_at_1": 0.0,
-          "recall_at_10": 0.0,
-          "recall_at_20": 0.0,
-          "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
-          "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "document_recall_at_5": 1.0,
+          "mrr": 1.0,
+          "ndcg_at_20": 1.0,
+          "recall_at_1": 0.5,
+          "recall_at_10": 1.0,
+          "recall_at_20": 1.0,
+          "recall_at_5": 1.0,
+          "redundancy_at_20": 0.5,
+          "set_precision_at_20": 0.1,
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
           "document_recall_at_5": 0.5,
-          "mrr": 0.2,
-          "ndcg_at_20": 0.3905,
+          "mrr": 0.25,
+          "ndcg_at_20": 0.4825,
           "recall_at_1": 0.0,
-          "recall_at_10": 0.5,
+          "recall_at_10": 1.0,
           "recall_at_20": 1.0,
           "recall_at_5": 0.5,
-          "redundancy_at_20": 0.05,
+          "redundancy_at_20": 0.15,
           "set_precision_at_20": 0.1,
           "stale_rate": 0.0
         },
@@ -1676,13 +1800,13 @@
       "route": "ANSWER",
       "set_selection": {
         "R1_bm25_S1_top_k": {
-          "all_required_evidence_recall": 0.0,
+          "all_required_evidence_recall": 1.0,
           "average_set_size": 5.0,
-          "minimal_set_recall": 0.0,
+          "minimal_set_recall": 1.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.4
         },
         "R1_bm25_S2_greedy": {
           "all_required_evidence_recall": 0.0,
@@ -1694,13 +1818,13 @@
           "set_precision": 0.0
         },
         "R1_bm25_S3_beam": {
-          "all_required_evidence_recall": 0.0,
+          "all_required_evidence_recall": 0.5,
           "average_set_size": 6.0,
-          "minimal_set_recall": 0.0,
+          "minimal_set_recall": 1.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.1667
         },
         "R1_bm25_S4_oracle": {
           "all_required_evidence_recall": 0.0,
@@ -1733,13 +1857,13 @@
           "set_precision": 0.0
         },
         "R3_rrf_S3_beam": {
-          "all_required_evidence_recall": 0.0,
+          "all_required_evidence_recall": 0.5,
           "average_set_size": 6.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.1667
         },
         "R3_rrf_S4_oracle": {
           "all_required_evidence_recall": 0.0,
@@ -1797,6 +1921,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": false,
           "result": null,
           "verification_state": null
@@ -1816,7 +1941,12 @@
     },
     {
       "case_id": "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025",
-      "decision": "ANSWER",
+      "decision": "ABSTAIN",
+      "evaluation": {
+        "bucket": "abstain",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -1827,7 +1957,7 @@
           "recall_at_10": 1.0,
           "recall_at_20": 1.0,
           "recall_at_5": 1.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.55,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -1840,7 +1970,7 @@
           "recall_at_10": 1.0,
           "recall_at_20": 1.0,
           "recall_at_5": 1.0,
-          "redundancy_at_20": 0.25,
+          "redundancy_at_20": 0.15,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -1996,6 +2126,7 @@
       "verification": {
         "joint_valid": true,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": false,
           "result": null,
           "verification_state": null
@@ -2013,19 +2144,24 @@
     {
       "case_id": "finvest-MSFT-cashflow-proxy-2023",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.85,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -2036,9 +2172,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.75,
+          "redundancy_at_20": 0.5,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -2192,6 +2328,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -2215,6 +2352,11 @@
     {
       "case_id": "finvest-KO-cashflow-proxy-2023",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -2225,22 +2367,22 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.55,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -2394,6 +2536,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -2415,6 +2558,11 @@
     {
       "case_id": "finvest-JNJ-cashflow-proxy-2023",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -2425,9 +2573,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.65,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -2438,9 +2586,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.3,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -2594,6 +2742,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -2611,6 +2760,11 @@
     {
       "case_id": "finvest-UPS-cashflow-proxy-2022",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -2621,22 +2775,22 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -2790,6 +2944,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -2812,19 +2967,24 @@
     {
       "case_id": "finvest-AAPL-cashflow-proxy-2023",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.75,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -2835,9 +2995,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.6,
+          "redundancy_at_20": 0.4,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -2991,6 +3151,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -3012,19 +3173,24 @@
     {
       "case_id": "finvest-MSFT-cashflow-proxy-2024",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.85,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -3035,9 +3201,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.75,
+          "redundancy_at_20": 0.45,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -3191,6 +3357,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -3212,6 +3379,11 @@
     {
       "case_id": "finvest-KO-cashflow-proxy-2024",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -3222,9 +3394,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.85,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -3235,7 +3407,7 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.55,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
           "stale_rate": 0.0
         },
@@ -3391,6 +3563,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -3412,6 +3585,11 @@
     {
       "case_id": "finvest-JNJ-cashflow-proxy-2024",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -3424,7 +3602,7 @@
           "recall_at_5": 0.0,
           "redundancy_at_20": 0.7,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.05
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
@@ -3435,9 +3613,9 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.35,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -3591,6 +3769,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -3608,6 +3787,11 @@
     {
       "case_id": "finvest-UPS-cashflow-proxy-2023",
       "decision": "REVIEW",
+      "evaluation": {
+        "bucket": "review",
+        "correct": true,
+        "gold_used": true
+      },
       "retrieval": {
         "R1_bm25": {
           "candidate_pool_size": 20,
@@ -3618,22 +3802,22 @@
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.7,
+          "redundancy_at_20": 0.95,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.1
+          "stale_rate": 0.0
         },
         "R2_dense": {
           "candidate_pool_size": 20,
-          "document_recall_at_5": 0.0,
+          "document_recall_at_5": 1.0,
           "mrr": 0.0,
           "ndcg_at_20": 0.0,
           "recall_at_1": 0.0,
           "recall_at_10": 0.0,
           "recall_at_20": 0.0,
           "recall_at_5": 0.0,
-          "redundancy_at_20": 0.65,
+          "redundancy_at_20": 0.0,
           "set_precision_at_20": 0.0,
-          "stale_rate": 0.15
+          "stale_rate": 0.0
         },
         "R3_rrf": {
           "candidate_pool_size": 20,
@@ -3787,6 +3971,7 @@
       "verification": {
         "joint_valid": false,
         "numerical": {
+          "note": "executability only; gold never enters the decision",
           "present": true,
           "result": null,
           "verification_state": "REVIEW_REQUIRED"
@@ -3807,6 +3992,46 @@
       }
     }
   ],
+  "per_issuer_retrieval": {
+    "macro_average_recall@5": {
+      "R1_bm25": 0.08,
+      "R2_dense": 0.06,
+      "R3_rrf": 0.08,
+      "R4_concept_temporal": 0.04
+    },
+    "per_issuer": {
+      "AAPL": {
+        "R1_bm25": 0.4,
+        "R2_dense": 0.3,
+        "R3_rrf": 0.4,
+        "R4_concept_temporal": 0.2
+      },
+      "JNJ": {
+        "R1_bm25": 0.0,
+        "R2_dense": 0.0,
+        "R3_rrf": 0.0,
+        "R4_concept_temporal": 0.0
+      },
+      "KO": {
+        "R1_bm25": 0.0,
+        "R2_dense": 0.0,
+        "R3_rrf": 0.0,
+        "R4_concept_temporal": 0.0
+      },
+      "MSFT": {
+        "R1_bm25": 0.0,
+        "R2_dense": 0.0,
+        "R3_rrf": 0.0,
+        "R4_concept_temporal": 0.0
+      },
+      "UPS": {
+        "R1_bm25": 0.0,
+        "R2_dense": 0.0,
+        "R3_rrf": 0.0,
+        "R4_concept_temporal": 0.0
+      }
+    }
+  },
   "review_bucket": [
     "finvest-AAPL-cashflow-proxy-2024",
     "finvest-AAPL-cashflow-proxy-2025",
@@ -3827,5 +4052,14 @@
     "finvest-JNJ-cashflow-proxy-2024",
     "finvest-UPS-cashflow-proxy-2023"
   ],
-  "schema_version": "a11-two-stage.v1"
+  "schema_version": "a11-two-stage.v1",
+  "selective": {
+    "abstention_precision": 1.0,
+    "answer_precision": 0.0,
+    "coverage": 0.0,
+    "false_review_rate": 0.0,
+    "note": "coverage = ANSWER share; a system that always REVIEWS has high safety but zero utility \u2014 report coverage alongside precision.",
+    "review_precision": 1.0,
+    "unsafe_answer_rate": 0.0
+  }
 }

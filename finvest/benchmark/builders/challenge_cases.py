@@ -249,3 +249,157 @@ def build_challenge_cases(
             builder = _CHALLENGE_BUILDERS[family]
             challenges.append(builder(base))
     return challenges
+
+
+# --- Hand-designed challenges (P1-1: independent of the mutation generator) ---
+# These are NOT produced by _CHALLENGE_BUILDERS; they encode real-world failure
+# patterns (restatement conflict, cross-period scope, unit-swap) by hand so the
+# verifier is not only tested against its own mutation rules (same-rule-generates
+# + same-rule-detects would overestimate robustness).
+
+
+def hand_designed_challenges() -> list[ChallengeCase]:
+    """Hand-built challenge cases with explicit evidence (no generator loop)."""
+    from datetime import date as _date
+
+    from finvest.benchmark.schemas import CalculationProgram, EvidenceItem, RequirementGraph
+
+    def _item(eid: str, concept: str, val: str, end: str, filed: str, form: str = "10-K") -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=eid, document_id=f"HD-{eid}",
+            document_version=form, filing_date=_date.fromisoformat(filed),
+            valid_from=_date.fromisoformat("2022-10-01"), valid_to=_date.fromisoformat(end),
+            text_span=f"{concept} {val} USD 2022-10-01 {end} {filed} {form}",
+            concept=concept, unit="USD", content_hash=eid,
+        )
+
+    # 1. RESTATEMENT_CONFLICT: two filings for the SAME concept/period with
+    #    DIFFERENT values; a naive verifier accepts whichever is retrieved.
+    restatement = FinVestCase(
+        case_id="HD-restatement-conflict",
+        base_question_id="hd-bq-restatement",
+        issuer_id="AAPL", jurisdiction="US",
+        question="What is AAPL net income for FY2023 (restated)?",
+        source_cutoff=datetime(2024, 2, 1),
+        target_period_start=_date(2022, 10, 1),
+        target_period_end=_date(2023, 9, 30), target_fiscal_year="FY2023",
+        answer_type="extractive",
+        gold_answer={"value": 97000000000.0, "unit": "USD"},
+        decision_label="REVIEW", sufficiency_label="CONFLICTING",
+        requirement_graph=None,
+        acceptable_evidence_sets=(), minimal_evidence_sets=(),
+        evidence_items=(
+            _item("HD-AAPL-NetIncomeLoss-1", "NetIncomeLoss", "96995000000", "2023-09-30", "2023-11-03"),
+            _item("HD-AAPL-NetIncomeLoss-2", "NetIncomeLoss", "97009000000", "2023-09-30", "2024-01-25"),
+        ),
+        version_relations=(),
+        known_conflicts=("two filings differ for same period",),
+    )
+    # 2. CROSS_PERIOD_SCOPE: a 10-Q (quarterly) value presented as the full-year
+    #    answer — period scope mismatch a generator would not encode.
+    cross_period = FinVestCase(
+        case_id="HD-cross-period-scope",
+        base_question_id="hd-bq-cross-period",
+        issuer_id="MSFT", jurisdiction="US",
+        question="What is MSFT total revenue for FY2023?",
+        source_cutoff=datetime(2023, 8, 1),
+        target_period_start=_date(2022, 7, 1),
+        target_period_end=_date(2023, 6, 30), target_fiscal_year="FY2023",
+        answer_type="extractive",
+        gold_answer={"value": 100000000000.0, "unit": "USD"},
+        decision_label="REVIEW", sufficiency_label="PARTIAL",
+        requirement_graph=None,
+        acceptable_evidence_sets=(), minimal_evidence_sets=(),
+        evidence_items=(
+            _item("HD-MSFT-Revenues-Q4", "Revenues", "62000000000", "2023-06-30", "2023-07-25", form="10-Q"),
+        ),
+        version_relations=(),
+    )
+    # 3. UNIT_SWAP: value correct for a different unit scale (EUR vs USD).
+    unit_swap = FinVestCase(
+        case_id="HD-unit-swap",
+        base_question_id="hd-bq-unit",
+        issuer_id="KO", jurisdiction="US",
+        question="What is KO revenue for FY2023 in USD?",
+        source_cutoff=datetime(2024, 2, 1),
+        target_period_start=_date(2023, 1, 1),
+        target_period_end=_date(2023, 12, 31), target_fiscal_year="FY2023",
+        answer_type="extractive",
+        gold_answer={"value": 45000000000.0, "unit": "USD"},
+        decision_label="REVIEW", sufficiency_label="REFUTED",
+        requirement_graph=None,
+        acceptable_evidence_sets=(), minimal_evidence_sets=(),
+        evidence_items=(
+            EvidenceItem(
+                evidence_id="HD-KO-Revenues-EUR", document_id="HD-KO-Revenues-EUR",
+                document_version="10-K", filing_date=_date(2024, 2, 1),
+                valid_from=_date(2023, 1, 1), valid_to=_date(2023, 12, 31),
+                text_span="Revenues 41000000000 EUR 2023-01-01 2023-12-31 2024-02-01 10-K",
+                concept="Revenues", unit="EUR", content_hash="HD-KO-Revenues-EUR",
+            ),
+        ),
+        version_relations=(),
+    )
+    return [
+        ChallengeCase("HD-restatement-conflict", "hd-bq-restatement", "HAND_DESIGNED_RESTATEMENT_CONFLICT", restatement, "REVIEW_REQUIRED"),
+        ChallengeCase("HD-cross-period-scope", "hd-bq-cross-period", "HAND_DESIGNED_CROSS_PERIOD", cross_period, "REVIEW_REQUIRED"),
+        ChallengeCase("HD-unit-swap", "hd-bq-unit", "HAND_DESIGNED_UNIT_SWAP", unit_swap, "REVIEW_REQUIRED"),
+    ]
+
+
+def challenge_report(
+    correct_cases: list[FinVestCase],
+    *,
+    verifier_fn: Any = None,
+) -> dict[str, Any]:
+    """Robustness report: mutation detection rate + clean-case false-rejection.
+
+    If ``verifier_fn`` is given (callable case -> bool "valid"), we compute:
+      - mutation_detection_rate: share of mutations the verifier REJECTS;
+      - clean_case_false_rejection_rate: share of CORRECT cases the verifier
+        wrongly rejects.
+    Without a verifier, the report still enumerates hand-designed + generated
+    challenges with their expected verdicts (13/13 killed is NOT generalizable).
+    """
+    from finvest.verification.temporal_version import verify_joint_temporal
+
+    generated = build_challenge_cases(correct_cases)
+    hand = hand_designed_challenges()
+
+    def _verdict_valid(case: FinVestCase) -> bool:
+        items = tuple(case.evidence_items)
+        if not items:
+            return False
+        v = verify_joint_temporal(
+            items,
+            source_cutoff=case.source_cutoff or datetime(2030, 1, 1),
+            target_end=case.target_period_end,
+            target_fiscal_year=case.target_fiscal_year,
+            version_relations=case.version_relations,
+        )
+        return v.valid
+
+    def _rejects(ch: ChallengeCase) -> bool:
+        if verifier_fn is not None:
+            return not bool(verifier_fn(ch.case))
+        return not _verdict_valid(ch.case)
+
+    mutations = generated + hand
+    rejected = sum(1 for ch in mutations if _rejects(ch))
+    clean_rejected = sum(1 for c in correct_cases if not _verdict_valid(c))
+
+    return {
+        "generated_challenges": len(generated),
+        "hand_designed_challenges": len(hand),
+        "total_challenges": len(mutations),
+        "mutation_detection_rate": round(rejected / max(len(mutations), 1), 4),
+        "clean_cases": len(correct_cases),
+        "clean_case_false_rejection_rate": round(clean_rejected / max(len(correct_cases), 1), 4),
+        "note": (
+            "mutation_detection_rate measures REJECTION of both generator "
+            "mutants AND hand-designed independent cases; 13/13 killed on "
+            "known mutants alone does NOT imply real-world verifier recall. "
+            "clean_case_false_rejection_rate measures over-conservatism."
+        ),
+        "hand_designed_types": [ch.challenge_type for ch in hand],
+    }
