@@ -23,9 +23,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
+        # human-workbench extra: test_workbench(_smoke) import the FastAPI app.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev,human-workbench]"
 
       - name: Run unit tests
         run: |
