@@ -25,7 +25,10 @@
 | Leak-free calibration (A6) | **ENGINEERING_COMPLETE** | Metrics implemented; real-data run needs gold labels |
 | Robustness perturbations (A7) | **ENGINEERING_COMPLETE** | 14 paired perturbations |
 | Transfer reporting (A8) | **ENGINEERING_COMPLETE** | Per-dataset reporting, no merged average |
-| Human study (A9) | **AWAITING_HUMAN_VALIDATION** | Protocol + interface ready; needs 24-30 human reviewers |
+| Human study (A9) | **AWAITING_HUMAN_VALIDATION** | Protocol + interface ready; needs 24-30 human reviewers; day-1 single-reviewer pilot PREPARED (queues frozen, labels pending) — A9 NOT complete |
+| FinVEST SEC 22 base cases (day-1 pilot) | **CANDIDATE_QUEUE_FROZEN** | `human_review/day1/QUEUE_MANIFEST.json` hashed; human labels PENDING — `HUMAN_VERIFIED_PILOT` only after all 22 signed |
+| Paired conditions (day-1 pilot) | **12_CASE_QUEUE_FROZEN** | 2×6 stratified conditions frozen; `12_CASE_HUMAN_VALIDATED_PILOT` only after all 12 signed |
+| VISTA-Fin learned selector (day-1 pilot) | **INSUFFICIENT_DATA_FOR_TRAINING** | Gated runner ready (leave-one-issuer-out × 3 seeds, low-capacity logistic, inference-time features); 0 human labels → training skipped honestly; `PILOT_TRAINED_EXPLORATORY` after labels |
 | 2,000-case benchmark | **PLANNED** | 22 base cases now; scale-up needs more companies + annotation |
 | EcoQuant integration (A10) | **ENGINEERING_COMPLETE** | Evidence package + boundary enforced; architecture demo |
 | Paper | **PLANNED** | Auto-tables generate; main.tex to write |
@@ -40,3 +43,5 @@
 | E2 94% tolerance | PILOT_ORACLE_CONDITION (gold cells) |
 | E4 false-pass 0.000 | PILOT_STRESS_TEST (30 cases) |
 | E8 citation 0→1.0 | ARCHITECTURE_DEMO (6 cases) |
+| Day-1 pilot human verification (22 base / 12 paired / 5 blind / 9 interface) | NO_HUMAN_LABELS_YET — records empty; verification claims are explicitly not made |
+| VISTA_PILOT_V0_1 | INSUFFICIENT_DATA_FOR_TRAINING (0 human-verified labels; exploratory, not headline) |

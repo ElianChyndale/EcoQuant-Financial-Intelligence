@@ -42,7 +42,7 @@ class CoverageModel:
     coverage: Mapping[str, frozenset[str]]
 
     def uncovered(self, selected: Sequence[str], requirements: frozenset[str]) -> frozenset[str]:
-        covered = set()
+        covered: set[str] = set()
         for eid in selected:
             covered |= self.coverage.get(eid, frozenset())
         return requirements - covered
@@ -97,9 +97,23 @@ def b3_beam_search(
     beam: int = 4,
     max_size: int = 6,
 ) -> SelectedSet:
-    """B3: beam search maximizing covered requirements, minimizing size."""
+    """B3: beam search maximizing covered requirements, minimizing size.
+
+    Tracks the best-scoring subset seen across ALL frontiers: pruning keeps
+    the search tractable but the final answer must not be restricted to the
+    last frontier (the best subset may have been pruned away).
+    """
+
+    def _score(subset: tuple[str, ...]) -> tuple[int, int]:
+        covered: set[str] = set()
+        for eid in subset:
+            covered |= coverage.coverage.get(eid, frozenset())
+        return (len(covered & requirements), -len(subset))
+
     candidates = ranked[:20]
     beams: list[tuple[str, ...]] = [()]
+    best: tuple[str, ...] = ()
+    best_score: tuple[int, int] = (0, 0)
     for _ in range(max_size):
         next_beams: list[tuple[str, ...]] = []
         for subset in beams:
@@ -107,19 +121,15 @@ def b3_beam_search(
                 if eid in subset:
                     continue
                 next_beams.append(subset + (eid,))
-        # Score: covered count (primary), smaller size (secondary).
-        def _score(subset: tuple[str, ...]) -> tuple[int, int]:
-            covered = set()
-            for eid in subset:
-                covered |= coverage.coverage.get(eid, frozenset())
-            return (len(covered & requirements), -len(subset))
-
         pruned = sorted(set(next_beams), key=_score, reverse=True)[:beam]
         if not pruned:
             break
         beams = pruned
-    best = max(beams, key=_score)
-    covered = set()
+        if _score(pruned[0]) > best_score:
+            best, best_score = pruned[0], _score(pruned[0])
+    if not best:
+        best = max(beams, key=_score)
+    covered: set[str] = set()
     for eid in best:
         covered |= coverage.coverage.get(eid, frozenset())
     return SelectedSet(
@@ -139,7 +149,7 @@ def b4_ilp_oracle(
     best_covered: frozenset[str] = frozenset()
     for size in range(1, min(6, len(candidates)) + 1):
         for subset in itertools.combinations(candidates, size):
-            covered = set()
+            covered: set[str] = set()
             for eid in subset:
                 covered |= gold_coverage.coverage.get(eid, frozenset())
             if len(covered & requirements) > len(best_covered):

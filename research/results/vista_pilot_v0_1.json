@@ -1,0 +1,61 @@
+{
+  "config": {
+    "baselines": [
+      "b1_top_k",
+      "b2_greedy_set_cover",
+      "b3_beam_search",
+      "b4_ilp_oracle"
+    ],
+    "eligibility": {
+      "min_issuers": 3,
+      "min_signed_labels": 12
+    },
+    "eligibility_rule": "train only after human labels are frozen; if fewer than the required labels/issuers, report INSUFFICIENT_DATA_FOR_TRAINING",
+    "feature_provenance": "inference_time_only (no gold-derived values)",
+    "features": [
+      "retrieval_score",
+      "requirement_coverage_fraction",
+      "temporal_flag",
+      "conflict_flag",
+      "execution_flag",
+      "unit_match_flag",
+      "period_overlap_flag",
+      "text_length"
+    ],
+    "markers": [
+      "EXPLORATORY_PILOT",
+      "SMALL_SAMPLE",
+      "NOT_PAPER_HEADLINE"
+    ],
+    "method": "P1_low_capacity_logistic_selector",
+    "metrics": [
+      "all_required_evidence_recall",
+      "evidence_set_precision",
+      "false_support_rate",
+      "wrong_period_rate",
+      "minimality_violation",
+      "average_set_size"
+    ],
+    "no_test_tuning": true,
+    "weak_paired_conditions_train_rule": "weakly generated paired conditions may train only when their transformation is deterministic; headline evaluation uses human-verified cases only"
+  },
+  "experiment": "VISTA_PILOT_V0_1",
+  "human_verified_issuer_count": 0,
+  "human_verified_label_count": 0,
+  "markers": [
+    "EXPLORATORY_PILOT",
+    "SMALL_SAMPLE",
+    "NOT_PAPER_HEADLINE"
+  ],
+  "metric_definitions": {
+    "all_required_evidence_recall": "|selected \u2229 human_supported| / |human_supported| (reuses set_metrics; human_supported = researcher-signed supporting_evidence_ids)",
+    "average_set_size": "mean |selected| (set_metrics)",
+    "evidence_set_precision": "|selected \u2229 human_supported| / |selected| (set_metrics)",
+    "false_support_rate": "|selected \\ (human_supported \u222a period/version-valid)| / |selected|",
+    "minimality_violation": "set_metrics minimality_violation_rate",
+    "wrong_period_rate": "|selected with valid_from outside target period| / |selected|"
+  },
+  "reason": "human-verified labels frozen: 0 across 0 issuers; required: >= 12 labels across >= 3 issuers. Training is skipped honestly.",
+  "result": null,
+  "status": "INSUFFICIENT_DATA_FOR_TRAINING"
+}

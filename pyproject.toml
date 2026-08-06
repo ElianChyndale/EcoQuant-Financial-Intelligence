@@ -29,3 +29,6 @@ reranker_name = "BAAI/bge-reranker-base"
 where = ["src", "."]
 include = ["ecoquant*", "integrations*"]
 namespaces = true
+[tool.mypy]
+explicit_package_bases = true
+mypy_path = "src:."
