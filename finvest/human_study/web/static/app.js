@@ -90,7 +90,9 @@
     document.getElementById("sign-confirm").value = "";
     document.getElementById("sign-confirm").focus();
   }
-  document.getElementById("open-final-review").addEventListener("click", openFinalReview);
+  var openReviewBtn = document.getElementById("open-final-review");
+  if (!openReviewBtn) return; // dashboard page: no case controls
+  openReviewBtn.addEventListener("click", openFinalReview);
 
   document.getElementById("do-sign").addEventListener("click", function () {
     var form = document.getElementById("judgement-form");

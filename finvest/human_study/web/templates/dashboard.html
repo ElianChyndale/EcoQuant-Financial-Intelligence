@@ -13,7 +13,13 @@
       <td>{{ row.signed }}</td>
       <td>{{ row.total }}</td>
       <td>{{ "complete" if row.complete else "in progress" }}</td>
-      <td><a href="/dashboard/{{ row.queue }}">open</a></td>
+      <td>
+        {% if row.first_key %}
+        <a href="/case/{{ row.queue }}/{{ row.first_key }}">open</a>
+        {% else %}
+        <span class="muted">empty</span>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>

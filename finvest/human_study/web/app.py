@@ -80,17 +80,39 @@ def dashboard(request: Request, reviewer: str = "ELIAN_PRIMARY"):
     manifest = _manifest()
     rows = []
     for queue in ("base", "paired", "interface", "blind"):
+        keys = queue_keys(DAY1, queue, manifest)
         signed = len(signed_keys(DAY1, queue))
-        total = len(queue_keys(DAY1, queue, manifest))
+        total = len(keys)
         rows.append({
             "queue": queue,
             "signed": signed,
             "total": total,
             "complete": signed >= total,
+            "first_key": keys[0] if keys else None,
         })
     return templates.TemplateResponse("dashboard.html", {
         "request": request, "reviewer": reviewer, "rows": rows,
     })
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return RedirectResponse("/static/favicon.svg")
+
+
+@app.get("/dashboard/{queue}", response_class=HTMLResponse)
+def queue_dashboard(request: Request, queue: str):
+    """Redirect /dashboard/{queue} to the first unfinished case."""
+    manifest = _manifest()
+    keys = queue_keys(DAY1, queue, manifest)
+    if not keys:
+        return HTMLResponse("empty queue", status_code=404)
+    # First unfinished case (resume logic).
+    signed = set(signed_keys(DAY1, queue))
+    for key in keys:
+        if key not in signed:
+            return RedirectResponse(f"/case/{queue}/{key}")
+    return RedirectResponse(f"/case/{queue}/{keys[-1]}")
 
 
 @app.get("/case/{queue}/{key}", response_class=HTMLResponse)
