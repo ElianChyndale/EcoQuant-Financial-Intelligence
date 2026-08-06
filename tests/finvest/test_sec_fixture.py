@@ -84,3 +84,75 @@ def test_fixture_sha256_stable() -> None:
     content = FIXTURE.read_text(encoding="utf-8")
     digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
     assert digest.startswith("db8ede83ef6902ca")
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: SecFact full source identity from the committed fixture
+# ---------------------------------------------------------------------------
+
+def _facts_from_fixture():
+    """Parse the fixture through the real SecFact adapter (no real cache)."""
+    from pathlib import Path
+    import tempfile
+
+    from ecoquant.research.temporal_eval.sec_adapter import load_companyfacts
+
+    tmp = Path(tempfile.mkdtemp(prefix="fixture-sec-"))
+    (tmp / "synth_companyfacts.json").write_text(FIXTURE.read_text(encoding="utf-8"), encoding="utf-8")
+    return load_companyfacts(tmp, tickers=("SYNTH",))
+
+
+def test_secfact_has_full_identity() -> None:
+    bundle = _facts_from_fixture()
+    assert bundle.facts
+    fact = next(f for f in bundle.facts if f.concept == "Assets")
+    assert fact.taxonomy == "us-gaap"
+    assert fact.value == 400_000_000_000
+    assert fact.unit == "USD"
+    assert fact.accession == "0000320193-24-000123"
+    assert fact.form == "10-K"
+    assert fact.fiscal_year == 2024
+    assert fact.start is None  # instant fact
+    assert fact.end.isoformat() == "2024-09-28"
+
+
+def test_secfact_fact_id_unique_and_source_traceable() -> None:
+    bundle = _facts_from_fixture()
+    ids = [f.fact_id for f in bundle.facts]
+    assert len(ids) == len(set(ids))
+    # fact_id embeds issuer, taxonomy, concept, unit, period, form, accession.
+    assets = next(f for f in bundle.facts if f.concept == "Assets")
+    assert "SYNTH" in assets.fact_id
+    assert "us-gaap" in assets.fact_id
+    assert "Assets" in assets.fact_id
+    assert "USD" in assets.fact_id
+    assert "0000320193-24-000123" in assets.fact_id
+
+
+def test_secfact_content_hash_is_source_row_hash() -> None:
+    bundle = _facts_from_fixture()
+    fact = next(f for f in bundle.facts if f.concept == "Assets")
+    row = load_fixture()["facts"]["us-gaap"]["Assets"]["units"]["USD"][0]
+    expected = hashlib.sha256(
+        json.dumps(row, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    assert fact.content_hash == expected
+
+
+def test_no_auto_scope_or_usd_hardcode() -> None:
+    bundle = _facts_from_fixture()
+    # No fact claims consolidated scope unless the source says so (it doesn't).
+    assert all(f.scope is None for f in bundle.facts)
+    # EUR fact keeps its real unit, not forced to USD.
+    eur = next(f for f in bundle.facts if f.concept == "RevenueEur")
+    assert eur.unit == "EUR"
+    # Different units coexist.
+    assert {f.unit for f in bundle.facts} >= {"USD", "EUR"}
+
+
+def test_duration_period_preserved() -> None:
+    bundle = _facts_from_fixture()
+    revenues = next(f for f in bundle.facts if f.concept == "Revenues")
+    assert revenues.start is not None
+    assert revenues.start.isoformat() == "2023-10-01"
+    assert revenues.end.isoformat() == "2024-09-28"
