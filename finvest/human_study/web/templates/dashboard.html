@@ -5,9 +5,10 @@
 {% if preflight %}
 <div class="preflight">
   <strong>Base queue usability:</strong>
-  <span class="ready">{{ preflight.READY_FOR_ANNOTATION | length }} READY</span> ·
+  <span class="ready">{{ preflight.READY_POSITIVE | length }} READY_POSITIVE</span> ·
+  <span class="ready">{{ preflight.READY_NEGATIVE_VERIFIED | length }} READY_NEGATIVE_VERIFIED</span> ·
   <span class="blocked">{{ preflight.TOOLING_BLOCKED | length }} TOOLING_BLOCKED</span> ·
-  <span class="invalid">{{ preflight.INVALID_CASE | length }} INVALID</span>
+  <span class="invalid">{{ preflight.SCIENTIFICALLY_INVALID | length }} SCIENTIFICALLY_INVALID</span>
 </div>
 {% endif %}
 <table class="queues">

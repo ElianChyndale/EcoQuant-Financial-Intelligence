@@ -226,7 +226,7 @@ def sign(
         view = _view_for(queue, key)
         if view is not None:
             preflight = preflight_case(view, queue=queue, cache=CACHE)
-            if preflight.status != "READY_FOR_ANNOTATION":
+            if preflight.status not in ("READY_POSITIVE", "READY_NEGATIVE_VERIFIED"):
                 return JSONResponse(
                     {"ok": False, "error": f"case not signable: {preflight.status} ({preflight.reason})"},
                     status_code=400,
