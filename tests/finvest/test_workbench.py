@@ -41,9 +41,19 @@ def manifest():
 
 @pytest.fixture()
 def day1(tmp_path):
+    from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
+
     day1_dir = tmp_path / "day1"
+    cache = tmp_path / "cache"
+    sec = cache / "sec"
+    sec.mkdir(parents=True, exist_ok=True)
+    fixture_json = (SEC_FIXTURE_DIR / "sec_companyfacts_fixture.json").read_text(
+        encoding="utf-8"
+    )
+    for ticker in ("aapl", "msft", "ko", "eqix", "jnj", "ups"):
+        (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
     # v0.2 temp freeze: accept the actual valid-case count.
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache)
     return day1_dir
 
 

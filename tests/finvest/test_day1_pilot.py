@@ -145,9 +145,10 @@ def test_interface_cases_9_distinct_balanced(sec_cache: Path) -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def frozen(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def frozen(tmp_path_factory: pytest.TempPathFactory, sec_cache: Path) -> Path:
     day1 = tmp_path_factory.mktemp("day1_frozen")
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1, corpus=EMPTY_FULL_CORPUS)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1, min_cases=1,
+                corpus=EMPTY_FULL_CORPUS, cache_dir=sec_cache)
     return Path(day1)
 
 
@@ -168,8 +169,9 @@ def test_verify_frozen_no_violations(frozen: Path) -> None:
     assert result["violations"] == []
 
 
-def test_verify_frozen_detects_tampering(tmp_path: Path) -> None:
-    freeze_day1(seed=FREEZE_SEED, day1_dir=tmp_path, min_cases=1, corpus=EMPTY_FULL_CORPUS)
+def test_verify_frozen_detects_tampering(tmp_path: Path, sec_cache: Path) -> None:
+    freeze_day1(seed=FREEZE_SEED, day1_dir=tmp_path, min_cases=1,
+                corpus=EMPTY_FULL_CORPUS, cache_dir=sec_cache)
     manifest_path = tmp_path / "QUEUE_MANIFEST.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest["sealed"]["base_22_queue"][0]["question"] = "tampered question"
