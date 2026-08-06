@@ -32,6 +32,7 @@ class SecFact:
     filed: date
     val: float
     form: str
+    unit: str | None = None
     frame: str | None = None
 
 
@@ -95,6 +96,7 @@ def _parse_ticker(ticker: str, payload: dict) -> list[SecFact]:
                         filed=_parse_date(filed),
                         val=float(val),
                         form=form,
+                        unit=unit,
                         frame=fact.get("frame"),
                     ))
     return facts

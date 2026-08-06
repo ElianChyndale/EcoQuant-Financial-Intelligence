@@ -223,16 +223,37 @@ def _annual_fact(bundle: SecBundle, ticker: str, year: int, concept: str) -> Sec
 
 
 def _amended_pair(bundle: SecBundle, ticker: str) -> tuple[SecFact | None, SecFact | None]:
-    """Find a (10-K, 10-K/A) pair with differing values for the same period."""
-    by_end: dict[date, dict[str, SecFact]] = {}
+    """Find a valid (10-K, 10-K/A) pair under strict identity.
+
+    A valid amendment pair requires EXACT compatibility on a canonical key
+    (ticker, concept, start, end, unit) — never pairing facts of different
+    concepts (the v0.1 defect). The amended side must:
+    - be form 10-K/A,
+    - be filed on or after the original 10-K filing date,
+    - report a different value for the same identity.
+    """
+    # Group by canonical identity (ticker, concept, end, unit); keep ALL facts
+    # per group (not last-wins). companyfacts exposes end but not start for
+    # instant facts; period identity is (concept, end).
+    from collections import defaultdict
+
+    groups: dict[tuple[str, str, str, str], list[SecFact]] = defaultdict(list)
     for fact in bundle.facts:
-        if fact.ticker == ticker and fact.form in {"10-K", "10-K/A"}:
-            by_end.setdefault(fact.end, {})[fact.form] = fact
-    for end in sorted(by_end):
-        original = by_end[end].get("10-K")
-        amended = by_end[end].get("10-K/A")
-        if original and amended and abs(original.val - amended.val) > 1e-6:
-            return original, amended
+        if fact.ticker != ticker or fact.form not in {"10-K", "10-K/A"}:
+            continue
+        key = (fact.ticker, fact.concept, str(fact.end), fact.unit or "")
+        groups[key].append(fact)
+    for key in sorted(groups):
+        facts = groups[key]
+        originals = [f for f in facts if f.form == "10-K"]
+        amendeds = [f for f in facts if f.form == "10-K/A"]
+        for original in originals:
+            for amended in amendeds:
+                if abs(original.val - amended.val) <= 1e-6:
+                    continue  # no real restatement
+                if amended.filed < original.filed:
+                    continue  # amendment must not predate the original
+                return original, amended
     return None, None
 
 
