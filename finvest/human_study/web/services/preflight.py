@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .evidence_service import (
+    AMBIGUOUS_IDENTITY,
     METADATA_INCONSISTENCY,
     RESOLUTION_FAILED,
     CanonicalEvidenceRecord,
@@ -85,11 +86,17 @@ def preflight_case(case: dict, *, queue: str, cache: Path) -> CasePreflight:
             r.inconsistency_fields for r in records
             if r.resolution_status == METADATA_INCONSISTENCY
         ]
+        ambiguous = [
+            r.missing_asset for r in records
+            if r.resolution_status == AMBIGUOUS_IDENTITY
+        ]
         reason = "evidence resolution incomplete"
         if failed:
             reason += f"; missing: {failed[0]}"
         if inconsistent:
             reason += f"; inconsistent: {inconsistent[0]}"
+        if ambiguous:
+            reason += f"; ambiguous: {ambiguous[0]}"
         return CasePreflight(case["case_id"], queue, BLOCKED,
                              reason=reason, evidence_statuses=statuses)
 

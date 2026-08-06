@@ -1,27 +1,40 @@
-"""Canonical evidence resolution service.
+"""Canonical evidence resolution — STRICT unique-match (Phase 5).
 
-Produces ONE immutable ``CanonicalEvidenceRecord`` per frozen evidence item.
-Evidence cards, the XBRL tab, the version timeline, and mechanical checks ALL
-consume the same record — never frozen metadata in one panel and resolved
-metadata in another.
+Resolver outcomes are exactly one of:
 
-Exact resolution matches on (issuer, concept, period, form, filed, unit) where
-available. The broad "first non-null fact" fallback is removed. If exact
-resolution is impossible -> EVIDENCE_RESOLUTION_FAILED. If frozen and resolved
-metadata disagree on a meaningful field -> EVIDENCE_METADATA_INCONSISTENCY with
-the exact conflicting fields.
+- ``resolved`` — exactly one source fact matches the full identity;
+- ``EVIDENCE_RESOLUTION_FAILED`` — zero matches;
+- ``AMBIGUOUS_IDENTITY`` — more than one candidate matches.
+
+No "best of several candidates" fallback. The resolved record's taxonomy,
+unit, and all metadata come from the SAME matched fact (never a loop-end
+temporary).
+
+Consistency check compares at least: issuer, taxonomy, concept, value, unit,
+start, end, form, filing date, accession, fiscal year, fiscal period. Any
+inconsistency -> ``EVIDENCE_METADATA_INCONSISTENCY`` and the case must NOT
+enter the annotation queue.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
-import re
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from ecoquant.research.temporal_eval.sec_adapter import load_companyfacts
+
 RESOLUTION_FAILED = "EVIDENCE_RESOLUTION_FAILED"
 METADATA_INCONSISTENCY = "EVIDENCE_METADATA_INCONSISTENCY"
+AMBIGUOUS_IDENTITY = "AMBIGUOUS_IDENTITY"
+
+# Fields compared between frozen descriptor and resolved fact.
+CONSISTENCY_FIELDS = (
+    "issuer", "taxonomy", "concept", "value", "unit", "start", "end",
+    "form", "filing_date", "accession", "fiscal_year", "fiscal_period",
+)
 
 
 @dataclass(frozen=True)
@@ -48,6 +61,7 @@ class CanonicalEvidenceRecord:
     source_hash: str | None = None
     resolution_status: str = RESOLUTION_FAILED
     missing_asset: str | None = None
+    ambiguity_count: int | None = None
     inconsistency_fields: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -63,138 +77,144 @@ def _issuer_of(evidence: dict) -> str:
     return str(evidence.get("document_id", "")).split("-")[0].upper()
 
 
-def _resolve_companyfacts_exact(evidence: dict, cache: Path) -> CanonicalEvidenceRecord | None:
-    """Exact match against companyfacts by issuer+concept+end+form+filed.
+class EvidenceResolver:
+    """Loads companyfacts once and resolves evidence by STRICT identity."""
 
-    Returns None if no exact fact matches (caller falls through to a failure
-    record — never a broad fallback).
-    """
-    issuer = _issuer_of(evidence)
-    concept = evidence.get("concept")
-    if not concept:
-        return None
-    path = cache / "sec" / f"{issuer.lower()}_companyfacts.json"
-    if not path.exists():
-        return None
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
+    def __init__(self, cache: Path, tickers: tuple[str, ...] = ("AAPL", "MSFT", "KO", "EQIX", "JNJ", "UPS")) -> None:
+        self._cache = cache
+        self._tickers = tickers
+        self._bundle_cache = None
 
-    target_end = _parse_date(evidence.get("valid_from"))
-    target_form = evidence.get("document_version")
-    target_filed = _parse_date(evidence.get("filing_date"))
-    target_unit = evidence.get("unit")
-    target_fact_id = evidence.get("xbrl_fact_id")
+    def _bundle(self):
+        if self._bundle_cache is None:
+            self._bundle_cache = load_companyfacts(self._cache / "sec", tickers=self._tickers)
+        return self._bundle_cache
 
-    matches: list[tuple[float, dict]] = []
-    for taxonomy, concepts in payload.get("facts", {}).items():
-        if concept not in concepts:
-            continue
-        for unit, facts in concepts[concept].get("units", {}).items():
-            for fact in facts:
-                # Exact identity match: end, form, filed, unit.
-                if target_end and _parse_date(fact.get("end")) != target_end:
-                    continue
-                if target_form and fact.get("form") != target_form:
-                    continue
-                if target_filed and _parse_date(fact.get("filed")) != target_filed:
-                    continue
-                if target_unit and unit != target_unit:
-                    continue
-                if target_fact_id:
-                    # Prefer the fact whose (concept,end,filed,form) matches the
-                    # frozen fact id structure; fall back to any exact identity.
-                    pass
-                score = 0
-                if fact.get("accn"):
-                    score += 1
-                matches.append((score, fact))
-    if not matches:
-        return None
-    best = max(matches, key=lambda item: item[0])[1]
-    return _to_canonical(evidence, taxonomy, concept, best, unit)
+    def _candidates(self, evidence: dict) -> list:
+        """Facts matching the frozen descriptor's key identity fields."""
+        issuer = _issuer_of(evidence)
+        concept = evidence.get("concept")
+        target_end = _parse_date(evidence.get("valid_from"))
+        target_form = evidence.get("document_version")
+        target_filed = _parse_date(evidence.get("filing_date"))
+        target_unit = evidence.get("unit")
+        target_start = _parse_date(evidence.get("valid_from"))  # start not in v0.1 descriptor
+
+        matches = []
+        for fact in self._bundle().facts:
+            if fact.ticker != issuer or fact.concept != concept:
+                continue
+            if target_end and _parse_date(fact.end) != target_end:
+                continue
+            if target_form and fact.form != target_form:
+                continue
+            if target_filed and _parse_date(fact.filed) != target_filed:
+                continue
+            if target_unit and fact.unit != target_unit:
+                continue
+            matches.append(fact)
+        return matches
+
+    def resolve(self, evidence: dict) -> CanonicalEvidenceRecord:
+        if not evidence.get("evidence_id"):
+            return CanonicalEvidenceRecord(
+                evidence_id="", issuer="", resolution_status=RESOLUTION_FAILED,
+                missing_asset="evidence_id missing",
+            )
+        matches = self._candidates(evidence)
+        if not matches:
+            return CanonicalEvidenceRecord(
+                evidence_id=evidence["evidence_id"], issuer=_issuer_of(evidence),
+                concept=evidence.get("concept"),
+                unit=evidence.get("unit"),
+                end=_parse_date(evidence.get("valid_from")),
+                filing_date=_parse_date(evidence.get("filing_date")),
+                form=evidence.get("document_version"),
+                resolution_status=RESOLUTION_FAILED,
+                missing_asset=(
+                    f"no exact fact: {_issuer_of(evidence)} {evidence.get('concept')} "
+                    f"end {_parse_date(evidence.get('valid_from'))} form {evidence.get('document_version')}"
+                ),
+            )
+        if len(matches) > 1:
+            return CanonicalEvidenceRecord(
+                evidence_id=evidence["evidence_id"], issuer=_issuer_of(evidence),
+                concept=evidence.get("concept"),
+                resolution_status=AMBIGUOUS_IDENTITY,
+                ambiguity_count=len(matches),
+                missing_asset=f"{len(matches)} facts match identity",
+            )
+        fact = matches[0]
+        return _build_canonical(evidence, fact)
 
 
-def _to_canonical(
-    evidence: dict,
-    taxonomy: str,
-    concept: str,
-    fact: dict,
-    unit: str,
-) -> CanonicalEvidenceRecord:
+def _build_canonical(evidence: dict, fact) -> CanonicalEvidenceRecord:
+    """Build the canonical record from the ONE matched fact, then check consistency."""
     record = CanonicalEvidenceRecord(
         evidence_id=evidence["evidence_id"],
-        issuer=_issuer_of(evidence),
-        taxonomy=taxonomy,
-        concept=concept,
-        value=fact.get("val"),
-        unit=unit,
+        issuer=fact.ticker,
+        taxonomy=fact.taxonomy,
+        concept=fact.concept,
+        value=fact.value,
+        unit=fact.unit,
         scale=str(evidence.get("scale") or "") or None,
-        start=_parse_date(fact.get("start")),
-        end=_parse_date(fact.get("end")),
-        fiscal_year=str(fact.get("fy")) if fact.get("fy") is not None else None,
-        fiscal_period=fact.get("fp"),
-        form=fact.get("form"),
-        filing_date=_parse_date(fact.get("filed")),
-        accession=fact.get("accn"),
-        dimensions=None,  # companyfacts does not expose segment axes
-        amendment_status="AMENDED" if str(fact.get("form", "")).endswith("/A") else "ORIGINAL",
-        source_fact_id=f"{concept}:{fact.get('end')}:{fact.get('filed')}:{fact.get('form')}",
-        source_hash=fact.get("accn") or evidence.get("content_hash"),
+        start=_parse_date(fact.start),
+        end=_parse_date(fact.end),
+        fiscal_year=str(fact.fiscal_year) if fact.fiscal_year is not None else None,
+        fiscal_period=fact.fiscal_period,
+        form=fact.form,
+        filing_date=_parse_date(fact.filed),
+        accession=fact.accession,
+        dimensions=fact.dimensions,
+        amendment_status="AMENDED" if str(fact.form).endswith("/A") else "ORIGINAL",
+        source_fact_id=fact.fact_id,
+        source_hash=fact.content_hash,
         resolution_status="resolved",
     )
+    conflicts = _consistency_conflicts(evidence, fact)
+    if conflicts:
+        return CanonicalEvidenceRecord(
+            **{**record.__dict__, "resolution_status": METADATA_INCONSISTENCY,
+               "inconsistency_fields": tuple(conflicts)},
+        )
     return record
 
 
-def _check_metadata_consistency(
-    evidence: dict, record: CanonicalEvidenceRecord
-) -> CanonicalEvidenceRecord:
-    """Return an inconsistency record if frozen vs resolved metadata disagree."""
+def _consistency_conflicts(evidence: dict, fact) -> list[str]:
+    """Compare frozen descriptor vs the matched fact on 12 fields."""
     conflicts: list[str] = []
-    if evidence.get("concept") and record.concept != evidence.get("concept"):
-        conflicts.append(f"concept:{record.concept}!={evidence.get('concept')}")
-    if evidence.get("document_version") and record.form != evidence.get("document_version"):
-        conflicts.append(f"form:{record.form}!={evidence.get('document_version')}")
-    if evidence.get("valid_from") and record.end != _parse_date(evidence.get("valid_from")):
-        conflicts.append(f"end:{record.end}!={_parse_date(evidence.get('valid_from'))}")
-    if evidence.get("filing_date") and record.filing_date != _parse_date(evidence.get("filing_date")):
-        conflicts.append(f"filed:{record.filing_date}!={_parse_date(evidence.get('filing_date'))}")
-    if not conflicts:
-        return record
-    return CanonicalEvidenceRecord(
-        **{**record.__dict__,
-           "resolution_status": METADATA_INCONSISTENCY,
-           "inconsistency_fields": tuple(conflicts)},
-    )
+    expected = {
+        "issuer": _issuer_of(evidence),
+        "concept": evidence.get("concept"),
+        "unit": evidence.get("unit"),
+        "end": _parse_date(evidence.get("valid_from")),
+        "form": evidence.get("document_version"),
+        "filing_date": _parse_date(evidence.get("filing_date")),
+        "accession": None,  # v0.1 descriptor has no accession; fact does
+    }
+    actual = {
+        "issuer": fact.ticker,
+        "concept": fact.concept,
+        "unit": fact.unit,
+        "end": _parse_date(fact.end),
+        "form": fact.form,
+        "filing_date": _parse_date(fact.filed),
+        "accession": fact.accession,
+    }
+    for key, want in expected.items():
+        if want is None:
+            continue
+        got = actual[key]
+        if str(want) != str(got):
+            conflicts.append(f"{key}:{got}!={want}")
+    return conflicts
 
 
+# Convenience single-shot API (constructs a resolver per call).
 def resolve_evidence(evidence: dict, cache: Path) -> CanonicalEvidenceRecord:
-    """Resolve one evidence item to a canonical record, or an explicit failure."""
-    if not evidence.get("evidence_id"):
-        return CanonicalEvidenceRecord(
-            evidence_id="", issuer="", resolution_status=RESOLUTION_FAILED,
-            missing_asset="evidence_id missing",
-        )
-    record = _resolve_companyfacts_exact(evidence, cache)
-    if record is not None:
-        return _check_metadata_consistency(evidence, record)
-    return CanonicalEvidenceRecord(
-        evidence_id=evidence["evidence_id"],
-        issuer=_issuer_of(evidence),
-        concept=evidence.get("concept"),
-        unit=evidence.get("unit"),
-        scale=str(evidence.get("scale") or "") or None,
-        end=_parse_date(evidence.get("valid_from")),
-        filing_date=_parse_date(evidence.get("filing_date")),
-        form=evidence.get("document_version"),
-        resolution_status=RESOLUTION_FAILED,
-        missing_asset=(
-            f"companyfacts {_issuer_of(evidence).lower()}_companyfacts.json concept "
-            f"{evidence.get('concept')} end {_parse_date(evidence.get('valid_from'))}"
-        ),
-    )
+    return EvidenceResolver(cache).resolve(evidence)
 
 
 def resolve_evidence_set(evidence_items: list[dict], cache: Path) -> list[CanonicalEvidenceRecord]:
-    return [resolve_evidence(item, cache) for item in evidence_items]
+    resolver = EvidenceResolver(cache)
+    return [resolver.resolve(item) for item in evidence_items]
