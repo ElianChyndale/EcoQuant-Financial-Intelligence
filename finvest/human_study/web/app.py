@@ -44,6 +44,8 @@ from finvest.human_study.web.services.tooling_issue import report_tooling_issue
 
 import os
 
+from finvest.human_study.web.services.practice_mode import PRACTICE_REQUIRED_COUNT, practice_summary, record_practice
+
 ROOT = Path(os.environ.get("FINVEST_ROOT", Path(__file__).resolve().parents[3]))
 DAY1 = Path(os.environ.get("FINVEST_DAY1", ROOT / "human_review" / "day1"))
 CACHE = Path(os.environ.get("FINVEST_CACHE", ROOT / "research" / "cache"))
@@ -57,6 +59,12 @@ TOOLING_ISSUE_PATH = Path(
     os.environ.get(
         "FINVEST_TOOLING_ISSUES",
         ROOT / "research" / "cache" / "workbench" / "tooling_issues.jsonl",
+    )
+)
+PRACTICE_PATH = Path(
+    os.environ.get(
+        "FINVEST_PRACTICE",
+        ROOT / "research" / "cache" / "workbench" / "practice_records.jsonl",
     )
 )
 
@@ -205,6 +213,39 @@ def tooling_issue(
         return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
     db.record_interaction(reviewer, key, "tooling_issue", category)
     return JSONResponse({"ok": True})
+
+
+@app.post("/practice/{key}")
+def practice(
+    request: Request,
+    key: str,
+    reviewer: str = Form(...),
+    judgement: str = Form(...),
+    reference_answer: str = Form(""),
+    source_explanation: str = Form(""),
+    disagreement_reason: str = Form(None),
+):
+    """Submit a practice judgement (NEVER a formal label)."""
+    try:
+        record_practice(
+            practice_path=PRACTICE_PATH,
+            case_id=key,
+            researcher_judgement=judgement,
+            reference_answer=reference_answer,
+            source_explanation=source_explanation,
+            disagreement_reason=disagreement_reason or None,
+            reviewer_id=reviewer,
+        )
+    except Exception as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    summary = practice_summary(PRACTICE_PATH)
+    return JSONResponse({"ok": True, "summary": summary.__dict__})
+
+
+@app.get("/practice/status")
+def practice_status():
+    """Practice gate status (>=5 required before formal pilot)."""
+    return JSONResponse(practice_summary(PRACTICE_PATH).__dict__)
 
 
 @app.post("/sign/{queue}/{key}")
