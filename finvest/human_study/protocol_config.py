@@ -10,8 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-# Root of the human-review tree.
-HUMAN_REVIEW_ROOT = Path(__file__).resolve().parents[3] / "human_review"
+# Root of the human-review tree (repo root is parents[2] from this file:
+# finvest/human_study/protocol_config.py -> parents[0]=human_study,
+# [1]=finvest, [2]=<repo root>).
+HUMAN_REVIEW_ROOT = Path(__file__).resolve().parents[2] / "human_review"
 
 
 @dataclass(frozen=True)

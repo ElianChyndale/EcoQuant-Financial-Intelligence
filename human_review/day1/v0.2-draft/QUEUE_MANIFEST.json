@@ -1,0 +1,4133 @@
+{
+  "components": {
+    "base_candidates_queue": "2113405cc9130f7d8b0591de5035c642f6d7d9eced29831853e96038f74f5acf",
+    "blind_repeat_selection": "d0b278998621a856079f6c4407de27ff667c50d76f855f5c436f2b85ed7eeecf",
+    "experiment_config": "9048e128daac6adf6e00df372c0a15ab272ac96d05350a791c5baadd20bfee7b",
+    "interface_candidates_cases": "922f5d4a61054fc2e92f9b0251ab0e4bcc177e99e774359998141eab2da50c6d",
+    "paired_candidates_queue": "0b028d1c869c9ab7c8b5f9abc9f526ea1965a2e3b9df4c16f4b6fde25ff70fff",
+    "paired_candidates_token_map": "d95be5db196acb7392f142eba77e6561f9df62a0aa4a30455f9cf1cbe7648da7",
+    "reviewer_view": "d4a8315fb1a683e1583db3454254c3483baf1437248a0a0a70e448a87536b29f",
+    "split_manifest": "b06c244d2524d89706781b475095e1f5823e88f83b541bdc5a7ad6253b9b86d0"
+  },
+  "freeze_seed": 20260806,
+  "frozen_at": "2026-08-06T10:53:28+00:00",
+  "manifest_id": "v0.2-draft",
+  "manifest_version": "0.2.0-draft",
+  "policy_rules": [
+    "1. Never generate, infer, fill, or modify human labels.",
+    "2. Never display candidate labels, system predictions, model scores, or prior annotations before the researcher's first-pass label is frozen.",
+    "3. AI may validate schema and evidence-ID existence only.",
+    "4. Human signatures require explicit researcher action.",
+    "5. This work is a pilot, not a human study.",
+    "6. No inter-rater agreement may be claimed (single reviewer).",
+    "7. No statistical significance may be reported.",
+    "8. Gold-derived values are never used as model inference features.",
+    "9. No tuning on held-out issuer results.",
+    "10. All unresolved and ambiguous cases are preserved."
+  ],
+  "reviewer_view": {
+    "base_candidates": [
+      {
+        "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "evidence": [
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          }
+        ],
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          }
+        ],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-AAPL-cashflow-proxy-2025",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-09-29"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-09-29"
+          }
+        ],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2025-09-27?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025",
+        "evidence": [],
+        "question": "What is AccruedIncomeTaxesNoncurrent for AAPL for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-AAPL-insufficient-AccruedLiabilitiesCurrent-2024",
+        "evidence": [],
+        "question": "What is AccruedLiabilitiesCurrent for AAPL for fiscal year 2024?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+        "evidence": [],
+        "question": "What is AccountsPayableAndAccruedLiabilitiesCurrent for EQIX for fiscal year 2026?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent-2025",
+        "evidence": [],
+        "question": "What is AccountsPayableRelatedPartiesCurrentAndNoncurrent for EQIX for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-JNJ-cashflow-proxy-2025",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "JNJ-10-K-2025-12-28",
+            "document_version": "10-K",
+            "evidence_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "filing_date": "2026-02-11",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-12-30"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "JNJ-10-K-2025-12-28",
+            "document_version": "10-K",
+            "evidence_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "filing_date": "2026-02-11",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-12-30"
+          }
+        ],
+        "question": "What is JNJ operating cash flow minus capital expenditure for the fiscal period ending 2025-12-28?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+        "evidence": [],
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2026",
+        "evidence": [],
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2026?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-KO-cashflow-proxy-2025",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01"
+          }
+        ],
+        "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-KO-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+        "evidence": [],
+        "question": "What is AccountsPayableAndAccruedLiabilitiesCurrent for KO for fiscal year 2026?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-KO-insufficient-AccountsPayableOtherCurrent-2025",
+        "evidence": [],
+        "question": "What is AccountsPayableOtherCurrent for KO for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2025",
+        "evidence": [],
+        "question": "What is AccountsReceivableNet for MSFT for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2026",
+        "evidence": [],
+        "question": "What is AccountsReceivableNet for MSFT for fiscal year 2026?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-UPS-cashflow-proxy-2024",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01"
+          }
+        ],
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-UPS-cashflow-proxy-2025",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "UPS-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "filing_date": "2026-02-17",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "UPS-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "filing_date": "2026-02-17",
+            "page_id": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01"
+          }
+        ],
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-UPS-insufficient-AccountsReceivableGrossCurrent-2025",
+        "evidence": [],
+        "question": "What is AccountsReceivableGrossCurrent for UPS for fiscal year 2025?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      },
+      {
+        "case_id": "finvest-UPS-insufficient-AccruedIncomeTaxesCurrent-2024",
+        "evidence": [],
+        "question": "What is AccruedIncomeTaxesCurrent for UPS for fiscal year 2024?",
+        "source_files": [
+          "research/cache/sec/companyfacts"
+        ]
+      }
+    ],
+    "blind_repeat": [
+      {
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "temp_id": "br-01"
+      },
+      {
+        "question": "What is AccountsPayableAndAccruedLiabilitiesCurrent for KO for fiscal year 2026?",
+        "temp_id": "br-02"
+      },
+      {
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "temp_id": "br-03"
+      },
+      {
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2025?",
+        "temp_id": "br-04"
+      },
+      {
+        "question": "What is AccruedIncomeTaxesCurrent for UPS for fiscal year 2024?",
+        "temp_id": "br-05"
+      }
+    ],
+    "interface_candidates": [
+      {
+        "case_id": "finvest-KO-cashflow-proxy-2025",
+        "display_condition": "answer_only",
+        "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?"
+      },
+      {
+        "case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "display_condition": "answer_topk_pages",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?"
+      },
+      {
+        "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "display_condition": "answer_vista_package",
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?"
+      },
+      {
+        "case_id": "finvest-UPS-cashflow-proxy-2025",
+        "display_condition": "answer_topk_pages",
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?"
+      },
+      {
+        "case_id": "finvest-KO-insufficient-AccountsPayableOtherCurrent-2025",
+        "display_condition": "answer_only",
+        "question": "What is AccountsPayableOtherCurrent for KO for fiscal year 2025?"
+      },
+      {
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent-2025",
+        "display_condition": "answer_vista_package",
+        "question": "What is AccountsPayableRelatedPartiesCurrentAndNoncurrent for EQIX for fiscal year 2025?"
+      },
+      {
+        "case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "display_condition": "answer_only",
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?"
+      },
+      {
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+        "display_condition": "answer_topk_pages",
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2025?"
+      },
+      {
+        "case_id": "finvest-UPS-cashflow-proxy-2024",
+        "display_condition": "answer_vista_package",
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?"
+      }
+    ],
+    "paired_candidates": [
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "review_token": "pr-01"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2025-07-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2025-07-01"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2026-07-30",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "review_token": "pr-02"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          },
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123-amended",
+            "filing_date": "2024-11-01",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          }
+        ],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "review_token": "pr-03"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2025-01-01"
+          }
+        ],
+        "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "review_token": "pr-04"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2025-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "review_token": "pr-05"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2024-11-02",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          }
+        ],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "review_token": "pr-06"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123.x",
+            "filing_date": "2010-01-26",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-10-01"
+          },
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-09-29"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          }
+        ],
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "review_token": "pr-07"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2025-07-29",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2025-07-29",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "review_token": "pr-08"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "review_token": "pr-09"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2024-07-30",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-07-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2024-07-30",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2023-07-01"
+          }
+        ],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "review_token": "pr-10"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-01-01"
+          },
+          {
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2024-01-01"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2025-02-19",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          }
+        ],
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?",
+        "review_token": "pr-11"
+      },
+      {
+        "condition_identity": "HIDDEN_DURING_REVIEW",
+        "evidence": [
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          },
+          {
+            "concept": "AccruedLiabilitiesCurrent",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859-amended",
+            "filing_date": "2009-10-27",
+            "scale": "1",
+            "unit": "USD",
+            "valid_from": "2008-09-27"
+          }
+        ],
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "review_token": "pr-12"
+      }
+    ]
+  },
+  "sealed": {
+    "base_candidates_queue": [
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123', 'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2024",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2024",
+          "result": 108807000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 108807000000.0
+        },
+        "issuer_id": "AAPL",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123', 'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2024"
+            }
+          ]
+        },
+        "source_cutoff": "2024-11-01 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2024",
+        "target_period_end": "2024-09-28",
+        "target_period_start": "2023-10-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccruedLiabilitiesCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-AAPL-insufficient-AccruedLiabilitiesCurrent-2024",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "AAPL",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccruedLiabilitiesCurrent for AAPL for fiscal year 2024?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccruedLiabilitiesCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2024"
+            }
+          ]
+        },
+        "source_cutoff": "2025-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2024",
+        "target_period_end": "2024-12-31",
+        "target_period_start": "2024-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079', 'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2025",
+          "result": 98767000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-AAPL-cashflow-proxy-2025",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-09-29",
+            "valid_to": "2025-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-09-29",
+            "valid_to": "2025-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 98767000000.0
+        },
+        "issuer_id": "AAPL",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079', 'AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2025-09-27?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2025-10-31 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-09-27",
+        "target_period_start": "2024-09-29",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccruedIncomeTaxesNoncurrent",
+        "calculation_program": null,
+        "case_id": "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "AAPL",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccruedIncomeTaxesNoncurrent for AAPL for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccruedIncomeTaxesNoncurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091'})"
+        ],
+        "answer_type": "extractive",
+        "assumptions": [],
+        "base_question_id": "bq-amended-AccruedLiabilitiesCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 4224000000.0
+        },
+        "issuer_id": "AAPL",
+        "jurisdiction": "US",
+        "known_conflicts": [
+          "original 3719000000.0 vs amended 4224000000.0"
+        ],
+        "minimal_evidence_sets": [
+          "frozenset({'AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            },
+            {
+              "relation": "REQUIRES",
+              "source_id": "version",
+              "target_id": "metric"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccruedLiabilitiesCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2008-09-27"
+            },
+            {
+              "attributes": {},
+              "node_id": "version",
+              "node_type": "VERSION",
+              "value": "latest"
+            }
+          ]
+        },
+        "source_cutoff": "2010-01-25 00:00:00",
+        "sufficiency_label": "CONFLICTING",
+        "target_fiscal_year": "2008",
+        "target_period_end": "2008-09-27",
+        "target_period_start": "2008-09-27",
+        "version_relations": [
+          {
+            "relation": "AMENDS",
+            "source_document": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "target_document": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          }
+        ]
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2025",
+          "result": 71611000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 71611000000.0
+        },
+        "issuer_id": "MSFT",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "MSFT"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2025-07-30 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-06-30",
+        "target_period_start": "2024-07-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsReceivableNet",
+        "calculation_program": null,
+        "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "MSFT",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsReceivableNet for MSFT for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsReceivableNet"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "MSFT"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2026",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2026",
+          "result": 66987000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 66987000000.0
+        },
+        "issuer_id": "MSFT",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660', 'MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "MSFT"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2026"
+            }
+          ]
+        },
+        "source_cutoff": "2026-07-29 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2026",
+        "target_period_end": "2026-06-30",
+        "target_period_start": "2025-07-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsReceivableNet",
+        "calculation_program": null,
+        "case_id": "finvest-MSFT-insufficient-AccountsReceivableNet-2026",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "MSFT",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsReceivableNet for MSFT for fiscal year 2026?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsReceivableNet"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "MSFT"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2026"
+            }
+          ]
+        },
+        "source_cutoff": "2027-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2026",
+        "target_period_end": "2026-12-31",
+        "target_period_start": "2026-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047', 'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2025",
+          "result": 5296000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-KO-cashflow-proxy-2025",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31",
+            "xbrl_fact_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31",
+            "xbrl_fact_id": "KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 5296000000.0
+        },
+        "issuer_id": "KO",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'KO:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047', 'KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "KO"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-02-20 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsPayableOtherCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-KO-insufficient-AccountsPayableOtherCurrent-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "KO",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsPayableOtherCurrent for KO for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsPayableOtherCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "KO"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-KO-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "KO",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsPayableAndAccruedLiabilitiesCurrent for KO for fiscal year 2026?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsPayableAndAccruedLiabilitiesCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "KO"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2026"
+            }
+          ]
+        },
+        "source_cutoff": "2027-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2026",
+        "target_period_end": "2026-12-31",
+        "target_period_start": "2026-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent",
+        "calculation_program": null,
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "EQIX",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsPayableRelatedPartiesCurrentAndNoncurrent for EQIX for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsPayableRelatedPartiesCurrentAndNoncurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "EQIX"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "EQIX",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsPayableAndAccruedLiabilitiesCurrent for EQIX for fiscal year 2026?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsPayableAndAccruedLiabilitiesCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "EQIX"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2026"
+            }
+          ]
+        },
+        "source_cutoff": "2027-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2026",
+        "target_period_end": "2026-12-31",
+        "target_period_start": "2026-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016', 'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2025",
+          "result": 19698000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-JNJ-cashflow-proxy-2025",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "document_id": "JNJ-10-K-2025-12-28",
+            "document_version": "10-K",
+            "evidence_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "filing_date": "2026-02-11",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-12-30",
+            "valid_to": "2025-12-28",
+            "xbrl_fact_id": "JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "document_id": "JNJ-10-K-2025-12-28",
+            "document_version": "10-K",
+            "evidence_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016",
+            "filing_date": "2026-02-11",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-12-30",
+            "valid_to": "2025-12-28",
+            "xbrl_fact_id": "JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 19698000000.0
+        },
+        "issuer_id": "JNJ",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'JNJ:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016', 'JNJ:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-12-30:2025-12-28:10-K:0000200406-26-000016'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is JNJ operating cash flow minus capital expenditure for the fiscal period ending 2025-12-28?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "JNJ"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-02-11 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-28",
+        "target_period_start": "2024-12-30",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt",
+        "calculation_program": null,
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "JNJ",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AcceleratedShareRepurchasesSettlementPaymentOrReceipt"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "JNJ"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt",
+        "calculation_program": null,
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2026",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "JNJ",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AcceleratedShareRepurchasesSettlementPaymentOrReceipt for JNJ for fiscal year 2026?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AcceleratedShareRepurchasesSettlementPaymentOrReceipt"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "JNJ"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2026"
+            }
+          ]
+        },
+        "source_cutoff": "2027-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2026",
+        "target_period_end": "2026-12-31",
+        "target_period_start": "2026-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2024",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2024",
+          "result": 6213000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-UPS-cashflow-proxy-2024",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01",
+            "valid_to": "2024-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01",
+            "valid_to": "2024-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 6213000000.0
+        },
+        "issuer_id": "UPS",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "UPS"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2024"
+            }
+          ]
+        },
+        "source_cutoff": "2025-02-18 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2024",
+        "target_period_end": "2024-12-31",
+        "target_period_start": "2024-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccruedIncomeTaxesCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-UPS-insufficient-AccruedIncomeTaxesCurrent-2024",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "UPS",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccruedIncomeTaxesCurrent for UPS for fiscal year 2024?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccruedIncomeTaxesCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "UPS"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2024"
+            }
+          ]
+        },
+        "source_cutoff": "2025-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2024",
+        "target_period_end": "2024-12-31",
+        "target_period_start": "2024-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [
+          "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432'})"
+        ],
+        "answer_type": "derived",
+        "assumptions": [
+          "SIMPLIFIED cash-flow proxy = OCF - capex; NOT standard FCFF (no tax/interest/working-capital adjustments)."
+        ],
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "calculation_program": {
+          "inputs": [
+            "OperatingCashFlow",
+            "CapitalExpenditure"
+          ],
+          "operation": "subtract",
+          "period": "FY2025",
+          "result": 4765000000.0,
+          "scale": "1",
+          "unit": "USD"
+        },
+        "case_id": "finvest-UPS-cashflow-proxy-2025",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "document_id": "UPS-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "filing_date": "2026-02-17",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "document_id": "UPS-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432",
+            "filing_date": "2026-02-17",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 4765000000.0
+        },
+        "issuer_id": "UPS",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [
+          "frozenset({'UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432', 'UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-008432'})"
+        ],
+        "prohibited_claims": [],
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "ocf"
+            },
+            {
+              "relation": "DERIVES_FROM",
+              "source_id": "cash_flow_proxy",
+              "target_id": "capex"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "ocf",
+              "target_id": "period"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "capex",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "attributes": {},
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "attributes": {},
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "UPS"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-02-17 00:00:00",
+        "sufficiency_label": "SUPPORTED",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      },
+      {
+        "acceptable_evidence_sets": [],
+        "answer_type": "unanswerable",
+        "assumptions": [
+          "Metric not reported for the period (no public disclosure)"
+        ],
+        "base_question_id": "bq-insufficient-AccountsReceivableGrossCurrent",
+        "calculation_program": null,
+        "case_id": "finvest-UPS-insufficient-AccountsReceivableGrossCurrent-2025",
+        "decision_label": "ABSTAIN",
+        "evidence_items": [],
+        "gold_answer": {},
+        "issuer_id": "UPS",
+        "jurisdiction": "US",
+        "known_conflicts": [],
+        "minimal_evidence_sets": [],
+        "prohibited_claims": [],
+        "question": "What is AccountsReceivableGrossCurrent for UPS for fiscal year 2025?",
+        "requirement_graph": {
+          "edges": [
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "ticker"
+            },
+            {
+              "relation": "SAME_AS",
+              "source_id": "metric",
+              "target_id": "period"
+            }
+          ],
+          "nodes": [
+            {
+              "attributes": {},
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsReceivableGrossCurrent"
+            },
+            {
+              "attributes": {},
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "UPS"
+            },
+            {
+              "attributes": {},
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ]
+        },
+        "source_cutoff": "2026-06-30 00:00:00",
+        "sufficiency_label": "INSUFFICIENT",
+        "target_fiscal_year": "FY2025",
+        "target_period_end": "2025-12-31",
+        "target_period_start": "2025-01-01",
+        "version_relations": []
+      }
+    ],
+    "blind_repeat_selection": [
+      {
+        "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "temp_id": "br-01"
+      },
+      {
+        "case_id": "finvest-KO-insufficient-AccountsPayableAndAccruedLiabilitiesCurrent-2026",
+        "temp_id": "br-02"
+      },
+      {
+        "case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "temp_id": "br-03"
+      },
+      {
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+        "temp_id": "br-04"
+      },
+      {
+        "case_id": "finvest-UPS-insufficient-AccruedIncomeTaxesCurrent-2024",
+        "temp_id": "br-05"
+      }
+    ],
+    "experiment_config": {
+      "baselines": [
+        "b1_top_k",
+        "b2_greedy_set_cover",
+        "b3_beam_search",
+        "b4_ilp_oracle"
+      ],
+      "eligibility": {
+        "min_issuers": 3,
+        "min_signed_labels": 12
+      },
+      "eligibility_rule": "train only after human labels are frozen; if fewer than the required labels/issuers, report INSUFFICIENT_DATA_FOR_TRAINING",
+      "feature_provenance": "inference_time_only (no gold-derived values)",
+      "features": [
+        "retrieval_score",
+        "requirement_coverage_fraction",
+        "temporal_flag",
+        "conflict_flag",
+        "execution_flag",
+        "unit_match_flag",
+        "period_overlap_flag",
+        "text_length"
+      ],
+      "markers": [
+        "EXPLORATORY_PILOT",
+        "SMALL_SAMPLE",
+        "NOT_PAPER_HEADLINE"
+      ],
+      "method": "P1_low_capacity_logistic_selector",
+      "metrics": [
+        "all_required_evidence_recall",
+        "evidence_set_precision",
+        "false_support_rate",
+        "wrong_period_rate",
+        "minimality_violation",
+        "average_set_size"
+      ],
+      "no_test_tuning": true,
+      "weak_paired_conditions_train_rule": "weakly generated paired conditions may train only when their transformation is deterministic; headline evaluation uses human-verified cases only"
+    },
+    "interface_candidates_cases": [
+      {
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 5296000000.0
+          }
+        },
+        "case_id": "finvest-KO-cashflow-proxy-2025",
+        "display_condition": "answer_only"
+      },
+      {
+        "base_question_id": "bq-cashflow-proxy-2026",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 66987000000.0
+          }
+        },
+        "case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "display_condition": "answer_topk_pages",
+        "top_k_pages": [
+          {
+            "document_id": "msft-10k",
+            "evidence_id": "msft-10k:00008",
+            "rank": 1,
+            "score": 20.332166
+          },
+          {
+            "document_id": "msft-10k",
+            "evidence_id": "msft-10k:00057",
+            "rank": 2,
+            "score": 20.332166
+          },
+          {
+            "document_id": "ups-10k",
+            "evidence_id": "ups-10k:02716",
+            "rank": 3,
+            "score": 16.321435
+          },
+          {
+            "document_id": "aapl-20250927",
+            "evidence_id": "aapl-20250927:00721",
+            "rank": 4,
+            "score": 16.111995
+          },
+          {
+            "document_id": "msft-10k",
+            "evidence_id": "msft-10k:03418",
+            "rank": 5,
+            "score": 15.674171
+          }
+        ]
+      },
+      {
+        "base_question_id": "bq-amended-AccruedLiabilitiesCurrent",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 4224000000.0
+          }
+        },
+        "case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "display_condition": "answer_vista_package",
+        "vista_package": {
+          "calculation_trace": null,
+          "known_conflicts": [
+            "original 3719000000.0 vs amended 4224000000.0"
+          ],
+          "minimal_evidence_set": [
+            "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          ],
+          "requirements": [
+            {
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccruedLiabilitiesCurrent"
+            },
+            {
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "AAPL"
+            },
+            {
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2008-09-27"
+            },
+            {
+              "node_id": "version",
+              "node_type": "VERSION",
+              "value": "latest"
+            }
+          ],
+          "version_relations": [
+            {
+              "relation": "AMENDS",
+              "source_document": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+              "target_document": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+            }
+          ]
+        }
+      },
+      {
+        "base_question_id": "bq-cashflow-proxy-2025",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 4765000000.0
+          }
+        },
+        "case_id": "finvest-UPS-cashflow-proxy-2025",
+        "display_condition": "answer_topk_pages",
+        "top_k_pages": [
+          {
+            "document_id": "eqix-10k",
+            "evidence_id": "eqix-10k:00938",
+            "rank": 1,
+            "score": 19.839044
+          },
+          {
+            "document_id": "eqix-10k",
+            "evidence_id": "eqix-10k:00008",
+            "rank": 2,
+            "score": 17.139748
+          },
+          {
+            "document_id": "ko-10k",
+            "evidence_id": "ko-10k:00008",
+            "rank": 3,
+            "score": 17.139748
+          },
+          {
+            "document_id": "ups-10k",
+            "evidence_id": "ups-10k:00008",
+            "rank": 4,
+            "score": 17.139748
+          },
+          {
+            "document_id": "ups-10k",
+            "evidence_id": "ups-10k:02716",
+            "rank": 5,
+            "score": 16.4716
+          }
+        ]
+      },
+      {
+        "base_question_id": "bq-insufficient-AccountsPayableOtherCurrent",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "ABSTAIN candidate",
+          "value": null
+        },
+        "case_id": "finvest-KO-insufficient-AccountsPayableOtherCurrent-2025",
+        "display_condition": "answer_only"
+      },
+      {
+        "base_question_id": "bq-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "ABSTAIN candidate",
+          "value": null
+        },
+        "case_id": "finvest-EQIX-insufficient-AccountsPayableRelatedPartiesCurrentAndNoncurrent-2025",
+        "display_condition": "answer_vista_package",
+        "vista_package": {
+          "calculation_trace": null,
+          "known_conflicts": [],
+          "minimal_evidence_set": [],
+          "requirements": [
+            {
+              "node_id": "metric",
+              "node_type": "METRIC",
+              "value": "AccountsPayableRelatedPartiesCurrentAndNoncurrent"
+            },
+            {
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "EQIX"
+            },
+            {
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2025"
+            }
+          ],
+          "version_relations": []
+        }
+      },
+      {
+        "base_question_id": "bq-cashflow-proxy-2024",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 108807000000.0
+          }
+        },
+        "case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "display_condition": "answer_only"
+      },
+      {
+        "base_question_id": "bq-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "ABSTAIN candidate",
+          "value": null
+        },
+        "case_id": "finvest-JNJ-insufficient-AcceleratedShareRepurchasesSettlementPaymentOrReceipt-2025",
+        "display_condition": "answer_topk_pages",
+        "top_k_pages": [
+          {
+            "document_id": "aapl-20250927",
+            "evidence_id": "aapl-20250927:00008",
+            "rank": 1,
+            "score": 18.549829
+          },
+          {
+            "document_id": "aapl-20250927",
+            "evidence_id": "aapl-20250927:00061",
+            "rank": 2,
+            "score": 18.549829
+          },
+          {
+            "document_id": "eqix-10k",
+            "evidence_id": "eqix-10k:00008",
+            "rank": 3,
+            "score": 18.549829
+          },
+          {
+            "document_id": "jnj-10k",
+            "evidence_id": "jnj-10k:00007",
+            "rank": 4,
+            "score": 18.549829
+          },
+          {
+            "document_id": "ko-10k",
+            "evidence_id": "ko-10k:00008",
+            "rank": 5,
+            "score": 18.549829
+          }
+        ]
+      },
+      {
+        "base_question_id": "bq-cashflow-proxy-2024",
+        "candidate_answer": {
+          "candidate": true,
+          "note": "AI candidate",
+          "value": {
+            "unit": "USD",
+            "value": 6213000000.0
+          }
+        },
+        "case_id": "finvest-UPS-cashflow-proxy-2024",
+        "display_condition": "answer_vista_package",
+        "vista_package": {
+          "calculation_trace": {
+            "inputs": [
+              "OperatingCashFlow",
+              "CapitalExpenditure"
+            ],
+            "operation": "subtract",
+            "period": "FY2024",
+            "result": 6213000000.0,
+            "scale": "1",
+            "unit": "USD"
+          },
+          "known_conflicts": [],
+          "minimal_evidence_set": [
+            "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019"
+          ],
+          "requirements": [
+            {
+              "node_id": "cash_flow_proxy",
+              "node_type": "FINAL_VALUE",
+              "value": "simplified-cash-flow-proxy"
+            },
+            {
+              "node_id": "ocf",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "OperatingCashFlow"
+            },
+            {
+              "node_id": "capex",
+              "node_type": "INTERMEDIATE_VALUE",
+              "value": "CapitalExpenditure"
+            },
+            {
+              "node_id": "ticker",
+              "node_type": "ENTITY",
+              "value": "UPS"
+            },
+            {
+              "node_id": "period",
+              "node_type": "PERIOD",
+              "value": "2024"
+            }
+          ],
+          "version_relations": []
+        }
+      }
+    ],
+    "paired_candidates_queue": [
+      {
+        "base_case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "condition": "CONFLICTING",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859-a",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859-amended",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": null,
+            "xbrl_fact_id": null
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 4224000000.0
+        },
+        "instance_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27::CONFLICTING",
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "source_cutoff": "2010-01-25 00:00:00",
+        "sufficiency_label": "CONFLICTING"
+      },
+      {
+        "base_case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "condition": "CONFLICTING",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          },
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123-a",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123-amended",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": null,
+            "xbrl_fact_id": null
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 108807000000.0
+        },
+        "instance_id": "finvest-AAPL-cashflow-proxy-2024::CONFLICTING",
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "source_cutoff": "2024-11-01 00:00:00",
+        "sufficiency_label": "CONFLICTING"
+      },
+      {
+        "base_case_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27",
+        "condition": "DISTRACTOR",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123.x",
+            "filing_date": "2010-01-26",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          },
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "document_id": "AAPL-10-K-2025-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079",
+            "filing_date": "2025-10-31",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-09-29",
+            "valid_to": "2025-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-09-29:2025-09-27:10-K:0000320193-25-000079"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "filing_date": "2010-01-25",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 4224000000.0
+        },
+        "instance_id": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27::DISTRACTOR",
+        "question": "What is the latest restated value of AccruedLiabilitiesCurrent for AAPL for the period ending 2008-09-27?",
+        "source_cutoff": "2010-01-25 00:00:00",
+        "sufficiency_label": "CONFLICTING"
+      },
+      {
+        "base_case_id": "finvest-AAPL-cashflow-proxy-2024",
+        "condition": "DISTRACTOR",
+        "decision_label": "ANSWER",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2024-11-02",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "document_id": "AAPL-10-K-2008-09-27",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859",
+            "filing_date": "2009-10-27",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K:0001193125-09-214859"
+          },
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "document_id": "AAPL-10-K-2024-09-28",
+            "document_version": "10-K",
+            "evidence_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123",
+            "filing_date": "2024-11-01",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-10-01",
+            "valid_to": "2024-09-28",
+            "xbrl_fact_id": "AAPL:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2023-10-01:2024-09-28:10-K:0000320193-24-000123"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 108807000000.0
+        },
+        "instance_id": "finvest-AAPL-cashflow-proxy-2024::DISTRACTOR",
+        "question": "What is AAPL operating cash flow minus capital expenditure for the fiscal period ending 2024-09-28?",
+        "source_cutoff": "2024-11-01 00:00:00",
+        "sufficiency_label": "SUPPORTED"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "condition": "FUTURE_LEAK",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2026-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 66987000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2026::FUTURE_LEAK",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "source_cutoff": "2026-07-29 00:00:00",
+        "sufficiency_label": "CONFLICTING"
+      },
+      {
+        "base_case_id": "finvest-UPS-cashflow-proxy-2024",
+        "condition": "FUTURE_LEAK",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01",
+            "valid_to": "2024-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "document_id": "UPS-10-K-2024-12-31",
+            "document_version": "10-K",
+            "evidence_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019",
+            "filing_date": "2025-02-18",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-01-01",
+            "valid_to": "2024-12-31",
+            "xbrl_fact_id": "UPS:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-01-01:2024-12-31:10-K:0001090727-25-000019"
+          },
+          {
+            "column": null,
+            "concept": "AccruedLiabilitiesCurrent",
+            "content_hash": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091",
+            "document_id": "AAPL-10-K/A-2008-09-27",
+            "document_version": "10-K/A",
+            "evidence_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091.x",
+            "filing_date": "2025-02-19",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2008-09-27",
+            "valid_to": "2008-09-27",
+            "xbrl_fact_id": "AAPL:us-gaap:AccruedLiabilitiesCurrent:USD::2008-09-27:10-K/A:0001193125-10-012091"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 6213000000.0
+        },
+        "instance_id": "finvest-UPS-cashflow-proxy-2024::FUTURE_LEAK",
+        "question": "What is UPS operating cash flow minus capital expenditure for the fiscal period ending 2024-12-31?",
+        "source_cutoff": "2025-02-18 00:00:00",
+        "sufficiency_label": "CONFLICTING"
+      },
+      {
+        "base_case_id": "finvest-KO-cashflow-proxy-2025",
+        "condition": "OUTDATED",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "document_id": "KO-10-K-2025-12-31",
+            "document_version": "10-K",
+            "evidence_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047",
+            "filing_date": "2026-02-20",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31",
+            "xbrl_fact_id": "KO:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-01-01:2025-12-31:10-K:0001628280-26-010047"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 5296000000.0
+        },
+        "instance_id": "finvest-KO-cashflow-proxy-2025::OUTDATED",
+        "question": "What is KO operating cash flow minus capital expenditure for the fiscal period ending 2025-12-31?",
+        "source_cutoff": "2026-02-20 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "condition": "OUTDATED",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 71611000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2025::OUTDATED",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "source_cutoff": "2025-07-30 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "condition": "PARTIAL_MISSING_INPUT",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2025-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 71611000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2025::PARTIAL_MISSING_INPUT",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "source_cutoff": "2025-07-30 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "condition": "PARTIAL_MISSING_INPUT",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2026-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2025-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 66987000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2026::PARTIAL_MISSING_INPUT",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "source_cutoff": "2026-07-29 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2025",
+        "condition": "WRONG_PERIOD",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2024-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "document_id": "MSFT-10-K-2025-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235",
+            "filing_date": "2024-07-30",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2023-07-01",
+            "valid_to": "2025-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2024-07-01:2025-06-30:10-K:0000950170-25-100235"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 71611000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2025::WRONG_PERIOD",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2025-06-30?",
+        "source_cutoff": "2025-07-30 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      },
+      {
+        "base_case_id": "finvest-MSFT-cashflow-proxy-2026",
+        "condition": "WRONG_PERIOD",
+        "decision_label": "REVIEW",
+        "evidence_items": [
+          {
+            "column": null,
+            "concept": "NetCashProvidedByUsedInOperatingActivities",
+            "content_hash": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2025-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:NetCashProvidedByUsedInOperatingActivities:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          },
+          {
+            "column": null,
+            "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+            "content_hash": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "document_id": "MSFT-10-K-2026-06-30",
+            "document_version": "10-K",
+            "evidence_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660",
+            "filing_date": "2025-07-29",
+            "page_id": null,
+            "row": null,
+            "scale": "1",
+            "scope": null,
+            "section": null,
+            "table_id": null,
+            "text_span": null,
+            "unit": "USD",
+            "valid_from": "2024-07-01",
+            "valid_to": "2026-06-30",
+            "xbrl_fact_id": "MSFT:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment:USD:2025-07-01:2026-06-30:10-K:0001193125-26-323660"
+          }
+        ],
+        "gold_answer": {
+          "unit": "USD",
+          "value": 66987000000.0
+        },
+        "instance_id": "finvest-MSFT-cashflow-proxy-2026::WRONG_PERIOD",
+        "question": "What is MSFT operating cash flow minus capital expenditure for the fiscal period ending 2026-06-30?",
+        "source_cutoff": "2026-07-29 00:00:00",
+        "sufficiency_label": "PARTIAL"
+      }
+    ],
+    "paired_candidates_token_map": {
+      "pr-01": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27::CONFLICTING",
+      "pr-02": "finvest-AAPL-cashflow-proxy-2024::CONFLICTING",
+      "pr-03": "finvest-AAPL-amended-AccruedLiabilitiesCurrent-2008-09-27::DISTRACTOR",
+      "pr-04": "finvest-AAPL-cashflow-proxy-2024::DISTRACTOR",
+      "pr-05": "finvest-MSFT-cashflow-proxy-2026::FUTURE_LEAK",
+      "pr-06": "finvest-UPS-cashflow-proxy-2024::FUTURE_LEAK",
+      "pr-07": "finvest-KO-cashflow-proxy-2025::OUTDATED",
+      "pr-08": "finvest-MSFT-cashflow-proxy-2025::OUTDATED",
+      "pr-09": "finvest-MSFT-cashflow-proxy-2025::PARTIAL_MISSING_INPUT",
+      "pr-10": "finvest-MSFT-cashflow-proxy-2026::PARTIAL_MISSING_INPUT",
+      "pr-11": "finvest-MSFT-cashflow-proxy-2025::WRONG_PERIOD",
+      "pr-12": "finvest-MSFT-cashflow-proxy-2026::WRONG_PERIOD"
+    },
+    "split_manifest": {
+      "folds": [
+        {
+          "test_issuer": "AAPL",
+          "train_issuers": [
+            "EQIX",
+            "JNJ",
+            "KO",
+            "MSFT",
+            "UPS"
+          ]
+        },
+        {
+          "test_issuer": "EQIX",
+          "train_issuers": [
+            "AAPL",
+            "JNJ",
+            "KO",
+            "MSFT",
+            "UPS"
+          ]
+        },
+        {
+          "test_issuer": "JNJ",
+          "train_issuers": [
+            "AAPL",
+            "EQIX",
+            "KO",
+            "MSFT",
+            "UPS"
+          ]
+        },
+        {
+          "test_issuer": "KO",
+          "train_issuers": [
+            "AAPL",
+            "EQIX",
+            "JNJ",
+            "MSFT",
+            "UPS"
+          ]
+        },
+        {
+          "test_issuer": "MSFT",
+          "train_issuers": [
+            "AAPL",
+            "EQIX",
+            "JNJ",
+            "KO",
+            "UPS"
+          ]
+        },
+        {
+          "test_issuer": "UPS",
+          "train_issuers": [
+            "AAPL",
+            "EQIX",
+            "JNJ",
+            "KO",
+            "MSFT"
+          ]
+        }
+      ],
+      "grouping": "issuer + base_question (Levels 1 & 4 isolation)",
+      "note": "No test tuning; thresholds fixed before evaluation.",
+      "seeds": [
+        20260806,
+        20260807,
+        20260808
+      ],
+      "split": "leave_one_issuer_out"
+    }
+  },
+  "status": {
+    "human_labels": "PENDING_HUMAN_LABEL",
+    "note": "No human label exists until a record is filled, signed, and timestamped by the researcher.",
+    "signed": false
+  },
+  "total_sha256": "619f22d3897b461291467598f52fb9534c9deae1ce07b4ec9f0711e360705484"
+}

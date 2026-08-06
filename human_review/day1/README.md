@@ -132,3 +132,40 @@ AI never fills, infers, or signs human labels. No inter-rater claims. No
 significance claims. No A9 COMPLETE status. Unresolved cases are preserved.
 Human records are NOT hashed components; the queues and hashes must never
 change.
+
+## How to work (web workbench — ACTIVE protocol v0.2-draft)
+
+The web workbench annotates the ACTIVE draft protocol (v0.2-draft) by
+default; its base queue holds the reference-sheet cases (10 candidate sheets
+in `v0.2-draft/reference_sheets/`, 9 signable + 1 insufficient case that
+needs a negative-evidence certificate).
+
+1. Freeze the active protocol (regenerates QUEUE_MANIFEST.json from the real
+   SEC cache; the committed sheets stay under v0.2-draft/reference_sheets/):
+
+       python - <<'PY'
+       from finvest.human_study.day1_pilot import FREEZE_SEED, freeze_day1, verify_frozen
+       from finvest.human_study.protocol_config import V0_2_DRAFT
+       freeze_day1(seed=FREEZE_SEED, day1_dir=V0_2_DRAFT.dir, protocol=V0_2_DRAFT)
+       print(verify_frozen(day1_dir=V0_2_DRAFT.dir))
+       PY
+
+2. Start the workbench:
+
+       python -m uvicorn finvest.human_study.web.app:app --port 8000
+
+   (FINVEST_DAY1 defaults to v0.2-draft; override with
+   `FINVEST_DAY1=human_review/day1/v0.1` to view the immutable v0.1 artifact.)
+
+3. Open http://127.0.0.1:8000/ — the base queue lists all candidate cases.
+   Each case page shows the Self-Contained Human Evidence Package: explicit
+   metric definition, human-readable evidence table, independent calculation
+   (inputs only; the machine candidate stays sealed until your first-pass
+   label is frozen), time & version card, and technical details.
+
+4. Answer the 3 natural questions (Q1 answerable / Q2 answer + calculation /
+   Q3 conflicts); the system maps them transparently into the record schema
+   (shown before signing). Sign with the typed confirmation `SIGN <case-id>`.
+
+5. Practice mode: /practice/<case-id> shows only the evidence package; the
+   reference answer appears only after you submit your own judgement.

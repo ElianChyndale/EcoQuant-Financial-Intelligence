@@ -55,10 +55,17 @@ jobs:
         run: |
           python -c "
           from pathlib import Path
-          day1 = Path('human_review/day1')
-          for name in ('BASE_22_HUMAN_SIGNED.jsonl','PAIRED_12_HUMAN_SIGNED.jsonl','BLIND_REPEAT_5.jsonl','INTERFACE_PILOT_9.jsonl'):
-              p = day1 / name
-              size = p.stat().st_size if p.exists() else 0
-              assert size == 0, f'{name} is not empty ({size} bytes)'
-          print('zero human labels confirmed')
+          # Both the immutable v0.1 and the active v0.2-draft protocols must
+          # have zero signed human records.
+          for proto in ('v0.1', 'v0.2-draft'):
+              day1 = Path('human_review/day1') / proto
+              names = {
+                  'v0.1': ('BASE_22_HUMAN_SIGNED.jsonl','PAIRED_12_HUMAN_SIGNED.jsonl','BLIND_REPEAT_5.jsonl','INTERFACE_PILOT_9.jsonl'),
+                  'v0.2-draft': ('BASE_HUMAN_SIGNED.jsonl','PAIRED_HUMAN_SIGNED.jsonl','BLIND_REPEAT.jsonl','INTERFACE_PILOT.jsonl'),
+              }[proto]
+              for name in names:
+                  p = day1 / name
+                  size = p.stat().st_size if p.exists() else 0
+                  assert size == 0, f'{proto}/{name} is not empty ({size} bytes)'
+          print('zero human labels confirmed (v0.1 + v0.2-draft)')
           "

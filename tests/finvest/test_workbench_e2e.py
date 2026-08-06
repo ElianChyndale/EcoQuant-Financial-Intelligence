@@ -38,9 +38,10 @@ def server(tmp_path_factory):
     db_path = tmp / "workbench.sqlite"
     issues_path = tmp / "tooling_issues.jsonl"
 
-    # Freeze an isolated v0.2 protocol (accepts actual case count).
+    # Freeze an isolated V0_2_DRAFT protocol (the ACTIVE protocol).
     from finvest.fixtures.sec_fixture import FIXTURE_DIR as SEC_FIXTURE_DIR
     from finvest.human_study.day1_pilot import FREEZE_SEED, freeze_day1
+    from finvest.human_study.protocol_config import V0_2_DRAFT
 
     cache = tmp / "cache"
     sec = cache / "sec"
@@ -50,7 +51,8 @@ def server(tmp_path_factory):
     )
     for ticker in ("aapl", "msft", "ko", "eqix", "jnj", "ups"):
         (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache)
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache,
+                protocol=V0_2_DRAFT)
 
     port = _free_port()
     env = dict(os.environ)
@@ -97,9 +99,15 @@ def _manifest(server):
     return json.loads((server["day1"] / "QUEUE_MANIFEST.json").read_text(encoding="utf-8"))
 
 
+def _base_cases(m):
+    from finvest.human_study.web.services.protocol_web import base_queue
+
+    return base_queue(m)
+
+
 def _first_case_id(server) -> str:
     m = _manifest(server)
-    return m["reviewer_view"]["base_22"][0]["case_id"]
+    return _base_cases(m)[0]["case_id"]
 
 
 def test_dashboard_opens(server, browser) -> None:
@@ -197,17 +205,20 @@ def test_sign_requires_typed_confirmation(server, browser) -> None:
     page.click("#do-sign")
     page.wait_for_timeout(800)
     # No signed record written.
-    signed_file = server["day1"] / "BASE_22_HUMAN_SIGNED.jsonl"
+    signed_file = server["day1"] / "BASE_HUMAN_SIGNED.jsonl"  # v0.2-draft file
     assert (not signed_file.exists()) or signed_file.stat().st_size == 0
     page.close()
 
 
 def test_real_human_jsonl_unchanged(server, browser) -> None:
-    """The REAL day1 JSONL must remain empty after all E2E activity."""
-    for name in ("BASE_22_HUMAN_SIGNED.jsonl", "PAIRED_12_HUMAN_SIGNED.jsonl",
-                 "BLIND_REPEAT_5.jsonl", "INTERFACE_PILOT_9.jsonl"):
-        real = REAL_DAY1 / name
-        assert (not real.exists()) or real.stat().st_size == 0, f"real {name} not empty"
+    """The REAL v0.1 + v0.2-draft JSONL must remain empty after all E2E activity."""
+    for day1_dir in (REAL_DAY1, ROOT / "human_review" / "day1" / "v0.2-draft"):
+        for name in ("BASE_22_HUMAN_SIGNED.jsonl", "PAIRED_12_HUMAN_SIGNED.jsonl",
+                     "BLIND_REPEAT_5.jsonl", "INTERFACE_PILOT_9.jsonl",
+                     "BASE_HUMAN_SIGNED.jsonl", "PAIRED_HUMAN_SIGNED.jsonl",
+                     "BLIND_REPEAT.jsonl", "INTERFACE_PILOT.jsonl"):
+            real = day1_dir / name
+            assert (not real.exists()) or real.stat().st_size == 0, f"real {name} not empty"
 
 
 def test_tooling_issue_creates_no_label(server, browser) -> None:
@@ -225,6 +236,6 @@ def test_tooling_issue_creates_no_label(server, browser) -> None:
     assert "EVIDENCE_RESOLUTION_FAILED" in line
     assert '"is_human_label": false' in line
     # No signed label created.
-    signed_file = server["day1"] / "BASE_22_HUMAN_SIGNED.jsonl"
+    signed_file = server["day1"] / "BASE_HUMAN_SIGNED.jsonl"  # v0.2-draft file
     assert (not signed_file.exists()) or signed_file.stat().st_size == 0
     page.close()

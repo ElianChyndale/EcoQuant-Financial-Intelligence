@@ -47,7 +47,10 @@ import os
 from finvest.human_study.web.services.practice_mode import PRACTICE_REQUIRED_COUNT, practice_summary, record_practice
 
 ROOT = Path(os.environ.get("FINVEST_ROOT", Path(__file__).resolve().parents[3]))
-DAY1 = Path(os.environ.get("FINVEST_DAY1", ROOT / "human_review" / "day1"))
+# Default to the ACTIVE draft protocol (v0.2-draft); FINVEST_DAY1 overrides.
+from finvest.human_study.protocol_config import active_draft_config
+
+DAY1 = Path(os.environ.get("FINVEST_DAY1", active_draft_config().dir))
 CACHE = Path(os.environ.get("FINVEST_CACHE", ROOT / "research" / "cache"))
 DB_PATH = Path(
     os.environ.get(
@@ -146,7 +149,9 @@ def _sealed_case(manifest: dict, queue: str, key: str) -> dict | None:
     """Sealed manifest case (server-side only) for the SHEP definition/calc."""
     if queue != "base":
         return None
-    for case in manifest["sealed"].get("base_22_queue", []):
+    from finvest.human_study.web.services.protocol_web import base_queue
+
+    for case in base_queue(manifest):
         if case["case_id"] == key:
             return case
     return None
@@ -185,8 +190,10 @@ def case_view(request: Request, queue: str, key: str, reviewer: str = "ELIAN_PRI
         case_issuer=view.get("issuer"),
     )
     signed_state = is_signed(DAY1, queue, key)
-    # Preflight: only READY cases are signable.
-    preflight = preflight_case(view, queue=queue, cache=CACHE) if queue == "base" else None
+    # Preflight uses the SEALED case (answer_type/evidence_items/version_relations
+    # live there; the display projection has none of them).
+    preflight_case_input = _sealed_case(manifest, queue, key) or view
+    preflight = preflight_case(preflight_case_input, queue=queue, cache=CACHE) if queue == "base" else None
     return templates.TemplateResponse("case_base.html", {
         "request": request, "queue": queue, "key": key, "view": view,
         "package": package, "checks": checks,
@@ -249,8 +256,10 @@ def _practice_reference(manifest: dict, key: str) -> dict[str, str]:
     sufficiency, the sealed gold answer, and the calculation result. This is
     revealed ONLY after the researcher submits their own judgement.
     """
+    from finvest.human_study.web.services.protocol_web import base_queue
+
     sealed = None
-    for case in manifest["sealed"].get("base_22_queue", []):
+    for case in base_queue(manifest):
         if case["case_id"] == key:
             sealed = case
             break
@@ -353,7 +362,8 @@ def sign(
     if queue == "base":
         view = _view_for(queue, key)
         if view is not None:
-            preflight = preflight_case(view, queue=queue, cache=CACHE)
+            sealed = _sealed_case(manifest, queue, key) or view
+            preflight = preflight_case(sealed, queue=queue, cache=CACHE)
             if preflight.status not in ("READY_POSITIVE", "READY_NEGATIVE_VERIFIED"):
                 return JSONResponse(
                     {"ok": False, "error": f"case not signable: {preflight.status} ({preflight.reason})"},

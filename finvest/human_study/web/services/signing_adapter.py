@@ -15,13 +15,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from finvest.human_study import annotate_cli as cli
+from finvest.human_study.web.services.protocol_web import (
+    protocol_for_manifest,
+    record_file_path,
+)
+from finvest.human_study.web.services.queue_service import valid_evidence_ids_for
 
 
 def record_problems_for(
     day1_dir: Path, queue: str, key: str, record: dict, manifest: dict
 ) -> list[str]:
-    """Schema/existence problems (CLI-authoritative). Empty = valid."""
-    return cli.record_problems(queue, key, record, manifest)
+    """Schema/existence problems (CLI-authoritative). Empty = valid.
+
+    Evidence-ID validation is protocol-aware (the CLI's own derivation is
+    frozen to the v0.1 manifest keys).
+    """
+    valid_ids = valid_evidence_ids_for(day1_dir, queue, key, manifest)
+    return cli.record_problems(queue, key, record, manifest, valid_ids=valid_ids)
 
 
 def append_signed(
@@ -42,10 +52,13 @@ def append_signed(
     record["signed"] = True
     record["signed_by"] = reviewer_id
     record["timestamp"] = now.isoformat(timespec="seconds")
-    problems = cli.record_problems(queue, key, record, manifest)
+    problems = record_problems_for(day1_dir, queue, key, record, manifest)
     if problems:
         raise cli.CliError("record invalid, nothing appended: " + "; ".join(problems))
-    cli._append_record(day1_dir, queue, record)
+    proto = protocol_for_manifest(manifest)
+    cli._append_record(
+        day1_dir, queue, record, path=record_file_path(day1_dir, proto, queue)
+    )
     return record
 
 
@@ -63,9 +76,21 @@ def correction_audit(
     cli._append_audit(day1_dir, key, queue, old, new, reason, reviewer_id, now)
 
 
+def _record_path(day1_dir: Path, queue: str) -> Path:
+    from finvest.human_study.web.services.protocol_web import record_file_path
+
+    manifest_path = day1_dir / "QUEUE_MANIFEST.json"
+    if manifest_path.exists():
+        import json
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        return record_file_path(day1_dir, protocol_for_manifest(manifest), queue)
+    return cli.record_file(day1_dir, queue)
+
+
 def is_signed(day1_dir: Path, queue: str, key: str) -> bool:
-    return key in cli.signed_index(cli.record_file(day1_dir, queue), queue)
+    return key in cli.signed_index(_record_path(day1_dir, queue), queue)
 
 
 def latest_signed(day1_dir: Path, queue: str, key: str) -> dict | None:
-    return cli.signed_index(cli.record_file(day1_dir, queue), queue).get(key)
+    return cli.signed_index(_record_path(day1_dir, queue), queue).get(key)

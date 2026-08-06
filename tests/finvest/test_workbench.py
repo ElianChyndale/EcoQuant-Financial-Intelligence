@@ -52,8 +52,11 @@ def day1(tmp_path):
     )
     for ticker in ("aapl", "msft", "ko", "eqix", "jnj", "ups"):
         (sec / f"{ticker}_companyfacts.json").write_text(fixture_json, encoding="utf-8")
-    # v0.2 temp freeze: accept the actual valid-case count.
-    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache)
+    # ACTIVE protocol (v0.2-draft) freeze: accept the actual valid-case count.
+    from finvest.human_study.protocol_config import V0_2_DRAFT
+
+    freeze_day1(seed=FREEZE_SEED, day1_dir=day1_dir, min_cases=1, cache_dir=cache,
+                protocol=V0_2_DRAFT)
     return day1_dir
 
 
@@ -65,7 +68,9 @@ def db(tmp_path):
 
 
 def _base_cases(manifest):
-    return manifest["sealed"]["base_22_queue"]
+    from finvest.human_study.web.services.protocol_web import base_queue
+
+    return base_queue(manifest)
 
 
 def _view_evidence(manifest, case_id):
@@ -180,11 +185,14 @@ def test_autosave_survives_db(tmp_path) -> None:
 def test_drafts_not_counted_as_signed(day1, db) -> None:
     # A draft in SQLite is not a signed JSONL record.
     db.save_draft("R1", "base", "c1", {"signed": False})
-    assert not (day1 / "BASE_22_HUMAN_SIGNED.jsonl").exists() or \
-        (day1 / "BASE_22_HUMAN_SIGNED.jsonl").stat().st_size == 0
+    assert not (day1 / "BASE_HUMAN_SIGNED.jsonl").exists() or \
+        (day1 / "BASE_HUMAN_SIGNED.jsonl").stat().st_size == 0
 
 
 def test_signing_requires_explicit_confirmation(day1, manifest) -> None:
+    from finvest.human_study.annotate_cli import load_manifest
+
+    manifest = load_manifest(day1)
     case = _base_cases(manifest)[0]
     key = case["case_id"]
     record = {"record_type": "BASE_22", "case_id": key, "sufficiency": "PARTIAL"}
@@ -194,6 +202,11 @@ def test_signing_requires_explicit_confirmation(day1, manifest) -> None:
 
 
 def test_signed_record_appended(day1, manifest) -> None:
+    # Use the DAY1 (v0.2-draft) manifest, not the v0.1 REAL manifest fixture,
+    # so append_signed and is_signed resolve the same protocol record file.
+    from finvest.human_study.annotate_cli import load_manifest
+
+    manifest = load_manifest(day1)
     case = _base_cases(manifest)[0]
     key = case["case_id"]
     ids = [e["evidence_id"] for e in case["evidence_items"]]

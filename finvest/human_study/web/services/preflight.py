@@ -127,11 +127,21 @@ def preflight_case(
 def preflight_queues(
     manifest: dict, *, cache: Path, negative_certificates: dict[str, object] | None = None,
     tickers: tuple[str, ...] | None = None,
+    base_cases: list[dict] | None = None,
 ) -> dict[str, dict[str, list[str]]]:
+    """Classify every base case into the four states (protocol-aware).
+
+    ``base_cases`` may be passed in (already resolved for the manifest's
+    protocol); otherwise the protocol's base queue is read from the manifest.
+    """
+    if base_cases is None:
+        from .protocol_web import base_queue
+
+        base_cases = base_queue(manifest)
     counts: dict[str, dict[str, list[str]]] = {
         READY_POSITIVE: [], READY_NEGATIVE_VERIFIED: [], BLOCKED: [], INVALID: [],
     }
-    for case in manifest["sealed"].get("base_22_queue", []):
+    for case in base_cases:
         result = preflight_case(case, queue="base", cache=cache,
                                 negative_certificates=negative_certificates,
                                 tickers=tickers)

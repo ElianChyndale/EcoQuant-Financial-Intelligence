@@ -571,9 +571,11 @@ def signed_index(path: Path, queue: str) -> dict[str, dict[str, Any]]:
     return index
 
 
-def _append_record(day1_dir: Path, queue: str, record: dict[str, Any]) -> None:
-    path = record_file(day1_dir, queue)
-    with path.open("a", encoding="utf-8") as handle:
+def _append_record(
+    day1_dir: Path, queue: str, record: dict[str, Any], *, path: Path | None = None
+) -> None:
+    target = path or record_file(day1_dir, queue)
+    with target.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, sort_keys=True, default=str) + "\n")
 
 
@@ -604,9 +606,14 @@ def _compose_draft(
 # ---------------------------------------------------------------------------
 
 def record_problems(
-    queue: str, key: str, record: dict[str, Any], manifest: dict[str, Any]
+    queue: str, key: str, record: dict[str, Any], manifest: dict[str, Any],
+    *, valid_ids: frozenset[str] | None = None,
 ) -> list[str]:
-    """Schema/existence problems for one signed record (empty = valid)."""
+    """Schema/existence problems for one signed record (empty = valid).
+
+    ``valid_ids`` may be injected by protocol-aware callers (the web layer on
+    the v0.2-draft protocol); when omitted it is derived from the v0.1 manifest.
+    """
     problems: list[str] = []
     if record.get("record_type") != QUEUE_RECORD_TYPES[queue]:
         problems.append(f"record_type must be {QUEUE_RECORD_TYPES[queue]}")
@@ -625,7 +632,8 @@ def record_problems(
         if record.get("display_condition") not in allowed:
             problems.append("display_condition not in " + "/".join(allowed))
     specs = BASE_FIELD_SPECS if queue != "interface" else INTERFACE_FIELD_SPECS
-    valid_ids = _valid_evidence_ids_for_record(queue, key, manifest)
+    if valid_ids is None:
+        valid_ids = _valid_evidence_ids_for_record(queue, key, manifest)
     for spec in specs:
         if spec.name not in record:
             problems.append(f"missing field: {spec.name}")
