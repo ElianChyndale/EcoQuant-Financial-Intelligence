@@ -31,10 +31,13 @@ jobs:
 
       - name: Install pinned tool repos (from INTEGRATION_LOCK)
         # Pinned by commit so CI does not track a moving default branch.
+        # #egg=<name> is required: pip cannot infer an editable package name
+        # from a bare git+https URL with @sha (P0-6 fix — this step was failing
+        # with "Could not detect requirement name").
         run: |
-          pip install -e "git+https://github.com/ElianChyndale/financial-ai-contracts.git@4b232218ad7a250ce03124d51dfa036082aee284"
-          pip install -e "git+https://github.com/ElianChyndale/financial-systems-verification-kit.git@b0b1024"
-          pip install -e "git+https://github.com/ElianChyndale/paper-reproduction-lab.git@9ca75082751c28ca46902f33fb8e269e4b79e05a"
+          pip install -e "git+https://github.com/ElianChyndale/financial-ai-contracts.git@4b232218ad7a250ce03124d51dfa036082aee284#egg=financial-ai-contracts"
+          pip install -e "git+https://github.com/ElianChyndale/financial-systems-verification-kit.git@b0b1024#egg=financial-systems-verification-kit"
+          pip install -e "git+https://github.com/ElianChyndale/paper-reproduction-lab.git@9ca75082751c28ca46902f33fb8e269e4b79e05a#egg=paper-reproduction-lab"
 
       - name: Adapter tests must RUN (zero skips)
         run: |
