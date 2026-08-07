@@ -489,16 +489,24 @@ def _verify(
     # public concept dictionary). This prevents a subtract over a pool missing
     # an input (e.g. only OCF, no capex) from computing a nonsense number that
     # is then marked SUPPORTED and routed to ANSWER.
-    program = case.get("calculation_program")
-    numerical = None
-    if program and program.get("operation"):
-        from finvest.retrieval.retrievers import _concepts_for
+    #
+    # P0-9: the executable program (operation + required metrics) is INDUCED
+    # from the question text, never read from the sealed benchmark payload's
+    # calc-program field. That field sits beside the hidden answer in the same
+    # payload, so consuming it would be oracle assistance — the production path
+    # must predict SUBTRACT/OCF/CAPEX from 'operating cash flow minus capex'
+    # itself. verify_calculation still gets expected_value=None (executability
+    # only; gold never enters the decision).
+    from finvest.program_induction.induction import induce_program
 
+    induced = induce_program(case.get("question") or "")
+    numerical = None
+    if induced.operation:
         texts = tuple(u.text_span or "" for u in items)
         numerical = verify_calculation(
-            operation=program["operation"], evidence_texts=texts,
+            operation=induced.operation, evidence_texts=texts,
             expected_value=None, tolerance=0.01,
-            required_concepts=_concepts_for(case.get("question") or ""),
+            required_concepts=set(induced.required_metrics),
         )
 
     # Production numerical semantics: the evidence must EXECUTE a calculation
@@ -521,7 +529,11 @@ def _verify(
             "present": numerical is not None,
             "verification_state": numerical.verification_state if numerical else None,
             "result": numerical.result if numerical else None,
-            "note": "executability only; gold never enters the decision",
+            "induced_program": induced.to_dict(),
+            "note": (
+                "executability only; gold never enters the decision; "
+                "program induced from the question (P0-9), not read from payload"
+            ),
         },
     }
 
