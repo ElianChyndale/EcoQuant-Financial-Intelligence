@@ -50,6 +50,17 @@ def test_calculate_functions(fn, values, expected) -> None:
     assert calculate(fn, values) == pytest.approx(expected)
 
 
+def test_calculate_subtract() -> None:
+    """FinVEST cashflow-proxy cases use operation='subtract' (OCF - capex).
+
+    Semantics: first value minus the remaining values (matches the derived
+    cash-flow proxy where OCF is the first input). Without this, the real
+    A11 cases can never produce a SUPPORTED numerical verification.
+    """
+    assert calculate("subtract", [100.0, 30.0]) == 70.0
+    assert calculate("subtract", [100.0, 30.0, 10.0]) == 60.0
+
+
 def test_calculate_unknown_function() -> None:
     with pytest.raises(ValueError):
         calculate("unknown", [1.0])

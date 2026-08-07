@@ -44,6 +44,21 @@ OUT = ROOT / "research/results/a11_two_stage.json"
 MARKERS = ["EXPLORATORY_PILOT", "SMALL_SAMPLE", "NOT_PAPER_HEADLINE", "SOLO_PROVISIONAL"]
 
 
+def route_decision(*, has_evidence: bool, joint_valid: bool) -> str:
+    """Gold-free production routing (audit P0-1 fix).
+
+    Decides ANSWER/REVIEW/ABSTAIN from the retrieved evidence and the joint
+    verifier state ONLY — it must never read the hidden gold_answer. A system
+    with no retrieved evidence abstains; with evidence that passes the joint
+    temporal/version/numerical verifier it answers; otherwise it defers.
+    """
+    if not has_evidence:
+        return "ABSTAIN"
+    if joint_valid:
+        return "ANSWER"
+    return "REVIEW"
+
+
 def load_gold(day1_dir: Path | None = None) -> list[dict[str, Any]]:
     """Load solo annotations as EVALUATION labels (latest per case)."""
     day1_dir = day1_dir or DAY1
@@ -273,30 +288,56 @@ def run_two_stage(
         }
 
         # --- Layer 2: Set selection (on each retriever's candidates) ---
+        # Audit P0-3 fix: requirements and coverage must live in the SAME space.
+        #   - requirements: concepts (gold-free — induced from the question via
+        #     the public concept dictionary for S1/S2/S3).
+        #   - coverage:     evidence_id -> {concept} (inference-time available:
+        #     each corpus unit carries its own concept).
+        #   - S4 is the ONLY gold oracle: it receives true gold coverage so it
+        #     is a genuine upper bound, flagged is_oracle.
+        from finvest.retrieval.retrievers import _concepts_for
+
+        predicted_concepts = frozenset(_concepts_for(query.question))
         set_results: dict[str, Any] = {}
         for rname, results in (
             ("R1_bm25", r1), ("R3_rrf", r3), ("R4_concept", r4),
         ):
             ranked_ids = [r.evidence_id for r in results]
-            requirements = gold_concepts if ranked_ids else frozenset()
-            coverage = CoverageModel(
-                {uid: frozenset({uid}) for uid in ranked_ids}
-            ) if ranked_ids else CoverageModel({})
             gold_support = gold_ids
             gold_minimal = next(iter(case.get("minimal_evidence_sets") or [()]), frozenset())
+
+            # Predicted (non-gold) coverage: evidence -> its own concept(s).
+            concept_coverage = CoverageModel(
+                {u.evidence_id: frozenset({u.concept}) for u in sub_corpus.units
+                 if u.concept and u.evidence_id in set(ranked_ids)}
+            ) if ranked_ids else CoverageModel({})
+
+            # Proposed (gold-free) selectors: S1 top-k, S2 greedy, S3 beam —
+            # requirements induced from the question, never from gold.
             for sname, sel in (
                 ("S1_top_k", b1_top_k(ranked_ids, k=5)),
-                ("S2_greedy", b2_greedy_set_cover(ranked_ids, requirements, coverage)),
-                ("S3_beam", b3_beam_search(ranked_ids, requirements, coverage)),
-                ("S4_oracle", b4_ilp_oracle(ranked_ids, requirements, coverage)),
+                ("S2_greedy", b2_greedy_set_cover(ranked_ids, predicted_concepts, concept_coverage)),
+                ("S3_beam", b3_beam_search(ranked_ids, predicted_concepts, concept_coverage)),
             ):
-                m = set_metrics(sel, gold_support, gold_minimal, requirements, coverage)
+                m = set_metrics(sel, gold_support, gold_minimal, predicted_concepts, concept_coverage)
                 label = f"{rname}_{sname}"
                 set_results[label] = {k: round(float(v), 4) for k, v in m.items() if k != "sets"}
-                if sname == "S4_oracle":
-                    set_results[label]["is_oracle"] = True
-                    set_results[label]["upper_bound_only"] = True
-                    set_results[label]["not_headline_eligible"] = True
+
+            # S4 oracle: TRUE gold coverage (evidence -> gold concepts if the
+            # evidence is in the gold support set). Upper bound only; gold is
+            # consumed here solely to bound what a perfect selector could do.
+            gold_requirements = frozenset(gold_concepts)
+            gold_coverage = CoverageModel(
+                {uid: gold_requirements if uid in gold_support else frozenset()
+                 for uid in ranked_ids}
+            ) if ranked_ids else CoverageModel({})
+            s4 = b4_ilp_oracle(ranked_ids, gold_requirements, gold_coverage)
+            m = set_metrics(s4, gold_support, gold_minimal, gold_requirements, gold_coverage)
+            label = f"{rname}_S4_oracle"
+            set_results[label] = {k: round(float(v), 4) for k, v in m.items() if k != "sets"}
+            set_results[label]["is_oracle"] = True
+            set_results[label]["upper_bound_only"] = True
+            set_results[label]["not_headline_eligible"] = True
         set_selection_results[cid] = set_results
 
         # --- Layer 3: Verification + decision ---
@@ -309,18 +350,14 @@ def run_two_stage(
                     EvidenceItem, VersionRelation)
         verification_results[cid] = v
 
-        # Routing: answerability is a case PROPERTY (frozen at case construction;
-        # it is NOT the gold answer). An insufficient case is answerable=False
-        # -> ABSTAIN even if retrieval returns stray candidates.
-        case_answerable = (case.get("gold_answer") or {}).get("value") is not None
-        if not case_answerable:
-            decisions[cid] = "ABSTAIN"
-        elif not selected_items:
-            decisions[cid] = "ABSTAIN"
-        elif v["joint_valid"]:
-            decisions[cid] = "ANSWER"
-        else:
-            decisions[cid] = "REVIEW"
+        # Routing: GOLD-FREE (audit P0-1 fix). The decision comes from the
+        # retrieved evidence and the joint verifier state ONLY. The hidden
+        # gold_answer is never consulted here — it is consumed only by the
+        # offline evaluator below.
+        decisions[cid] = route_decision(
+            has_evidence=bool(selected_items),
+            joint_valid=v["joint_valid"],
+        )
 
         # Evaluator runs AFTER the decision; gold touches ONLY this step.
         evaluation = evaluate_correctness(decisions[cid], v, case, rec.get("route"))
@@ -506,7 +543,13 @@ def evaluate_correctness(
         )
         return {"bucket": "answer", "correct": bool(correct), "gold_used": True}
     if decision == "REVIEW":
-        return {"bucket": "review", "correct": gold_route != "ANSWER" or True, "gold_used": True}
+        # A REVIEW is correct iff deferral was warranted: the case's gold route
+        # is NOT a straightforward ANSWER (either the human also flagged it, or
+        # the case is unanswerable). A REVIEW on an answerable case is an
+        # over-deferral (false review) — this is what makes review_precision
+        # and false_review_rate real, data-dependent metrics instead of the
+        # tautological 'X or True' the pre-audit code produced.
+        return {"bucket": "review", "correct": gold_route != "ANSWER", "gold_used": True}
     return {"bucket": "abstain", "correct": gold_route == "ABSTAIN", "gold_used": True}
 
 

@@ -22,7 +22,7 @@ import re
 from collections.abc import Sequence
 
 FUNCTIONS = {
-    "average", "sum", "increase_difference", "reduction_difference",
+    "average", "sum", "subtract", "increase_difference", "reduction_difference",
     "increase_percentage", "reduction_percentage",
 }
 
@@ -146,6 +146,8 @@ def calculate(fn_name: str, values: Sequence[float]) -> float:
         return sum(finite) / len(finite)
     if fn_name == "sum":
         return sum(finite)
+    if fn_name == "subtract":
+        return finite[0] - sum(finite[1:])
     if fn_name == "increase_difference":
         return finite[-1] - finite[0]
     if fn_name == "reduction_difference":
