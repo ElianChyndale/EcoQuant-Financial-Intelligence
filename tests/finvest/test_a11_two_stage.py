@@ -253,6 +253,30 @@ def test_a11_s2_uses_predicted_not_gold_requirements(env) -> None:
                 assert v.get("upper_bound_only") is not True
 
 
+def test_a11_loio_reports_held_out(env) -> None:
+    """P0-5: leave-one-issuer-out must report the HELD-OUT issuer's metrics.
+
+    The pre-fix _leave_one_issuer_out aggregated only TRAIN-side recall
+    (macro_recall@5_train), never the held-out issuer's own result — so it
+    was not a generalisation experiment. Each fold must carry the held-out
+    issuer's recall@5 (and completeness / routing risk where defined).
+    """
+    from experiments.a11_retrieval.run import run_two_stage
+
+    day1, cache = env
+    result = run_two_stage(day1_dir=day1, corpus_cache=cache)
+    loio = result["leave_one_issuer_out"]
+    assert loio["n_folds"] >= 1
+    for issuer, fold in loio["folds"].items():
+        assert "macro_recall@5_held_out" in fold, (
+            f"fold {issuer} must report held-out recall (audit P0-5)"
+        )
+        # Every fold with cases must have at least one R-method with a value.
+        if fold["held_out_cases"] > 0:
+            vals = [v for v in fold["macro_recall@5_held_out"].values() if v is not None]
+            assert vals, f"fold {issuer} has cases but no held-out recall"
+
+
 def test_a11_leakage_audit_clean(env) -> None:
     """The corpus leakage audit reports zero gold tokens / violations."""
     from experiments.a11_retrieval.run import run_two_stage

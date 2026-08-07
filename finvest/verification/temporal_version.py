@@ -48,10 +48,17 @@ def _wrong_period(item: EvidenceItem, target_fiscal_year: str | None) -> bool:
 
 
 def _superseded(item: EvidenceItem, relations: tuple[VersionRelation, ...]) -> bool:
-    """True if another document version supersedes this item's document."""
+    """True if another document version supersedes this item's document.
+
+    An amended document's ORIGINAL is superseded by the amendment: both a
+    SUPERSEDES relation and an AMENDS relation (source = the original) mark
+    the original document's items invalid. This keeps the joint verifier
+    consistent with latest_valid_version (N-2 fix: AMENDS was previously
+    ignored here, so amended originals passed verification).
+    """
     return any(
         relation.source_document == item.document_id
-        and relation.relation == "SUPERSEDES"
+        and relation.relation in {"SUPERSEDES", "AMENDS"}
         for relation in relations
     )
 

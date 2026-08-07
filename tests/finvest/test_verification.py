@@ -72,6 +72,27 @@ def test_joint_detects_superseded() -> None:
     assert result.superseded_rate == 1.0
 
 
+def test_joint_detects_amended_as_superseded() -> None:
+    """N-2: an AMENDS relation must invalidate the ORIGINAL document's items.
+
+    The pre-fix _superseded only matched relation == 'SUPERSEDES', so an
+    amended (10-K/A) superseding its original 10-K was not detected by the
+    joint verifier — 'amendment-aware verification' existed only in
+    latest_valid_version, which A11 never called. The verifier must agree
+    with latest_valid_version on which document is the invalid original.
+    """
+    original = _item("e1", "doc1", "2025-03-01", "2024-12-31")
+    result = verify_joint_temporal(
+        (original,),
+        source_cutoff=datetime(2025, 12, 31),
+        target_end=date(2024, 12, 31),
+        target_fiscal_year="FY2024",
+        version_relations=(VersionRelation("doc1", "doc1a", "AMENDS"),),
+    )
+    assert result.valid is False, "amended original must be invalid"
+    assert result.superseded_rate == 1.0
+
+
 def test_latest_valid_version_keeps_amended() -> None:
     original = _item("e-orig", "doc1", "2025-03-01", "2024-12-31")
     amended = _item("e-amend", "doc1a", "2025-06-01", "2024-12-31", ver="10-K/A")

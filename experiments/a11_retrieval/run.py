@@ -675,8 +675,16 @@ def _per_issuer_retrieval(per_case) -> dict[str, Any]:
 
 
 def _leave_one_issuer_out(per_case) -> dict[str, Any]:
-    """Leave-one-issuer-out: each issuer's cases are held out once; report the
-    macro-averaged recall@5 across the six folds (P1-3: variance across folds)."""
+    """Leave-one-issuer-out (audit P0-5 fix).
+
+    A true generalisation fold reports the HELD-OUT issuer's own metrics:
+    train/calibrate on the other issuers, then evaluate ONLY on the held-out
+    issuer. The pre-fix code aggregated only train-side recall, which proved
+    nothing about generalisation. Retrieval here is parameter-free, so the
+    held-out recall@5 is the direct per-case metric on the held-out issuer's
+    cases; completeness (all-required-evidence recall@5) and routing risk
+    (share of held-out cases not safely ANSWERED) are reported where defined.
+    """
     from collections import defaultdict
 
     groups: dict[str, list[dict]] = defaultdict(list)
@@ -687,19 +695,37 @@ def _leave_one_issuer_out(per_case) -> dict[str, Any]:
     folds = {}
     for held_out, held_cases in sorted(groups.items()):
         train = [c for iss, cs in groups.items() if iss != held_out for c in cs]
-        train_recall = defaultdict(list)
-        for c in train:
-            for rname in _RETRIEVERS:
-                r = c["retrieval"].get(rname, {})
-                if "recall_at_5" in r:
-                    train_recall[rname].append(r["recall_at_5"])
+
+        def _per_retriever(cases, key: str) -> dict[str, float | None]:
+            by_r: dict[str, list[float]] = defaultdict(list)
+            for c in cases:
+                for rname in _RETRIEVERS:
+                    r = c["retrieval"].get(rname, {})
+                    if key in r and r[key] is not None:
+                        by_r[rname].append(float(r[key]))
+            return {
+                rname: round(sum(v) / len(v), 4) if v else None
+                for rname, v in by_r.items()
+            }
+
+        held_recall = _per_retriever(held_cases, "recall_at_5")
+        held_completeness = _per_retriever(held_cases, "all_required_evidence_recall")
+        # Routing risk on the held-out issuer: fraction of cases NOT routed to
+        # ANSWER (a conservative proxy; zero ANSWER coverage is honest — a
+        # system that always REVIEWs has high safety but zero utility).
+        n_held = max(len(held_cases), 1)
+        held_risk = {
+            "not_answered_rate": round(
+                sum(1 for c in held_cases if c["decision"] != "ANSWER") / n_held, 4
+            ),
+        }
         folds[held_out] = {
             "held_out_cases": len(held_cases),
             "train_cases": len(train),
-            "macro_recall@5_train": {
-                rname: round(sum(v) / len(v), 4) if v else None
-                for rname, v in train_recall.items()
-            },
+            "macro_recall@5_held_out": held_recall,
+            "macro_recall@5_train": _per_retriever(train, "recall_at_5"),
+            "completeness@5_held_out": held_completeness,
+            "routing_risk_held_out": held_risk,
         }
     return {"folds": folds, "n_folds": len(folds)}
 
