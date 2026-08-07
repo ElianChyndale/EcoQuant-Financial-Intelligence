@@ -103,6 +103,21 @@ def test_latest_valid_version_keeps_amended() -> None:
     assert kept == (amended,)
 
 
+def test_extract_numbers_ignores_date_components() -> None:
+    """N-7: dates like 2024-09-29 must NOT contribute 2024, -9, -29.
+
+    The pre-fix regex `-?\\d+` splits '2024-09-29' into three numbers, so
+    subtract on cashflow texts computed a huge nonsense negative that was
+    still marked SUPPORTED (executability-only) and routed to ANSWER with
+    zero gold recall. Only the value digits in the text span are wanted.
+    """
+    from finvest.verification.numerical import _extract_numbers
+
+    text = "NetCashProvidedByUsedInOperatingActivities 29935000000.0 USD 2024-09-29 2024-12-28 2025-01-31 10-Q"
+    nums = _extract_numbers((text,))
+    assert nums == [29935000000.0], f"dates leaked into numbers: {nums}"
+
+
 def test_verify_calculation_matches() -> None:
     result = verify_calculation(
         operation="average", evidence_texts=("value 4710", "value 4710"),

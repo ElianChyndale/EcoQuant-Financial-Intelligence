@@ -79,9 +79,26 @@ def locate_cells(
 
 
 def _extract_numbers(texts: tuple[str, ...]) -> list[float]:
+    """Extract the numeric VALUES from evidence text spans.
+
+    N-7: raw regex extraction split ISO dates ('2024-09-29') into three
+    numbers (2024, -9, -29) which then polluted arithmetic (e.g. subtract
+    produced a nonsense negative that was still marked SUPPORTED under the
+    executability-only check). This removes date-shaped and negative-in-
+    date tokens before matching the value, then captures the remaining
+    (optionally signed) decimals.
+    """
     import re
 
     numbers: list[float] = []
     for text in texts:
+        # Blank out date-shaped tokens first: YYYY-MM-DD / YYYY-MM-DDThh:mm:ss
+        # (also their sub-tokens), so their digits never reach the value pool.
+        text = re.sub(r"\b\d{4}-\d{1,2}-\d{1,2}(?:[T ]\d{1,2}:\d{1,2}(?::\d{1,2})?)?\b", " ", text)
+        # Also drop bare signed numbers that are the pieces of a date already
+        # glued by the corpus tokenizer (e.g. '-9' following a 4-digit year).
+        text = re.sub(r"(?<=\b\d{4})-(\d{1,2})\b", r" \1", text)
+        # Blank form-type markers (10-K / 10-Q / 8-K) whose '10'/'8' are not values.
+        text = re.sub(r"\b\d{1,2}-[A-Z]\b", " ", text)
         numbers.extend(float(t) for t in re.findall(r"-?\d+(?:\.\d+)?", text))
     return numbers
