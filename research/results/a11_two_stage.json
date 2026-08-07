@@ -1,10 +1,8 @@
 {
-  "abstain_bucket": [
-    "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025"
-  ],
+  "abstain_bucket": [],
   "answer_agreement": {
     "agree_with_human_answer_route": 0,
-    "answer_cases": 0,
+    "answer_cases": 1,
     "rate": 0.0
   },
   "corpus": {
@@ -18,8 +16,8 @@
     "record_count": 170229
   },
   "decisions": {
-    "ABSTAIN": 1,
-    "ANSWER": 0,
+    "ABSTAIN": 0,
+    "ANSWER": 1,
     "REVIEW": 18
   },
   "denominator_audit": {
@@ -42,52 +40,102 @@
   "leave_one_issuer_out": {
     "folds": {
       "AAPL": {
+        "completeness@5_held_out": {},
         "held_out_cases": 5,
+        "macro_recall@5_held_out": {
+          "R1_bm25": 0.4,
+          "R2_dense": 0.3,
+          "R3_rrf": 0.4,
+          "R4_concept_temporal": 0.4
+        },
         "macro_recall@5_train": {
           "R1_bm25": 0.0,
           "R2_dense": 0.0,
           "R3_rrf": 0.0,
           "R4_concept_temporal": 0.0
         },
+        "routing_risk_held_out": {
+          "not_answered_rate": 0.8
+        },
         "train_cases": 14
       },
       "JNJ": {
+        "completeness@5_held_out": {},
         "held_out_cases": 3,
+        "macro_recall@5_held_out": {
+          "R1_bm25": 0.0,
+          "R2_dense": 0.0,
+          "R3_rrf": 0.0,
+          "R4_concept_temporal": 0.0
+        },
         "macro_recall@5_train": {
           "R1_bm25": 0.125,
           "R2_dense": 0.0938,
           "R3_rrf": 0.125,
-          "R4_concept_temporal": 0.0625
+          "R4_concept_temporal": 0.125
+        },
+        "routing_risk_held_out": {
+          "not_answered_rate": 1.0
         },
         "train_cases": 16
       },
       "KO": {
+        "completeness@5_held_out": {},
         "held_out_cases": 3,
+        "macro_recall@5_held_out": {
+          "R1_bm25": 0.0,
+          "R2_dense": 0.0,
+          "R3_rrf": 0.0,
+          "R4_concept_temporal": 0.0
+        },
         "macro_recall@5_train": {
           "R1_bm25": 0.125,
           "R2_dense": 0.0938,
           "R3_rrf": 0.125,
-          "R4_concept_temporal": 0.0625
+          "R4_concept_temporal": 0.125
+        },
+        "routing_risk_held_out": {
+          "not_answered_rate": 1.0
         },
         "train_cases": 16
       },
       "MSFT": {
+        "completeness@5_held_out": {},
         "held_out_cases": 4,
+        "macro_recall@5_held_out": {
+          "R1_bm25": 0.0,
+          "R2_dense": 0.0,
+          "R3_rrf": 0.0,
+          "R4_concept_temporal": 0.0
+        },
         "macro_recall@5_train": {
           "R1_bm25": 0.1333,
           "R2_dense": 0.1,
           "R3_rrf": 0.1333,
-          "R4_concept_temporal": 0.0667
+          "R4_concept_temporal": 0.1333
+        },
+        "routing_risk_held_out": {
+          "not_answered_rate": 1.0
         },
         "train_cases": 15
       },
       "UPS": {
+        "completeness@5_held_out": {},
         "held_out_cases": 4,
+        "macro_recall@5_held_out": {
+          "R1_bm25": 0.0,
+          "R2_dense": 0.0,
+          "R3_rrf": 0.0,
+          "R4_concept_temporal": 0.0
+        },
         "macro_recall@5_train": {
           "R1_bm25": 0.1333,
           "R2_dense": 0.1,
           "R3_rrf": 0.1333,
-          "R4_concept_temporal": 0.0667
+          "R4_concept_temporal": 0.1333
+        },
+        "routing_risk_held_out": {
+          "not_answered_rate": 1.0
         },
         "train_cases": 15
       }
@@ -256,7 +304,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -265,7 +313,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -461,7 +509,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -470,7 +518,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -666,7 +714,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -675,7 +723,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -719,7 +767,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -868,7 +916,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -877,7 +925,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -921,7 +969,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -1070,7 +1118,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1079,7 +1127,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1125,7 +1173,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -1274,7 +1322,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1283,7 +1331,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1329,7 +1377,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -1478,7 +1526,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1487,7 +1535,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1534,7 +1582,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -1683,7 +1731,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1692,7 +1740,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -1739,7 +1787,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -1783,16 +1831,16 @@
           "stale_rate": 0.0
         },
         "R4_concept_temporal": {
-          "candidate_pool_size": 8,
+          "candidate_pool_size": 14,
           "document_recall_at_5": 1.0,
-          "mrr": 0.0,
-          "ndcg_at_20": 0.0,
-          "recall_at_1": 0.0,
-          "recall_at_10": 0.0,
-          "recall_at_20": 0.0,
-          "recall_at_5": 0.0,
-          "redundancy_at_20": 0.0,
-          "set_precision_at_20": 0.0,
+          "mrr": 1.0,
+          "ndcg_at_20": 1.0,
+          "recall_at_1": 0.5,
+          "recall_at_10": 1.0,
+          "recall_at_20": 1.0,
+          "recall_at_5": 1.0,
+          "redundancy_at_20": 0.4286,
+          "set_precision_at_20": 0.1429,
           "stale_rate": 0.0
         },
         "dense_available": true
@@ -1809,33 +1857,33 @@
           "set_precision": 0.4
         },
         "R1_bm25_S2_greedy": {
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 1.0,
+          "minimal_set_recall": 0.0,
+          "minimality_violation_rate": 1.0,
+          "redundancy": 0.0,
+          "set_exact_match": 0.0,
+          "set_precision": 1.0
+        },
+        "R1_bm25_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
           "set_precision": 0.0
         },
-        "R1_bm25_S3_beam": {
-          "all_required_evidence_recall": 0.5,
-          "average_set_size": 6.0,
-          "minimal_set_recall": 1.0,
-          "minimality_violation_rate": 1.0,
-          "redundancy": 0.0,
-          "set_exact_match": 0.0,
-          "set_precision": 0.1667
-        },
         "R1_bm25_S4_oracle": {
-          "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 1.0,
           "is_oracle": true,
           "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
+          "minimality_violation_rate": 0.0,
           "not_headline_eligible": true,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0,
+          "set_precision": 1.0,
           "upper_bound_only": true
         },
         "R3_rrf_S1_top_k": {
@@ -1848,72 +1896,72 @@
           "set_precision": 0.4
         },
         "R3_rrf_S2_greedy": {
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 1.0,
+          "minimal_set_recall": 0.0,
+          "minimality_violation_rate": 1.0,
+          "redundancy": 0.0,
+          "set_exact_match": 0.0,
+          "set_precision": 1.0
+        },
+        "R3_rrf_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
           "set_precision": 0.0
         },
-        "R3_rrf_S3_beam": {
-          "all_required_evidence_recall": 0.5,
-          "average_set_size": 6.0,
-          "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
-          "redundancy": 0.0,
-          "set_exact_match": 0.0,
-          "set_precision": 0.1667
-        },
         "R3_rrf_S4_oracle": {
-          "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 1.0,
           "is_oracle": true,
           "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
+          "minimality_violation_rate": 0.0,
           "not_headline_eligible": true,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0,
+          "set_precision": 1.0,
           "upper_bound_only": true
         },
         "R4_concept_S1_top_k": {
-          "all_required_evidence_recall": 0.0,
+          "all_required_evidence_recall": 1.0,
           "average_set_size": 5.0,
-          "minimal_set_recall": 0.0,
+          "minimal_set_recall": 1.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.4
         },
         "R4_concept_S2_greedy": {
-          "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
-          "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.5
         },
         "R4_concept_S3_beam": {
-          "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
-          "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 2.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0
+          "set_precision": 0.5
         },
         "R4_concept_S4_oracle": {
-          "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "all_required_evidence_recall": 0.5,
+          "average_set_size": 1.0,
           "is_oracle": true,
-          "minimal_set_recall": 0.0,
-          "minimality_violation_rate": 1.0,
+          "minimal_set_recall": 1.0,
+          "minimality_violation_rate": 0.0,
           "not_headline_eligible": true,
           "redundancy": 0.0,
           "set_exact_match": 0.0,
-          "set_precision": 0.0,
+          "set_precision": 1.0,
           "upper_bound_only": true
         }
       },
@@ -1941,7 +1989,7 @@
     },
     {
       "case_id": "finvest-AAPL-insufficient-AccruedIncomeTaxesNoncurrent-2025",
-      "decision": "ABSTAIN",
+      "decision": "ANSWER",
       "evaluation": {
         "bucket": "abstain",
         "correct": true,
@@ -2146,7 +2194,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -2295,7 +2343,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2304,7 +2352,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2354,7 +2402,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -2503,7 +2551,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2512,7 +2560,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2560,7 +2608,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -2709,7 +2757,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2718,7 +2766,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2762,7 +2810,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -2911,7 +2959,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2920,7 +2968,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -2969,7 +3017,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -3118,7 +3166,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3127,7 +3175,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3175,7 +3223,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -3324,7 +3372,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3333,7 +3381,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3381,7 +3429,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -3530,7 +3578,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3539,7 +3587,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3587,7 +3635,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -3736,7 +3784,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3745,7 +3793,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3789,7 +3837,7 @@
       "decision": "REVIEW",
       "evaluation": {
         "bucket": "review",
-        "correct": true,
+        "correct": false,
         "gold_used": true
       },
       "retrieval": {
@@ -3938,7 +3986,7 @@
         },
         "R4_concept_S2_greedy": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 0.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3947,7 +3995,7 @@
         },
         "R4_concept_S3_beam": {
           "all_required_evidence_recall": 0.0,
-          "average_set_size": 6.0,
+          "average_set_size": 1.0,
           "minimal_set_recall": 0.0,
           "minimality_violation_rate": 1.0,
           "redundancy": 0.0,
@@ -3997,14 +4045,14 @@
       "R1_bm25": 0.08,
       "R2_dense": 0.06,
       "R3_rrf": 0.08,
-      "R4_concept_temporal": 0.04
+      "R4_concept_temporal": 0.08
     },
     "per_issuer": {
       "AAPL": {
         "R1_bm25": 0.4,
         "R2_dense": 0.3,
         "R3_rrf": 0.4,
-        "R4_concept_temporal": 0.2
+        "R4_concept_temporal": 0.4
       },
       "JNJ": {
         "R1_bm25": 0.0,
@@ -4054,12 +4102,12 @@
   ],
   "schema_version": "a11-two-stage.v1",
   "selective": {
-    "abstention_precision": 1.0,
-    "answer_precision": 0.0,
-    "coverage": 0.0,
-    "false_review_rate": 0.0,
+    "abstention_precision": 0.0,
+    "answer_precision": 1.0,
+    "coverage": 0.0526,
+    "false_review_rate": 0.8333,
     "note": "coverage = ANSWER share; a system that always REVIEWS has high safety but zero utility \u2014 report coverage alongside precision.",
-    "review_precision": 1.0,
+    "review_precision": 0.1667,
     "unsafe_answer_rate": 0.0
   }
 }
