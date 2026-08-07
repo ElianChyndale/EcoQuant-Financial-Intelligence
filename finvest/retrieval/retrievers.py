@@ -70,18 +70,29 @@ def _concepts_for(question: str) -> set[str]:
 
     Uses ONLY the public dictionary (never case payloads). The question is
     lowercased and matched against the dictionary's natural-language keys.
+
+    N-6: real benchmark questions spell concepts in camelCase (e.g.
+    'AccruedLiabilitiesCurrent'). To match the dictionary's space-separated
+    keys, the question is ALSO matched after inserting a space at each
+    camelCase boundary, so 'AccruedLiabilitiesCurrent' induces the exact
+    concept instead of degrading to the broader 'Liabilities'.
     """
     q = question.lower()
+    # camelCase -> 'camel case' so dictionary keys like 'accrued liabilities'
+    # match question text that spells the concept without spaces.
+    spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", question).lower()
+    candidates = {q, spaced}
     concepts: set[str] = set()
-    for terms, xs in CONCEPT_DICTIONARY.items():
-        if terms in q:
-            concepts.update(xs)
-    # Also match bare tokens against dictionary entries whose key is a single
-    # word (e.g. "assets", "revenue") to catch short questions.
-    for token in re.findall(r"[a-z0-9]+", q):
+    for q_variant in candidates:
         for terms, xs in CONCEPT_DICTIONARY.items():
-            if " " not in terms and terms == token:
+            if terms in q_variant:
                 concepts.update(xs)
+        # Also match bare tokens against dictionary entries whose key is a
+        # single word (e.g. "assets", "revenue") to catch short questions.
+        for token in re.findall(r"[a-z0-9]+", q_variant):
+            for terms, xs in CONCEPT_DICTIONARY.items():
+                if " " not in terms and terms == token:
+                    concepts.update(xs)
     return concepts
 
 
