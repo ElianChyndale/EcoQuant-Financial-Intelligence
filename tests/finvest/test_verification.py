@@ -118,6 +118,54 @@ def test_extract_numbers_ignores_date_components() -> None:
     assert nums == [29935000000.0], f"dates leaked into numbers: {nums}"
 
 
+def test_verify_calculation_requires_input_concepts() -> None:
+    """N-8: a derived calculation must FAIL if an input concept is missing.
+
+    The cashflow-proxy cases need BOTH OCF and capex in the selected evidence.
+    Pre-fix, subtract over a pool containing only OCF values computed a huge
+    nonsense negative that was marked SUPPORTED (executability-only) and
+    routed to ANSWER with zero gold recall. Passing the calculation program's
+    required concepts lets the verifier reject evidence missing an input.
+    """
+    from finvest.verification.numerical import verify_calculation
+
+    # Only OCF text present; capex is missing.
+    texts = (
+        "NetCashProvidedByUsedInOperatingActivities 29935000000.0 USD "
+        "2024-09-29 2024-12-28 2025-01-31 10-Q",
+    )
+    result = verify_calculation(
+        operation="subtract",
+        evidence_texts=texts,
+        expected_value=None,
+        required_concepts={
+            "NetCashProvidedByUsedInOperatingActivities",
+            "PaymentsToAcquirePropertyPlantAndEquipment",
+        },
+    )
+    assert result.verification_state == "REVIEW_REQUIRED", (
+        "missing capex input must force REVIEW, not SUPPORTED"
+    )
+
+
+def test_verify_calculation_passes_with_all_inputs() -> None:
+    from finvest.verification.numerical import verify_calculation
+
+    ocf = ("NetCashProvidedByUsedInOperatingActivities 29935000000.0 USD 10-K",)
+    capex = ("PaymentsToAcquirePropertyPlantAndEquipment 2940000000.0 USD 10-K",)
+    result = verify_calculation(
+        operation="subtract",
+        evidence_texts=ocf + capex,
+        expected_value=None,
+        required_concepts={
+            "NetCashProvidedByUsedInOperatingActivities",
+            "PaymentsToAcquirePropertyPlantAndEquipment",
+        },
+    )
+    assert result.verification_state == "SUPPORTED"
+    assert result.result == pytest.approx(29935000000.0 - 2940000000.0)
+
+
 def test_verify_calculation_matches() -> None:
     result = verify_calculation(
         operation="average", evidence_texts=("value 4710", "value 4710"),

@@ -31,14 +31,29 @@ def verify_calculation(
     evidence_texts: tuple[str, ...],
     expected_value: float | None,
     tolerance: float = 0.01,
+    required_concepts: set[str] | None = None,
 ) -> NumericalVerification:
     """Verify a derived answer is reproducible from the evidence.
 
     Extracts numbers from the evidence texts (scale-normalized via the E2
     parser), applies the operation, and checks the result against the expected
     value within tolerance.
+
+    N-8: when ``required_concepts`` is given (the calculation program's input
+    concepts), the evidence must contain every one of them. Without this, a
+    subtract over a pool that only contains OCF values (capex missing) computed
+    a nonsense negative that was marked SUPPORTED under the executability-only
+    check and routed to ANSWER with zero gold recall.
     """
     values = _extract_numbers(evidence_texts)
+    if required_concepts:
+        present = {_concept_of(text) for text in evidence_texts}
+        missing = required_concepts - present
+        if missing:
+            return NumericalVerification(
+                False, None, "REVIEW_REQUIRED",
+                f"missing required input concept(s): {sorted(missing)}",
+            )
     if not values:
         return NumericalVerification(False, None, "INSUFFICIENT_EVIDENCE", "no numeric evidence")
     try:
@@ -76,6 +91,19 @@ def locate_cells(
                 if parse_cell(row[col_idx]) is not None:
                     return row_idx, col_idx
     return None
+
+
+def _concept_of(text: str) -> str | None:
+    """First token of a corpus text span is the XBRL concept name.
+
+    Corpus spans are built as '{concept} {value} {unit} {start} {end} {filed}
+    {form} {accession}', so the concept is the leading token. Returns None for
+    spans that do not start with an alphanumeric identifier.
+    """
+    import re
+
+    m = re.match(r"^([A-Za-z0-9_]+)", text.strip())
+    return m.group(1) if m else None
 
 
 def _extract_numbers(texts: tuple[str, ...]) -> list[float]:

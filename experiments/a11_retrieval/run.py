@@ -484,13 +484,21 @@ def _verify(
     # V2 numerical EXECUTABILITY: expected_value is deliberately None so the
     # decision depends only on whether the evidence can produce a number, not
     # on whether it matches the hidden gold (no target leakage in routing).
+    #
+    # N-8: required_concepts = question-induced concepts (gold-free, via the
+    # public concept dictionary). This prevents a subtract over a pool missing
+    # an input (e.g. only OCF, no capex) from computing a nonsense number that
+    # is then marked SUPPORTED and routed to ANSWER.
     program = case.get("calculation_program")
     numerical = None
     if program and program.get("operation"):
+        from finvest.retrieval.retrievers import _concepts_for
+
         texts = tuple(u.text_span or "" for u in items)
         numerical = verify_calculation(
             operation=program["operation"], evidence_texts=texts,
             expected_value=None, tolerance=0.01,
+            required_concepts=_concepts_for(case.get("question") or ""),
         )
 
     # Production numerical semantics: the evidence must EXECUTE a calculation
