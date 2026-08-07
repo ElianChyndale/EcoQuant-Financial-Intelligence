@@ -48,7 +48,7 @@ Documents
 | E2 | Does separating calc from retrieval help tables? | GRI-QA 266q | known-table deterministic calc: 94% within 1%; retrieval is the bottleneck (B7 0.70 vs B3 0.50) |
 | E3 | Do source/valid-time filters reduce temporal errors? | SEC XBRL 3 companies | source filter eliminates future info (0.34→0); valid filter eliminates expired (0.09→0); contradiction F1 +76% |
 | E4 | Does post-generation verification reduce unsupported answers? | FinanceBench + GRI-QA | false-pass rate 0.000; scale-normalized matching necessary; presence ceiling 37% (derived answers) |
-| E5 | Does calibrated confidence enable selective prediction? | FinanceBench retrieval | AUROC 0.923; ECE 0.054; at 90% precision only 0.6% coverage — calibration certifies, doesn't create precision |
+| E5 | Does calibrated confidence enable selective prediction? | FinanceBench retrieval | **INVALIDATED** (gold-feature leakage); leak-free rerun AUROC 0.719, ECE 0.055; at 90% precision only ~0.4% coverage — calibration certifies, doesn't create precision |
 | E7 | Does the method generalize to commercial analysis? | SEC XBRL 6 companies, 4 domains | source-linked margins/FCFF/ROIC; values match public financials; honest None for missing evidence |
 | E8 | Does the evidence pipeline replace the prompt-only score? | 6 commercial cases | citation 0→1.0; review routing 0→0.67; boundary held (AI never sets spread) |
 

@@ -2,7 +2,14 @@
 
 **Experiment:** e5-calibration-selective
 **Date:** 2026-08-06
-**Status:** INTERNAL PILOT — results valid on the E1 FinanceBench retrieval results.
+**Status:** HEADLINE **INVALIDATED** (gold-feature leakage); leak-free rerun
+`PILOT_VALIDATED` — see [audit](docs/audits/E5_GOLD_LEAKAGE_AUDIT.md).
+The original headline (AUROC 0.923, ECE 0.054, Brier 0.085) is **retracted**:
+the `evidence_coverage` feature was computed from the gold relevant-evidence
+set, which is unavailable at inference time.
+**Current result (leak-free):** AUROC **0.719**, ECE **0.055**, Brier **0.126**,
+coverage at 90% precision **0.004** (pooled accuracy 0.184). Small sample, pilot
+only — **not a paper headline.**
 **Reproduction:** `python scripts/run_e5_calibration.py` (writes
 `research/results/e5_calibration_summary.json`).
 **Commit:** branch `feat/e5-calibration-selective`.
@@ -47,39 +54,48 @@ drive ECE, Brier, AUROC, and the risk-coverage frontier. Headline metric:
 
 ## 4. Results
 
-| Metric | Value |
-|---|---|
-| Pooled accuracy (top-1 hit) | 0.184 |
-| ECE | 0.054 |
-| Brier | 0.085 |
-| **AUROC (correctness)** | **0.923** |
-| Coverage at 90% precision | 0.006 (1/900) |
-| Coverage at 95% precision | 0.006 (1/900) |
+> **Leak-free rerun (current).** The `evidence_coverage` feature is pinned to
+> 0.0 (gold-derived coverage removed). Original gold-leaked numbers are
+> archived and **must not be quoted**.
 
-Feature separation (correct vs wrong):
+| Metric | Leak-free (current) | Original (INVALIDATED) |
+|---|---|---|
+| Pooled accuracy (top-1 hit) | 0.184 | 0.184 |
+| ECE | **0.055** | 0.054 |
+| Brier | **0.126** | 0.085 |
+| **AUROC (correctness)** | **0.719** | **0.923** |
+| Coverage at 90% precision | **0.004 (1/225)** | 0.006 (1/900) |
+| Coverage at 95% precision | **0.004 (1/225)** | 0.006 (1/900) |
+
+Feature separation (correct vs wrong, leak-free rerun):
 
 | Feature | Correct mean | Wrong mean |
 |---|---|---|
-| retrieval_margin | **1.075** | 0.334 |
+| retrieval_margin | 1.075 | 0.334 |
 | extraction_confidence | 0.160 | 0.196 |
 
 ## 5. Findings
 
-1. **H1 strongly supported.** Retrieval margin separates correct from wrong
-   top-1 predictions by 3× (1.075 vs 0.334). AUROC 0.923 — retrieval confidence
-   is a strong correctness signal.
-2. **H2 supported.** ECE 0.054 and Brier 0.085 — the Platt-calibrated
-   probability is well-calibrated and ranks correctness accurately.
-3. **H3 NOT supported at meaningful coverage.** At 90% precision, only 0.6%
-   coverage is reachable (1/900). The calibrated model is honest: it knows it is
-   confident about very few cases, because top-1 retrieval accuracy is only
-   18.4%.
+> **Validity caveat:** the pre-fix AUROC 0.923 / ECE 0.054 / Brier 0.085 are
+> **INVALIDATED** by gold-feature leakage (`evidence_coverage` was a function of
+> the gold relevant set). Only the leak-free rerun below is reportable.
 
-**Interpretation:** calibration is *working correctly* (AUROC 0.92, low ECE) —
-it does not over-claim. The binding constraint is **retrieval quality**, not
+1. **H1 supported at lower strength (leak-free).** Retrieval margin still
+   separates correct from wrong top-1 predictions, but AUROC drops from the
+   leaked 0.923 to **0.719** once the gold-derived coverage feature is removed —
+   retrieval confidence is a *moderate* correctness signal, not a near-perfect
+   one.
+2. **H2 partially supported.** The leak-free rerun shows ECE 0.055 and Brier
+   0.126 — calibration is intact but the probability ranks correctness less
+   accurately than the (invalidated) leaked numbers suggested.
+3. **H3 NOT supported at meaningful coverage.** At 90% precision, only 0.4%
+   coverage is reachable (1/225). The calibrated model is honest: it is confident
+   about very few cases, because top-1 retrieval accuracy is only 18.4%.
+
+**Interpretation:** after removing the gold leak, calibration still *does not
+create* precision — the binding constraint remains **retrieval quality**, not
 calibration. To auto-accept more cases at high precision, the system must first
-improve retrieval (E1 showed dense helps on FinanceBench; retrieval gap B7→B3
-in E2 was 20 points). This is a clean, honest quantification of the
+improve retrieval. This is the honest leak-free quantification of the
 "calibration can't fix retrieval" claim: **selective prediction certificates
 precision, it does not create it.**
 
@@ -92,15 +108,21 @@ precision, it does not create it.**
    response confidence.
 4. **Small coverage at high precision** — the honest result is a low-coverage
    high-precision frontier, not a "system that auto-answers everything safely."
+5. **Small sample** — 225 pooled leak-free predictions; pilot only, no headline
+   claim.
 
 ## 7. Claims Permitted After This Experiment
 
-- **SUPPORTED:** Retrieval margin strongly separates correct from incorrect
-  top-1 predictions (AUROC 0.923) on FinanceBench.
-- **SUPPORTED:** Platt calibration over retrieval features yields low ECE (0.054)
-  and Brier (0.085).
-- **SUPPORTED:** At 90% supported-answer precision, only ~0.6% of cases can be
-  auto-accepted — retrieval quality, not calibration, is the binding constraint.
+- **PILOT_VALIDATED (leak-free):** After removing the gold-derived feature,
+  retrieval margin separates correct from incorrect top-1 predictions with
+  AUROC **0.719** (pilot; not a headline). Do **not** quote the original 0.923.
+- **PILOT_VALIDATED (leak-free):** Platt calibration over leak-free features
+  yields ECE 0.055 and Brier 0.126.
+- **PILOT_VALIDATED (leak-free):** At 90% supported-answer precision, only ~0.4%
+  of cases can be auto-accepted — retrieval quality, not calibration, is the
+  binding constraint.
+- **INVALIDATED (do not state):** "AUROC 0.923", "ECE 0.054", "Brier 0.085",
+  "retrieval confidence reliably separates correct/incorrect".
 - **PROHIBITED:** "calibration ensures safe auto-answering", "high coverage at
   high precision", "production-ready selective system".
 
